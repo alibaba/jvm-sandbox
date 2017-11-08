@@ -1,37 +1,42 @@
 # JVM-SANDBOX
->基于JVM的实时无侵入AOP框架容器
+> 基于JVM的实时无侵入AOP框架容器
 
 
 ## 项目简介
 
-#### JVM-SANDBOX的核心功能是什么？
+### JVM-SANDBOX的核心功能是什么？
 
-##### 1.实时无侵入AOP框架
+#### 实时无侵入AOP框架
+
 在常见的AOP框架实现方案中，有静态编织和动态编织两种。
 
-###### 静态编织
-静态编织发生在字节码生成时根据一定框架的规则提前将AOP字节码插入到目标类和方法中，实现AOP；
-###### 动态编织
-动态编织则允许在JVM运行过程中完成指定方法的AOP字节码增强.
-常见的动态编织方案大多采用重命名原有方法，再新建一个同签名的方法来做代理的工作模式来完成AOP的功能(常见的实现方案如CgLib)，但这种方式存在一些应用边界：
-- 侵入性
-  对被代理的目标类需要进行侵入式改造。比如：在Spring中必须是托管于Spring容器中的Bean。
-- 固化性
-  目标代理方法在启动之后即固化，无法重新对一个已有方法进行AOP增强。
+1. **静态编织**
+  静态编织发生在字节码生成时根据一定框架的规则提前将AOP字节码插入到目标类和方法中，实现AOP；
 
-###### 热部署
+1. **动态编织**
+  动态编织则允许在JVM运行过程中完成指定方法的AOP字节码增强.常见的动态编织方案大多采用重命名原有方法，再新建一个同签名的方法来做代理的工作模式来完成AOP的功能(常见的实现方案如CgLib)，但这种方式存在一些应用边界：
+
+   - **侵入性**
+     对被代理的目标类需要进行侵入式改造。比如：在Spring中必须是托管于Spring容器中的Bean。
+
+   - **固化性**
+     目标代理方法在启动之后即固化，无法重新对一个已有方法进行AOP增强。
+
+#### 热部署
+
 还有一些实现AOP的方式是通过类似热部署的方式完成，但现有的热部署实现方案也存在一些应用边界：
 
-- 性能折损巨大
-- 对JVM存在侵入性
-- 必须启动时显式开启
+1. 性能折损巨大
+1. 对JVM存在侵入性
+1. 必须启动时显式开启
 
 基于此我通过JDK6所提供的Instrumentation-API实现了利用HotSwap技术在不重启JVM的情况下实现对任意方法的AOP增强。而且性能开销还在可以接受的范围之内。
 
-#####2. 动态可插拔容器
+#### 动态可插拔容器
+
 为了实现沙箱模块的动态热插拔，容器客户端和沙箱动态可插拔容器采用HTTP协议进行通讯，底层用Jetty6作为HTTP服务器。
 
-#### What can the JVM-SANDBOX do？
+### JVM-SANDBOX能做什么？
 
 在JVM沙箱（以下简称沙箱）的世界观中，任何一个Java方法的调用都可以分解为`BEFORE`、`RETURN`和`THROWS`三个环节，由此在三个环节上引申出对应环节的事件探测和流程控制机制。
 
@@ -51,7 +56,6 @@ try {
 }
 ```
 
-
 基于`BEFORE`、`RETURN`和`THROWS`三个环节事件，可以完成很多类AOP的操作。
 
 1. 可以感知和改变方法调用的入参
@@ -62,7 +66,7 @@ try {
     - 在方法体返回之前重新构造新的结果对象，甚至可以改变为抛出异常
     - 在方法体抛出异常之后重新抛出新的异常，甚至可以改变为正常返回
 
-#### JVM沙箱都有哪些可能的应用场景
+### JVM沙箱都有哪些可能的应用场景
 
 - 线上故障定位
 - 线上系统流控
@@ -73,24 +77,24 @@ try {
 
 JVM沙箱还能帮助你做很多很多，取决于你的脑洞有多大了。
 
-# For English
+# FOR ENGLISH
 
 # JVM-SANDBOX
->Real - time non-invasive AOP framework container based on JVM
+> Real - time non-invasive AOP framework container based on JVM
 
 
 ## Foreword
 
-#### What is the core function of the JVM-SANDBOX？
+### What is the core function of the JVM-SANDBOX？
 
-##### Real-time non-invasive AOP framework
+#### Real-time non-invasive AOP framework
 In the common AOP framework to achieve the program, there are two kinds of static weaving and dynamic weaving.
 
-###### Static weaving
+##### Static weaving
 
 Static weaving occurs in the bytecode generation according to a certain framework of the rules in advance AOP byte code into the target class and method to achieve AOP.
 
-###### Dynamic weaving
+##### Dynamic weaving
 
 Dynamic weaving allows AOP bytecode enhancement of the specified method to be completed during the execution of the JVM.
 
@@ -104,7 +108,7 @@ Common dynamic weaving programs are mostly used to rename the original method, a
 
     The target agent method is solidified after startup and can not re-validate an existing method
     
-###### Hot deployment
+##### Hot deployment
 There are some ways to implement AOP is done through a similar hot deployment, but there are some application boundaries for existing hot deployment implementations:
 
 - Performance damage huge
@@ -114,10 +118,10 @@ There are some ways to implement AOP is done through a similar hot deployment, b
 Based on this I am through the JDK6 provided Instrumentation-API implementation of the use of HotSwap technology without restarting the JVM in the case of any method to achieve AOP enhancements. And performance overhead is still within acceptable limits
 
 
-##### Provides a plug-and-play module management container
+#### Provides a plug-and-play module management container
 In order to realize the dynamic hot-swapping of the sandbox module, the container client and the sandbox dynamic pluggable container communicate with the HTTP protocol. The bottom layer uses Jetty6 as the HTTP server.
 
-#### What can the JVM-SANDBOX do？
+### What can the JVM-SANDBOX do？
 
 In the JVM-SANDBOX (hereinafter referred to as the sandbox) world view, any one of the Java method calls can be broken down into `BEFORE`,` RETURN` and `THROWS` three links, which in three links on the corresponding link Event detection and process control mechanisms.
 
@@ -148,7 +152,7 @@ Based on the `BEFORE`,` RETURN` and `THROWS` three events, you can do a lot of A
     - Throws a new exception after throwing an exception in the method body, and can even change to a normal return
 
 
-#### What are the possible scenarios for the JVM-SANDBOX?
+### What are the possible scenarios for the JVM-SANDBOX?
 
 - Online fault location
 - Online system flow control

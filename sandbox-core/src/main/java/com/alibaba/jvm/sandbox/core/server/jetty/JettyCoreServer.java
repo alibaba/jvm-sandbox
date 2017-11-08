@@ -14,6 +14,7 @@ import com.alibaba.jvm.sandbox.core.server.CoreServer;
 import com.alibaba.jvm.sandbox.core.server.jetty.servlet.ModuleHttpServlet;
 import com.alibaba.jvm.sandbox.core.server.jetty.servlet.WebSocketAcceptorServlet;
 import com.alibaba.jvm.sandbox.core.util.Initializer;
+import com.alibaba.jvm.sandbox.core.util.NetworkUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -35,7 +36,8 @@ import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
 
 /**
  * Jetty实现的Http服务器
- * Created by luanjia@taobao.com on 16/10/2.
+ *
+ * @author luanjia@taobao.com
  */
 public class JettyCoreServer implements CoreServer {
 
@@ -80,14 +82,20 @@ public class JettyCoreServer implements CoreServer {
 
                         // stop http server
                         httpServer.stop();
+//                        while (!httpServer.isStopped()) {
+//                            logger.info("server is stopping....");
+//                            Thread.sleep(1000);
+//                        }
                         logger.info("server was stop.");
 
-                        // destroy http server
-                        httpServer.destroy();
-                        logger.info("server was destroyed.");
                     }
                 }
             });
+
+            // destroy http server
+            httpServer.destroy();
+            logger.info("server was destroyed.");
+
         } catch (Throwable cause) {
             logger.debug("unBind failed.", cause);
             throw new IOException("unBind failed.", cause);
@@ -157,6 +165,16 @@ public class JettyCoreServer implements CoreServer {
     }
 
     private void initHttpServer(final CoreConfigure cfg) {
+
+        // 如果IP:PORT已经被占用，则无法继续被绑定
+        // 这里说明下为什么要这么无聊加个这个判断，让Jetty的Server.bind()抛出异常不是更好么？
+        // 比较郁闷的是，如果这个端口的绑定是"SO_REUSEADDR"端口可重用的模式，那么这个server是能正常启动，但无法正常工作的
+        // 所以这里必须先主动检查一次端口占用情况，当然了，这里也会存在一定的并发问题，BUT，我认为这种概率事件我可以选择暂时忽略
+        if (NetworkUtils.isPortInUsing(cfg.getServerIp(), cfg.getServerPort())) {
+            throw new IllegalStateException(String.format("server[ip=%s;port=%s;] already in using, server bind failed.",
+                    cfg.getServerIp(), cfg.getServerPort()));
+        }
+
         httpServer = new Server(new InetSocketAddress(cfg.getServerIp(), cfg.getServerPort()));
         if (httpServer.getThreadPool() instanceof QueuedThreadPool) {
             final QueuedThreadPool qtp = (QueuedThreadPool) httpServer.getThreadPool();
@@ -188,7 +206,7 @@ public class JettyCoreServer implements CoreServer {
     }
 
     @Override
-    public void bind(final CoreConfigure cfg, final Instrumentation inst) throws IOException {
+    public synchronized void bind(final CoreConfigure cfg, final Instrumentation inst) throws IOException {
         try {
             initializer.initProcess(new Initializer.Processor() {
                 @Override
@@ -198,7 +216,7 @@ public class JettyCoreServer implements CoreServer {
 
                     initLogback(cfg);
                     logger.debug("init logback finished.");
-                    logger.info("cfg={}",cfg.toString());
+                    logger.info("cfg={}", cfg.toString());
 
                     initManager(inst, cfg);
                     logger.debug("init resource finished.");
@@ -217,8 +235,11 @@ public class JettyCoreServer implements CoreServer {
                 }
             });
         } catch (Throwable cause) {
-            logger.debug("server bind failed. cfg={}", cfg);
-            throw new IOException("server bind failed.", cause);
+            logger.warn("server bind failed. cfg={}", cfg, cause);
+            throw new IOException(
+                    String.format("server bind to %s:%s failed.", cfg.getServerIp(), cfg.getServerPort()),
+                    cause
+            );
         }
 
         logger.info("server bind to {} success. cfg={}", getLocal(), cfg);

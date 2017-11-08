@@ -58,23 +58,51 @@ public class DefaultConfigInfo implements ConfigInfo {
     }
 
     @Override
+    public String[] getUserModuleLibPaths() {
+        return cfg.getUserModuleLibPaths();
+    }
+
+    @Override
     public boolean isEnableEventPool() {
         return cfg.isEventPoolEnable();
     }
 
+    @Deprecated
     @Override
     public int getEventPoolKeyMin() {
-        return cfg.getEventPoolKeyMin();
+        return getEventPoolMaxIdlePerEvent();
     }
 
+    @Deprecated
     @Override
     public int getEventPoolKeyMax() {
-        return cfg.getEventPoolKeyMax();
+        return getEventPoolMaxTotal();
+    }
+
+    @Deprecated
+    @Override
+    public int getEventPoolTotal() {
+        return getEventPoolMaxTotal();
     }
 
     @Override
-    public int getEventPoolTotal() {
-        return cfg.getEventPoolTotal();
+    public int getEventPoolMaxTotal() {
+        return cfg.getEventPoolMaxTotal();
+    }
+
+    @Override
+    public int getEventPoolMinIdlePerEvent() {
+        return cfg.getEventPoolMinIdlePerEvent();
+    }
+
+    @Override
+    public int getEventPoolMaxIdlePerEvent() {
+        return cfg.getEventPoolMaxIdlePerEvent();
+    }
+
+    @Override
+    public int getEventPoolMaxTotalPerEvent() {
+        return cfg.getEventPoolMaxTotalPerEvent();
     }
 
     @Override

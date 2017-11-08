@@ -27,9 +27,10 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
  * 沙箱模块管理模块
- * Created by luanjia@taobao.com on 2017/2/9.
+ *
+ * @author luanjia@taobao.com
  */
-@Information(id = "module-mgr", author = "luanjia@taobao.com", version = "0.0.0.1")
+@Information(id = "module-mgr", author = "luanjia@taobao.com", version = "0.0.1")
 public class ModuleMgrModule implements Module {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

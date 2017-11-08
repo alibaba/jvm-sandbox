@@ -66,16 +66,16 @@ public class AgentLauncher {
     private static volatile ClassLoader sandboxClassLoader;
 
 
-    private static boolean isBlankString(final String string) {
+    private static boolean isNotBlankString(final String string) {
         return null != string
                 && string.length() > 0
                 && !string.matches("^\\s*$");
     }
 
     private static String getDefaultString(final String string, final String defaultString) {
-        return isBlankString(string)
-                ? defaultString
-                : string;
+        return isNotBlankString(string)
+                ? string
+                : defaultString;
     }
 
     /**

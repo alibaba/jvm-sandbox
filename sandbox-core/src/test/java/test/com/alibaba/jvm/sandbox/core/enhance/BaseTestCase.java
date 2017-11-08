@@ -86,7 +86,7 @@ public class BaseTestCase {
 
     @BeforeClass
     public static void testBeforeClass() {
-        CoreConfigure.toConfigure("","");
+        CoreConfigure.toConfigure("", "");
     }
 
     @Ignore
@@ -98,7 +98,7 @@ public class BaseTestCase {
                 new EventListener() {
                     @Override
                     public void onEvent(Event event) throws Throwable {
-                        final BeforeEvent beforeEvent = (BeforeEvent)event;
+                        final BeforeEvent beforeEvent = (BeforeEvent) event;
                         final int[] numberArray = (int[]) beforeEvent.argumentArray[0];
                         numberArray[0] = 40;
                         numberArray[1] = 60;

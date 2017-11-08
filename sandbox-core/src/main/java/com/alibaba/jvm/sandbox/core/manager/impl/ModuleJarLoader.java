@@ -81,7 +81,7 @@ public class ModuleJarLoader {
                 // 是否有模块加载成功
                 boolean hasModuleLoadedSuccessFlag = false;
 
-                if(null != mjCb) {
+                if (null != mjCb) {
                     mjCb.onLoad(moduleJarFile);
                 }
 

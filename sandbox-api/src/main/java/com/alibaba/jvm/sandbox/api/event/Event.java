@@ -38,21 +38,9 @@ public abstract class Event {
         RETURN,
 
         /**
-         * 立即调用:RETURN
-         * 由{@link com.alibaba.jvm.sandbox.api.ProcessControlException#throwReturnImmediately(Object)}触发
-         */
-        IMMEDIATELY_RETURN,
-
-        /**
          * 调用:THROWS
          */
         THROWS,
-
-        /**
-         * 立即调用:THROWS
-         * 由{@link com.alibaba.jvm.sandbox.api.ProcessControlException#throwThrowsImmediately(Throwable)}触发
-         */
-        IMMEDIATELY_THROWS,
 
         /**
          * 调用:LINE
@@ -92,6 +80,20 @@ public abstract class Event {
          * 一个方法被调用抛出异常之后
          */
         CALL_THROWS,
+
+
+        /**
+         * 立即调用:RETURN
+         * 由{@link com.alibaba.jvm.sandbox.api.ProcessControlException#throwReturnImmediately(Object)}触发
+         */
+        IMMEDIATELY_RETURN,
+
+        /**
+         * 立即调用:THROWS
+         * 由{@link com.alibaba.jvm.sandbox.api.ProcessControlException#throwThrowsImmediately(Throwable)}触发
+         */
+        IMMEDIATELY_THROWS,
+
     }
 
 }

@@ -5,6 +5,7 @@ import com.alibaba.jvm.sandbox.util.SandboxStringUtils;
 
 /**
  * 名称模版匹配过滤器
+ *
  * @author launajia@taobao.com
  */
 public class NamePatternFilter implements Filter {

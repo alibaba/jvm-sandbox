@@ -153,7 +153,7 @@ public class ObjectIDs {
             final IdentityWeakReference reference = identityObjectMapping.get(objectID);
             if (null != reference
                     && null != (object = reference.get())) {
-                return (T)object;
+                return (T) object;
             } else {
                 return null;
             }

@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.core;
 
 import com.alibaba.jvm.sandbox.api.Information;
+import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.core.util.FeatureCodec;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -8,6 +9,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.tools.ant.DirectoryScanner;
 
 import java.io.File;
 import java.io.InputStream;
@@ -33,15 +35,23 @@ public class CoreConfigure {
     private static final String VAL_LAUNCH_MODE_AGENT = "agent";
     private static final String VAL_LAUNCH_MODE_ATTACH = "attach";
     private static final String KEY_EVENT_POOL_ENABLE = "event.pool.enable";
-    private static final String KEY_EVENT_POOL_KEY_MIN = "event.pool.key.min";
-    private static final String KEY_EVENT_POOL_KEY_MAX = "event.pool.key.max";
-    private static final String KEY_EVENT_POOL_TAL = "event.pool.total";
+
+    // ------------------------------------- 事件池配置 -------------------------------------
+    private static final String KEY_EVENT_POOL_MAX_TOTAL = "event.pool.max.total";
+    private static final String KEY_EVENT_POOL_MIN_IDLE_PER_EVENT = "event.pool.min.idle.per.event";
+    private static final int DEFAULT_VAL_EVENT_POOL_MIN_IDLE_PER_EVENT = 50;
+    private static final String KEY_EVENT_POOL_MAX_IDLE_PER_EVENT = "event.pool.max.idle.per.event";
+    private static final int DEFAULT_VAL_EVENT_POOL_MAX_IDLE_PER_EVENT = 100;
+    private static final String KEY_EVENT_POOL_MAX_TOTAL_PER_EVENT = "event.pool.max.total.per.event";
+    private static final int DEFAULT_VAL_EVENT_POOL_MAX_TOTAL_PER_EVENT = 2000;
+
     private static final String KEY_UNSAFE_ENABLE = "unsafe.enable";
 
     // 受保护key数组，在保护key范围之内，如果前端已经传递过参数了，只能认前端，后端无法修改
     private static final String[] PROTECT_KEY_ARRAY = {KEY_SANDBOX_HOME, KEY_LAUNCH_MODE, KEY_SERVER_IP, KEY_SERVER_PORT};
 
     private static final FeatureCodec codec = new FeatureCodec(';', '=');
+
     private final Map<String, String> featureMap;
 
     private CoreConfigure(final String featureString) {
@@ -105,6 +115,7 @@ public class CoreConfigure {
         return featureMap.get(KEY_SYSTEM_MODULE_LIB_PATH);
     }
 
+
     /**
      * 获取用户模块加载路径
      *
@@ -113,6 +124,63 @@ public class CoreConfigure {
     public String getUserModuleLibPath() {
         return featureMap.get(KEY_USER_MODULE_LIB_PATH);
     }
+
+    /**
+     * 获取用户模块加载路径(集合)
+     *
+     * @return 用户模块加载路径(集合)
+     */
+    public String[] getUserModuleLibPaths() {
+        return replaceWithSysPropUserHome(codec.toCollection(featureMap.get(KEY_USER_MODULE_LIB_PATH)).toArray(new String[]{}));
+    }
+
+    private static String[] replaceWithSysPropUserHome(final String[] pathArray) {
+        if (ArrayUtils.isEmpty(pathArray)) {
+            return pathArray;
+        }
+        final String SYS_PROP_USER_HOME = System.getProperty("user.home");
+        for (int index = 0; index < pathArray.length; index++) {
+            if (StringUtils.startsWith(pathArray[index], "~")) {
+                pathArray[index] = StringUtils.replaceOnce(pathArray[index], "~", SYS_PROP_USER_HOME);
+            }
+        }
+        return pathArray;
+    }
+
+    /**
+     * 获取用户模块加载文件/目录(集合)
+     *
+     * @return 用户模块加载文件/目录(集合)
+     */
+    public synchronized File[] getUserModuleLibFiles() {
+        final DirectoryScanner scanner = new DirectoryScanner();
+        scanner.setIncludes(getUserModuleLibPaths());
+        scanner.setCaseSensitive(false);
+        scanner.scan();
+        final String[] filePaths = scanner.getIncludedDirectories();
+        final File[] files = new File[filePaths.length];
+        for (int index = 0; index < filePaths.length; index++) {
+            files[index] = new File(filePaths[index]);
+        }
+        return GET_USER_MODULE_LIB_FILES_CACHE = files;
+    }
+
+    // 用户模块加载文件/目录缓存集合
+    private volatile File[] GET_USER_MODULE_LIB_FILES_CACHE = null;
+
+    /**
+     * 从缓存中获取用户模块加载文件/目录
+     *
+     * @return 用户模块加载文件/目录
+     */
+    public File[] getUserModuleLibFilesWithCache() {
+        if (null != GET_USER_MODULE_LIB_FILES_CACHE) {
+            return GET_USER_MODULE_LIB_FILES_CACHE;
+        } else {
+            return getUserModuleLibFiles();
+        }
+    }
+
 
     /**
      * 获取配置文件加载路径
@@ -163,32 +231,34 @@ public class CoreConfigure {
     }
 
 
-    /**
-     * 获取事件池最小值
-     *
-     * @return event.pool.min
-     */
-    public int getEventPoolKeyMin() {
-        return NumberUtils.toInt(featureMap.get(KEY_EVENT_POOL_KEY_MIN), Runtime.getRuntime().availableProcessors() * 64);
+    public int getEventPoolMaxTotal() {
+        return NumberUtils.toInt(
+                featureMap.get(KEY_EVENT_POOL_MAX_TOTAL),
+                getEventPoolMaxTotalPerEvent() * Event.Type.values().length
+        );
     }
 
-    /**
-     * 获取事件池最大值
-     *
-     * @return event.pool.max
-     */
-    public int getEventPoolKeyMax() {
-        return NumberUtils.toInt(featureMap.get(KEY_EVENT_POOL_KEY_MAX), Runtime.getRuntime().availableProcessors() * 128);
+    public int getEventPoolMinIdlePerEvent() {
+        return NumberUtils.toInt(
+                featureMap.get(KEY_EVENT_POOL_MIN_IDLE_PER_EVENT),
+                DEFAULT_VAL_EVENT_POOL_MIN_IDLE_PER_EVENT
+        );
     }
 
-    /**
-     * 获取事件池总体最大值
-     *
-     * @return event.pool.total
-     */
-    public int getEventPoolTotal() {
-        return NumberUtils.toInt(featureMap.get(KEY_EVENT_POOL_TAL), getEventPoolKeyMax() * 5/*numbers(Event.Type)==5*/);
+    public int getEventPoolMaxIdlePerEvent() {
+        return NumberUtils.toInt(
+                featureMap.get(KEY_EVENT_POOL_MAX_IDLE_PER_EVENT),
+                DEFAULT_VAL_EVENT_POOL_MAX_IDLE_PER_EVENT
+        );
     }
+
+    public int getEventPoolMaxTotalPerEvent() {
+        return NumberUtils.toInt(
+                featureMap.get(KEY_EVENT_POOL_MAX_TOTAL_PER_EVENT),
+                DEFAULT_VAL_EVENT_POOL_MAX_TOTAL_PER_EVENT
+        );
+    }
+
 
     /**
      * 是否启用事件池

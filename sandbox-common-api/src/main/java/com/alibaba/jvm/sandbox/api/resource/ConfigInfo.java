@@ -66,8 +66,17 @@ public interface ConfigInfo {
      * <p>固定在<b>${HOME}/.sandbox-module</b>目录下</p>
      *
      * @return 用户模块目录地址
+     * @deprecated 已经废弃，因为用户地址允许配置多条，可以通过{@link #getUserModuleLibPaths()}来获取所有的用户模块地址
      */
+    @Deprecated
     String getUserModuleLibPath();
+
+    /**
+     * 获取沙箱的用户模块目录地址(集合)
+     *
+     * @return 用户模块目录地址(集合)
+     */
+    String[] getUserModuleLibPaths();
 
     /**
      * 判断沙箱是否启用了事件对象池
@@ -83,6 +92,7 @@ public interface ConfigInfo {
      * 沙箱事件对象池单个事件类型缓存最小数量，{@link #isEnableEventPool()}==true时候有意义
      *
      * @return 单个事件类型缓存最小数量
+     * @deprecated 已经被废弃，推荐使用{@link #getEventPoolMaxIdlePerEvent()}
      */
     int getEventPoolKeyMin();
 
@@ -90,6 +100,7 @@ public interface ConfigInfo {
      * 沙箱事件对象池单个事件类型缓存最大数量，{@link #isEnableEventPool()}==true时候有意义
      *
      * @return 单个事件类型缓存最大数量
+     * @deprecated 已被废弃，推荐使用{@link #getEventPoolMaxTotalPerEvent()}
      */
     int getEventPoolKeyMax();
 
@@ -97,8 +108,42 @@ public interface ConfigInfo {
      * 沙箱事件对象池所有事件类型缓存最大总数量，{@link #isEnableEventPool()}==true时候有意义
      *
      * @return 所有事件类型缓存最大总数量
+     * @deprecated 已被废弃，推荐使用{@link #getEventPoolMaxTotal()}
      */
     int getEventPoolTotal();
+
+    /**
+     * 获取事件池最大容量
+     *
+     * @return 事件池最大容量
+     * @since {@code sandbox-common-api:1.0.1}
+     */
+    int getEventPoolMaxTotal();
+
+    /**
+     * 获取事件池每个事件最小空闲容量
+     *
+     * @return 事件池每个事件最小空闲容量
+     * @since {@code sandbox-common-api:1.0.1}
+     */
+    int getEventPoolMinIdlePerEvent();
+
+    /**
+     * 获取事件池每个事件最大空闲容量
+     *
+     * @return 事件池每个事件最大空闲容量
+     * @since {@code sandbox-common-api:1.0.1}
+     */
+    int getEventPoolMaxIdlePerEvent();
+
+    /**
+     * 获取事件池每个事件最大容量
+     *
+     * @return 事件池每个事件最大容量
+     * @since {@code sandbox-common-api:1.0.1}
+     */
+    int getEventPoolMaxTotalPerEvent();
+
 
     /**
      * 获取沙箱HTTP服务侦听地址

@@ -2,6 +2,7 @@ package com.alibaba.jvm.sandbox.module.debug;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
+import com.alibaba.jvm.sandbox.api.ProcessControlException;
 import com.alibaba.jvm.sandbox.api.event.CallBeforeEvent;
 import com.alibaba.jvm.sandbox.api.event.CallReturnEvent;
 import com.alibaba.jvm.sandbox.api.event.CallThrowsEvent;
@@ -38,6 +39,7 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 /**
  * 测试用模块
+ *
  * @author luanjia@taobao.com
  */
 @Information(id = "debug", version = "0.0.0.5", author = "luanjia@taobao.com")
@@ -193,7 +195,7 @@ public class DebugModule implements Module {
                         }
                     },
                     null,
-                    RETURN,BEFORE, THROWS
+                    RETURN, BEFORE, THROWS
             );
 
         } finally {
@@ -282,6 +284,50 @@ public class DebugModule implements Module {
                         }
                     },
                     toCallEventTypeArray(triggers)
+            );
+        } finally {
+            printer.close();
+        }
+
+    }
+
+
+    @Http("/broken")
+    public void broken(final HttpServletRequest req,
+                       final HttpServletResponse resp) throws Throwable {
+
+        final String classNamePattern = req.getParameter("class");
+        if (StringUtils.isBlank(classNamePattern)) {
+            resp.sendError(SC_BAD_REQUEST, "class parameter was required.");
+            return;
+        }
+
+        final String methodNamePattern = req.getParameter("method");
+        if (StringUtils.isBlank(methodNamePattern)) {
+            resp.sendError(SC_BAD_REQUEST, "method parameter was required.");
+            return;
+        }
+
+        final Printer printer = new ConcurrentLinkedQueuePrinter(resp.getWriter(), 20, 20, 2000);
+
+        try {
+
+            moduleEventWatcher.watching(
+                    new NamePatternFilter(classNamePattern, methodNamePattern),
+                    new EventListener() {
+                        @Override
+                        public void onEvent(final Event event) throws Throwable {
+                            printer.println(String.format("RECEIVE EVENT=%s;", event));
+                            ProcessControlException.throwThrowsImmediately(new RuntimeException("TEST FOR JVM-SANDBOX!"));
+                        }
+                    },
+                    new ModuleEventWatcher.WatchCallback() {
+                        @Override
+                        public void watchCompleted() throws Throwable {
+                            printer.waitingForBroken();
+                        }
+                    },
+                    Event.Type.RETURN, Event.Type.THROWS
             );
         } finally {
             printer.close();

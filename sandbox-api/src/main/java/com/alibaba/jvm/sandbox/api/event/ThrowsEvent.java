@@ -39,7 +39,7 @@ public class ThrowsEvent extends InvokeEvent {
                 final int processId,
                 final int invokeId,
                 final Throwable throwable) {
-        super(processId, invokeId, Type.THROWS);
+        super(processId, invokeId, type);
         this.throwable = throwable;
 
         // 对入参进行校验

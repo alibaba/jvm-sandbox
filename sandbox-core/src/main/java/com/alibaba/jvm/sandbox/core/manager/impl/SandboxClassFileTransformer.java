@@ -90,7 +90,8 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
             return toByteCodeArray;
         } catch (Throwable cause) {
             logger.warn("enhancer toByteCode failed, module[id={}];class={};loader={};", uniqueId, javaClassName, loader, cause);
-            throw new IllegalClassFormatException(cause.getMessage());
+            // throw new IllegalClassFormatException(cause.getMessage());
+            return null;
         }
     }
 
@@ -99,7 +100,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
      *
      * @return 观察ID
      */
-    public int getWatchId() {
+    int getWatchId() {
         return watchId;
     }
 
@@ -108,7 +109,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
      *
      * @return 事件监听器
      */
-    public EventListener getEventListener() {
+    EventListener getEventListener() {
         return eventListener;
     }
 
@@ -117,7 +118,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
      *
      * @return 事件监听器ID
      */
-    public int getListenerId() {
+    int getListenerId() {
         return listenerId;
     }
 
@@ -126,7 +127,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
      *
      * @return 类和方法过滤器
      */
-    public Filter getFilter() {
+    Filter getFilter() {
         return filter;
     }
 
@@ -135,7 +136,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
      *
      * @return 本次监听事件类型数组
      */
-    public Event.Type[] getEventTypeArray() {
+    Event.Type[] getEventTypeArray() {
         return eventTypeArray;
     }
 

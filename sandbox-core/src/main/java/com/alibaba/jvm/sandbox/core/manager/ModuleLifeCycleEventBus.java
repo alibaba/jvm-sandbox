@@ -66,7 +66,7 @@ public interface ModuleLifeCycleEventBus {
          * @param coreModule 被通知的沙箱模块
          * @param event      通知事件类型
          * @return TRUE  : 继续保持监听，下次有事件通知时继续接收消息
-         *         FALSE : 放弃后续的监听
+         * FALSE : 放弃后续的监听
          */
         boolean onFire(CoreModule coreModule, Event event);
 

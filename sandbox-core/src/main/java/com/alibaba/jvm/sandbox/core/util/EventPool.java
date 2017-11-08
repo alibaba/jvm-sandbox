@@ -14,7 +14,8 @@ import sun.misc.Unsafe;
 
 /**
  * 事件对象池
- * Created by luanjia on 16/10/15.
+ *
+ * @author luanjia@taobao.com
  */
 public class EventPool {
 
@@ -31,19 +32,45 @@ public class EventPool {
         final CoreConfigure cfg = CoreConfigure.getInstance();
         if (cfg.isEventPoolEnable()) {
             final GenericKeyedObjectPoolConfig poolConfig = new GenericKeyedObjectPoolConfig();
-            poolConfig.setMaxTotalPerKey(cfg.getEventPoolKeyMax());
-            poolConfig.setMinIdlePerKey(cfg.getEventPoolKeyMin());
-            poolConfig.setMaxTotal(cfg.getEventPoolTotal());
-            logger.info("enable event-pool[key-min={};key-max={};total={};]",
-                    cfg.getEventPoolKeyMin(),
-                    cfg.getEventPoolKeyMax(),
-                    cfg.getEventPoolTotal()
+            poolConfig.setMaxTotalPerKey(cfg.getEventPoolMaxTotalPerEvent());
+            poolConfig.setMinIdlePerKey(cfg.getEventPoolMinIdlePerEvent());
+            poolConfig.setMaxIdlePerKey(cfg.getEventPoolMaxIdlePerEvent());
+            poolConfig.setMaxTotal(cfg.getEventPoolMaxTotal());
+            logger.info("enable event-pool[per-key-idle-min={};per-key-idle-max={};per-key-max={};total={};]",
+                    cfg.getEventPoolMinIdlePerEvent(),
+                    cfg.getEventPoolMaxIdlePerEvent(),
+                    cfg.getEventPoolMaxTotalPerEvent(),
+                    cfg.getEventPoolMaxTotal()
             );
             return new GenericKeyedObjectPool<Event.Type, Event>(new EventFactory(), poolConfig);
         } else {
             logger.info("disable event-pool.");
             return null;
         }
+    }
+
+    public int getNumActive() {
+        return isEnable
+                ? pool.getNumActive()
+                : -1;
+    }
+
+    public int getNumActive(Event.Type type) {
+        return isEnable
+                ? pool.getNumActive(type)
+                : -1;
+    }
+
+    public int getNumIdle() {
+        return isEnable
+                ? pool.getNumIdle()
+                : -1;
+    }
+
+    public int getNumIdle(Event.Type type) {
+        return isEnable
+                ? pool.getNumIdle(type)
+                : -1;
     }
 
     public BeforeEvent borrowBeforeEvent(final int processId,

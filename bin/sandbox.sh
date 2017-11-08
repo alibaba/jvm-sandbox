@@ -150,6 +150,9 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:]]
          EXAMPLE:
              ${0} -C -I 192.168.0.1 -P 3658 -m debug
 
+    -S : Shutdown server
+         Shutdown jvm-sandbox\` server
+
 '
 }
 
@@ -174,7 +177,10 @@ reset_for_env()
 
     # if env define the JAVA_HOME, use it first
     # if is alibaba opts, use alibaba ops's default JAVA_HOME
-    [ -z ${JAVA_HOME} ] && JAVA_HOME=/opt/taobao/java
+    # [ -z ${JAVA_HOME} ] && JAVA_HOME=/opt/taobao/java
+    if [[ -z ${JAVA_HOME} ]]; then
+        JAVA_HOME=$(ps aux|grep ${TARGET_JVM_PID}|grep java|awk '{print $11}'|xargs ls -l|awk '{if($1~/^l/){print $11}else{print $9}}'|sed 's/\/bin\/java//g')
+    fi
 
     # check the jvm version, we need 1.6+
     local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
@@ -236,9 +242,8 @@ function sandbox_debug_curl() {
 function main() {
 
     check_permission
-    reset_for_env
 
-    while getopts "hp:vFfRu:a:A:d:m:I:P:Cl" ARG
+    while getopts "hp:vFfRu:a:A:d:m:I:P:ClS" ARG
     do
         case ${ARG} in
             h) usage;exit;;
@@ -256,13 +261,15 @@ function main() {
             I) TARGET_SERVER_IP=${OPTARG};;
             P) TARGET_SERVER_PORT=${OPTARG};;
             C) OP_CONNECT_ONLY=1;;
+            S) OP_SHUTDOWN=1;;
             ?) usage;exit_on_err 1;;
         esac
     done
 
+    reset_for_env
 
     # reset IP
-    [ -z ${TARGET_SERVER_IP} ] && TARGET_SERVER_IP="127.0.0.1";
+    [ -z ${TARGET_SERVER_IP} ] && TARGET_SERVER_IP="0.0.0.0";
 
     # reset PORT
     [ -z ${TARGET_SERVER_PORT} ] && TARGET_SERVER_PORT=0;
@@ -314,6 +321,10 @@ function main() {
     # -m module detail
     [[ ! -z ${OP_MODULE_DETAIL} ]] \
         && sandbox_curl_with_exit "module-mgr/detail" "&id=${ARG_MODULE_DETAIL}"
+
+    # -S shutdown
+    [[ ! -z ${OP_SHUTDOWN} ]] \
+        && sandbox_curl_with_exit "control/shutdown"
 
     # -d debug
     if [[ ! -z ${OP_DEBUG} ]]; then

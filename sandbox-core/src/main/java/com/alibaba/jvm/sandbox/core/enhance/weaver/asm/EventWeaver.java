@@ -4,7 +4,6 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.CodeLock;
 import com.alibaba.jvm.sandbox.core.util.BitUtils;
-import java.com.alibaba.jvm.sandbox.spy.Spy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
@@ -13,6 +12,7 @@ import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;

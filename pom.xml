@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- 这个如果开源之后，不再需要
     <parent>
         <groupId>com.taobao</groupId>
         <artifactId>parent</artifactId>
         <version>1.0.3</version>
     </parent>
+    -->
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
@@ -17,9 +20,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sandbox.api.version>1.0.8</sandbox.api.version>
-        <sandbox.provider.api.version>1.0.0</sandbox.provider.api.version>
-        <sandbox.common.api.version>1.0.0</sandbox.common.api.version>
+        <sandbox.api.version>1.0.9</sandbox.api.version>
+        <sandbox.provider.api.version>1.0.1</sandbox.provider.api.version>
+        <sandbox.common.api.version>1.0.1</sandbox.common.api.version>
     </properties>
 
     <build>
@@ -146,6 +149,14 @@
                 <artifactId>commons-pool2</artifactId>
                 <version>2.4.2</version>
             </dependency>
+
+            <!-- ant -->
+            <dependency>
+                <groupId>ant</groupId>
+                <artifactId>ant</artifactId>
+                <version>1.7.0</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -160,6 +171,20 @@
         <module>sandbox-mgr-module</module>
         <module>sandbox-provider-api</module>
         <module>sandbox-common-api</module>
-    <module>sandbox-mgr-provider</module>
-  </modules>
+        <module>sandbox-mgr-provider</module>
+    </modules>
+
+    <!--
+    <distributionManagement>
+        <repository>
+            <id>alibaba-releases</id>
+            <url>http://mvnrepo.alibaba-inc.com/mvn/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>alibaba-snapshots</id>
+            <url>http://mvnrepo.alibaba-inc.com/mvn/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+    -->
+
 </project>

@@ -1,7 +1,8 @@
 package com.alibaba.jvm.sandbox.core.enhance.weaver.asm;
 
-import java.com.alibaba.jvm.sandbox.spy.Spy;
 import org.objectweb.asm.commons.Method;
+
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 import static com.alibaba.jvm.sandbox.core.enhance.weaver.asm.AsmMethods.InnerHelper.getAsmMethod;
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtGetClassDeclaredJavaMethod;

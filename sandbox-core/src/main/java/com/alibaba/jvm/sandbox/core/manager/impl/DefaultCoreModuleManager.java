@@ -26,6 +26,7 @@ import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -76,10 +77,10 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         this.providerManager = providerManager;
 
         // 初始化模块目录
-        this.moduleLibDirArray = new File[]{
-                new File(cfg.getSystemModuleLibPath()),
-                new File(cfg.getUserModuleLibPath())
-        };
+        this.moduleLibDirArray = mergeFileArray(
+                new File[]{new File(cfg.getSystemModuleLibPath())},
+                cfg.getUserModuleLibFilesWithCache()
+        );
 
         // 初始化加载所有的模块
         try {
@@ -87,6 +88,17 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         } catch (ModuleException e) {
             logger.warn("init module[id={};] occur error={}.", e.getUniqueId(), e.getErrorCode(), e);
         }
+    }
+
+    private File[] mergeFileArray(File[] aFileArray, File[] bFileArray) {
+        final List<File> _r = new ArrayList<File>();
+        for (final File aFile : aFileArray) {
+            _r.add(aFile);
+        }
+        for (final File bFile : bFileArray) {
+            _r.add(bFile);
+        }
+        return _r.toArray(new File[]{});
     }
 
     /*
@@ -195,6 +207,11 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
             else if (ConfigInfo.class.isAssignableFrom(fieldType)) {
                 final ConfigInfo configInfo = new DefaultConfigInfo(cfg);
                 FieldUtils.writeField(resourceField, module, configInfo, true);
+            }
+
+            // EventMonitor注入
+            else if (EventMonitor.class.isAssignableFrom(fieldType)) {
+                FieldUtils.writeField(resourceField, module, new DefaultEventMonitor(), true);
             }
 
             // 其他情况需要输出日志警告
@@ -409,6 +426,10 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         }
     }
 
+    private boolean isSystemModule(final File child) {
+        return isOptimisticDirectoryContainsFile(new File(cfg.getSystemModuleLibPath()), child);
+    }
+
     /**
      * 用户模块文件加载回调
      */
@@ -537,51 +558,60 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
      */
     private void softFlush() throws ModuleException {
 
-        final File userModuleLibDir = new File(cfg.getUserModuleLibPath());
-        final ArrayList<File> appendJarFiles = new ArrayList<File>();
-        final ArrayList<CoreModule> removeCoreModules = new ArrayList<CoreModule>();
-        final ArrayList<Long> checksumCRC32s = new ArrayList<Long>();
+        final File[] userModuleLibDirArray = cfg.getUserModuleLibFilesWithCache();
+        for (final File userModuleLibDir : userModuleLibDirArray) {
 
-        // 1. 找出所有有变动的文件(add/remove)
-        for (final File jarFile : listFiles(userModuleLibDir, new String[]{"jar"}, false)) {
-            final long checksumCRC32;
             try {
-                checksumCRC32 = FileUtils.checksumCRC32(jarFile);
-            } catch (IOException e) {
-                logger.warn("soft flush {} failed, ignore this file.", jarFile, e);
-                continue;
-            }
-            checksumCRC32s.add(checksumCRC32);
-            // 如果CRC32已经在已加载的模块集合中存在，则说明这个文件没有变动，忽略
-            if (isChecksumCRC32Existed(checksumCRC32)) {
-                continue;
-            }
-            appendJarFiles.add(jarFile);
-        }
+                // final File userModuleLibDir = new File(cfg.getUserModuleLibPath());
+                final ArrayList<File> appendJarFiles = new ArrayList<File>();
+                final ArrayList<CoreModule> removeCoreModules = new ArrayList<CoreModule>();
+                final ArrayList<Long> checksumCRC32s = new ArrayList<Long>();
 
-        // 2. 找出所有待卸载的已加载用户模块
-        for (final CoreModule coreModule : loadedModuleBOMap.values()) {
-            final ModuleClassLoader moduleClassLoader = coreModule.getLoader();
-            // 如果不是用户模块目录，忽略
-            if (!isOptimisticDirectoryContainsFile(userModuleLibDir, coreModule.getJarFile())) {
-                continue;
-            }
-            // 如果CRC32已经在这次待加载的集合中，则说明这个文件没有变动，忽略
-            if (checksumCRC32s.contains(moduleClassLoader.getChecksumCRC32())) {
-                continue;
-            }
-            removeCoreModules.add(coreModule);
-        }
+                // 1. 找出所有有变动的文件(add/remove)
+                for (final File jarFile : listFiles(userModuleLibDir, new String[]{"jar"}, false)) {
+                    final long checksumCRC32;
+                    try {
+                        checksumCRC32 = FileUtils.checksumCRC32(jarFile);
+                    } catch (IOException e) {
+                        logger.warn("soft flush {} failed, ignore this file.", jarFile, e);
+                        continue;
+                    }
+                    checksumCRC32s.add(checksumCRC32);
+                    // 如果CRC32已经在已加载的模块集合中存在，则说明这个文件没有变动，忽略
+                    if (isChecksumCRC32Existed(checksumCRC32)) {
+                        continue;
+                    }
+                    appendJarFiles.add(jarFile);
+                }
 
-        // 3. 删除remove
-        for (final CoreModule coreModule : removeCoreModules) {
-            unload(coreModule, true);
-        }
+                // 2. 找出所有待卸载的已加载用户模块
+                for (final CoreModule coreModule : loadedModuleBOMap.values()) {
+                    final ModuleClassLoader moduleClassLoader = coreModule.getLoader();
+                    // 如果不是用户模块目录，忽略
+                    if (!isOptimisticDirectoryContainsFile(userModuleLibDir, coreModule.getJarFile())) {
+                        continue;
+                    }
+                    // 如果CRC32已经在这次待加载的集合中，则说明这个文件没有变动，忽略
+                    if (checksumCRC32s.contains(moduleClassLoader.getChecksumCRC32())) {
+                        continue;
+                    }
+                    removeCoreModules.add(coreModule);
+                }
 
-        // 4. 加载add
-        for (final File jarFile : appendJarFiles) {
-            new ModuleJarLoader(jarFile, cfg.getLaunchMode(), sandboxClassLoader)
-                    .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
+                // 3. 删除remove
+                for (final CoreModule coreModule : removeCoreModules) {
+                    unload(coreModule, true);
+                }
+
+                // 4. 加载add
+                for (final File jarFile : appendJarFiles) {
+                    new ModuleJarLoader(jarFile, cfg.getLaunchMode(), sandboxClassLoader)
+                            .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
+                }
+            } catch (Throwable cause) {
+                logger.warn("flushing USER_LIB_MODULE[{}] failed.", userModuleLibDir, cause);
+            }
+
         }
 
     }
@@ -593,8 +623,6 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
      * @throws ModuleException 模块操作失败
      */
     private void forceFlush() throws ModuleException {
-        // 用户模块目录
-        final File userModuleLibDir = new File(cfg.getUserModuleLibPath());
 
         // 1. 卸载模块
         // 等待卸载的模块集合
@@ -603,7 +631,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         // 找出所有USER的模块，所以这些模块都卸载了
         for (final CoreModule coreModule : loadedModuleBOMap.values()) {
             // 如果判断是属于USER模块目录下的模块，则加入到待卸载模块集合，稍后统一进行卸载
-            if (isOptimisticDirectoryContainsFile(userModuleLibDir, coreModule.getJarFile())) {
+            if (!isSystemModule(coreModule.getJarFile())) {
                 waitingUnloadCoreModules.add(coreModule);
             }
         }
@@ -613,16 +641,22 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
             unload(coreModule, true);
         }
 
+
         // 2. 加载模块
         // 用户模块加载目录，加载用户模块目录下的所有模块
         // 对模块访问权限进行校验
-        if (userModuleLibDir.exists()
-                && userModuleLibDir.canRead()) {
-            new ModuleJarLoader(userModuleLibDir, cfg.getLaunchMode(), sandboxClassLoader)
-                    .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
-        } else {
-            logger.warn("MODULE-LIB[{}] can not access, ignore flush load this lib.", userModuleLibDir);
+        // 用户模块目录
+        final File[] userModuleLibFileArray = cfg.getUserModuleLibFiles();
+        for (final File userModuleLibDir : userModuleLibFileArray) {
+            if (userModuleLibDir.exists()
+                    && userModuleLibDir.canRead()) {
+                new ModuleJarLoader(userModuleLibDir, cfg.getLaunchMode(), sandboxClassLoader)
+                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
+            } else {
+                logger.warn("MODULE-LIB[{}] can not access, ignore flush load this lib.", userModuleLibDir);
+            }
         }
+
     }
 
 }

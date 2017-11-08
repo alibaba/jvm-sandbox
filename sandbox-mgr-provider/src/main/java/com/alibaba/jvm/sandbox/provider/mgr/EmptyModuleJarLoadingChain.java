@@ -6,6 +6,7 @@ import java.io.File;
 
 /**
  * 空实现
+ *
  * @author luanjia@taobao.com
  */
 public class EmptyModuleJarLoadingChain implements ModuleJarLoadingChain {

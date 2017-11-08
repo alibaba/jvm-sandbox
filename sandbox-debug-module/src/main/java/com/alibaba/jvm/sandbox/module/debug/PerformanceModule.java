@@ -159,7 +159,7 @@ public class PerformanceModule implements Module {
                         }
                         outputSB
                                 .append("TOTAL:").append(total).append("\n")
-                                .append("RATE:").append(df.format(total/(INTERVAL_MS/1000))).append("/sec\n");
+                                .append("RATE:").append(df.format(total / (INTERVAL_MS / 1000))).append("/sec\n");
 
 
                         // 统计输出
@@ -198,10 +198,10 @@ public class PerformanceModule implements Module {
             try {
 
                 AtomicInteger countRef = eventCountMap.get(event.type);
-                if(null == countRef) {
+                if (null == countRef) {
                     countRef = new AtomicInteger(0);
                     final AtomicInteger tempCountRef = eventCountMap.putIfAbsent(event.type, countRef);
-                    if(null != tempCountRef) {
+                    if (null != tempCountRef) {
                         countRef = tempCountRef;
                     }
                 }

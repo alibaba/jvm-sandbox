@@ -12,10 +12,10 @@ import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
 import com.alibaba.jvm.sandbox.core.util.collection.GaStack;
 import com.alibaba.jvm.sandbox.core.util.collection.ThreadUnsafeGaStack;
-import java.com.alibaba.jvm.sandbox.spy.Spy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -25,7 +25,8 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtGetC
 
 /**
  * 事件处理
- * Created by luanjia@taobao.com on 16/7/12.
+ *
+ * @author luanjia@taobao.com
  */
 public class EventListenerHandlers {
 
@@ -40,6 +41,15 @@ public class EventListenerHandlers {
 
     // 事件对象池
     private final EventPool eventPool = new EventPool();
+
+    /**
+     * 获取事件对象池
+     *
+     * @return 事件对象池
+     */
+    public EventPool getEventPool() {
+        return eventPool;
+    }
 
     /**
      * 注册事件处理器
@@ -545,7 +555,7 @@ public class EventListenerHandlers {
                                   final Object[] argumentArray) throws Throwable {
         return singleton.handleOnBeforeWithTargetClassLoaderSpyRet(
                 listenerId,
-                (ClassLoader)ObjectIDs.instance.getObject(targetClassLoaderObjectID),
+                (ClassLoader) ObjectIDs.instance.getObject(targetClassLoaderObjectID),
                 spyRetClassInTargetClassLoader,
                 javaClassName,
                 javaMethodName,

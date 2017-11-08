@@ -1,7 +1,7 @@
 package com.alibaba.jvm.sandbox.module.debug;
 
-import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.api.http.printer.Printer;
+import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -38,7 +38,7 @@ public class ProgressPrinter implements ModuleEventWatcher.Progress {
     }
 
     private void progress(int index) {
-        if(printer.isBroken()) {
+        if (printer.isBroken()) {
             return;
         }
         final int rate = computeRate(index);
