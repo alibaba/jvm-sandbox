@@ -5,10 +5,10 @@
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
-    <name>sandbox</name>
+    <name>sandbox ${project.version}</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -54,6 +54,34 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- 为了发布到MAVEN中央仓库而用的插件 -->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>luanjia-ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -82,12 +110,12 @@
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-util</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>1.0.0</version>
             </dependency>
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-spy</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>1.0.0</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
@@ -203,6 +231,36 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
+
+    <description>Alibaba JVM-Sandbox OpenSource Project</description>
+    <url>https://github.com/alibaba/JVM-Sandbox</url>
+
+    <licenses>
+        <license>
+            <name>GPLv3</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>luanjia</name>
+            <email>dongchenxu_seu@163.com</email>
+            <organization>Alibaba Open Source</organization>
+            <organizationUrl>https://github.com/alibaba</organizationUrl>
+        </developer>
+        <developer>
+            <name>vlinux</name>
+            <email>oldmanpushcart@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/alibaba/JVM-Sandbox.git</connection>
+        <developerConnection>scm:git:https://github.com/alibaba/JVM-Sandbox.git</developerConnection>
+        <url>https://github.com/alibaba/JVM-Sandbox</url>
+    </scm>
+
 
 
 </project>

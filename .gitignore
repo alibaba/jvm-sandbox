@@ -1,5 +1,7 @@
-*.iml
+## for IDEA
 .idea
+*.iml
+
+## for maven
 target
-*/*.iml
-*/target
+pom.xml.versionsBackup
