@@ -14,14 +14,14 @@ import java.util.Map;
 public class FeatureCodec {
 
     /**
-     * KV片段分割符<br/>
+     * KV片段分割符
      * KV片段定义为一个完整的KV对，例如字符串<span>;k1=v1;k2=v2;</span>
      * 其中<b>;</b>即为KV片段分隔符
      */
     private final char kvSegmentSeparator;
 
     /**
-     * KV分割符<br/>
+     * KV分割符
      * KV定义为一个KV对区分K和V的分割符号，例如字符串<span>k1=v1</span>
      * 其中<b>=</b>即为KV分隔符
      */
@@ -33,7 +33,7 @@ public class FeatureCodec {
     private final char ESCAPE_PREFIX_CHAR = '\\';
 
     /**
-     * 使用指定的KV分割符构造FeatureParser<br/>
+     * 使用指定的KV分割符构造FeatureParser
      *
      * @param kvSegmentSeparator KV对之间的分隔符
      * @param kvSeparator        K与V之间的分隔符
@@ -177,7 +177,7 @@ public class FeatureCodec {
 
 
     /**
-     * 是否特殊字符<br/>
+     * 是否特殊字符
      * 特殊字符是指需要被转义的，用于features内部字段控制的字符
      */
     private boolean isSpecialChar(final char c) {

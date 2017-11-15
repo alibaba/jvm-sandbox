@@ -5,11 +5,11 @@ import java.util.NoSuchElementException;
 import static java.lang.System.arraycopy;
 
 /**
- * 线程不安全不固定栈深的堆栈实现<br/>
+ * 线程不安全不固定栈深的堆栈实现
  * 比默认的实现带来3倍的性能提升
  * Created by luanjia@taobao.com on 15/6/21.
  *
- * @param <E>
+ * @param <E> 堆栈元素类型
  */
 public class ThreadUnsafeGaStack<E> implements GaStack<E> {
 
@@ -29,7 +29,7 @@ public class ThreadUnsafeGaStack<E> implements GaStack<E> {
 
 
     /**
-     * 自动扩容<br/>
+     * 自动扩容
      * 当前堆栈最大深度不满足期望时会自动扩容(2倍扩容)
      *
      * @param expectDeep 期望堆栈深度

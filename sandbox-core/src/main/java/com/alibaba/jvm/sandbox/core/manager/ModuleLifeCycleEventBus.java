@@ -9,7 +9,7 @@ import com.alibaba.jvm.sandbox.core.domain.CoreModule;
 public interface ModuleLifeCycleEventBus {
 
     /**
-     * 添加模块生命周期监听器<br/>
+     * 添加模块生命周期监听器
      * <p>被添加的监听器将按顺序完成生命周期的通知</p>
      *
      * @param lifeCycleEventListener 模块生命周期监听

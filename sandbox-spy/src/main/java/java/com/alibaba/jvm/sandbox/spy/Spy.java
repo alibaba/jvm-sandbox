@@ -3,9 +3,7 @@ package java.com.alibaba.jvm.sandbox.spy;
 import java.lang.reflect.Method;
 
 /**
- * 间谍类<br/>
- * 藏匿在各个ClassLoader中
- * <p/>
+ * 间谍类，藏匿在各个ClassLoader中
  * <p>
  * 从{@code 0.0.0.v}版本之后,因为要考虑能在alipay的CloudEngine环境中使用,这个环境只能向上查找java.开头的包路径.
  * 所以这里只好把Spy的包路径前缀中增加了java.开头
@@ -26,6 +24,14 @@ public class Spy {
 
     /**
      * 初始化间谍
+     *
+     * @param ON_BEFORE_METHOD      ON_BEFORE 回调
+     * @param ON_RETURN_METHOD      ON_RETURN 回调
+     * @param ON_THROWS_METHOD      ON_THROWS 回调
+     * @param ON_LINE_METHOD        ON_LINE 回调
+     * @param ON_CALL_BEFORE_METHOD ON_CALL_BEFORE 回调
+     * @param ON_CALL_RETURN_METHOD ON_CALL_RETURN 回调
+     * @param ON_CALL_THROWS_METHOD ON_CALL_THROWS 回调
      */
     public static void init(final Method ON_BEFORE_METHOD,
                             final Method ON_RETURN_METHOD,

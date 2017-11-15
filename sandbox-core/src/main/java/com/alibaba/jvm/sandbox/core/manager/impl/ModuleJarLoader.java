@@ -17,7 +17,7 @@ import static org.apache.commons.io.FileUtils.convertFileCollectionToFileArray;
 import static org.apache.commons.io.FileUtils.listFiles;
 
 /**
- * 模块加载器<br/>
+ * 模块加载器
  * 用于从${module.lib}中加载所有的沙箱模块
  * Created by luanjia@taobao.com on 2016/11/17.
  */

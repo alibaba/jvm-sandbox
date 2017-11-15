@@ -29,13 +29,13 @@ mkdir -p ${SANDBOX_TARGET_DIR}/provider
 
 
 # copy jar to TARGET_DIR
-cp ../sandbox-core/target/sandbox-core-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/lib/sandbox-core.jar
-cp ../sandbox-agent/target/sandbox-agent-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/lib/sandbox-agent.jar
-cp ../sandbox-spy/target/sandbox-spy-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/lib/sandbox-spy.jar
-cp sandbox-logback.xml ${SANDBOX_TARGET_DIR}/cfg/sandbox-logback.xml
-cp sandbox.properties ${SANDBOX_TARGET_DIR}/cfg/sandbox.properties
-cp sandbox.sh ${SANDBOX_TARGET_DIR}/bin/sandbox.sh
-cp install-local.sh ${SANDBOX_TARGET_DIR}/install-local.sh
+cp ../sandbox-core/target/sandbox-core-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/lib/sandbox-core.jar \
+    && cp ../sandbox-agent/target/sandbox-agent-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/lib/sandbox-agent.jar \
+    && cp ../sandbox-spy/target/sandbox-spy-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/lib/sandbox-spy.jar \
+    && cp sandbox-logback.xml ${SANDBOX_TARGET_DIR}/cfg/sandbox-logback.xml \
+    && cp sandbox.properties ${SANDBOX_TARGET_DIR}/cfg/sandbox.properties \
+    && cp sandbox.sh ${SANDBOX_TARGET_DIR}/bin/sandbox.sh \
+    && cp install-local.sh ${SANDBOX_TARGET_DIR}/install-local.sh
 echo "${SANDBOX_VERSION}" > ${SANDBOX_TARGET_DIR}/cfg/version
 
 # for test
@@ -43,10 +43,8 @@ echo "${SANDBOX_VERSION}" > ${SANDBOX_TARGET_DIR}/cfg/version
 ##     ${SANDBOX_TARGET_DIR}/module/sandbox-debug-module.jar
 
 # for mgr
-cp ../sandbox-mgr-module/target/sandbox-mgr-module-*-jar-with-dependencies.jar\
-    ${SANDBOX_TARGET_DIR}/module/sandbox-mgr-module.jar
-cp ../sandbox-mgr-provider/target/sandbox-mgr-provider-*-jar-with-dependencies.jar\
-    ${SANDBOX_TARGET_DIR}/provider/sandbox-mgr-provider.jar
+cp ../sandbox-mgr-module/target/sandbox-mgr-module-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/module/sandbox-mgr-module.jar \
+    && cp ../sandbox-mgr-provider/target/sandbox-mgr-provider-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/provider/sandbox-mgr-provider.jar
 
 # make it execute able
 chmod +x ${SANDBOX_TARGET_DIR}/*.sh

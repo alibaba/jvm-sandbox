@@ -143,7 +143,7 @@ public class ModuleHttpServlet extends HttpServlet {
 
 
     /**
-     * 提取模块ID<br/>
+     * 提取模块ID
      * 模块ID应该在PATH的第一个位置
      *
      * @param path servlet访问路径
@@ -158,7 +158,7 @@ public class ModuleHttpServlet extends HttpServlet {
 
 
     /**
-     * 匹配模块中复合HTTP请求路径的方法<br/>
+     * 匹配模块中复合HTTP请求路径的方法
      * 匹配方法的方式是：HttpMethod和HttpPath全匹配
      *
      * @param path          HTTP请求路径
@@ -186,7 +186,7 @@ public class ModuleHttpServlet extends HttpServlet {
 
 
     /**
-     * 生成方法请求参数数组<br/>
+     * 生成方法请求参数数组
      * 主要用于填充HttpServletRequest和HttpServletResponse
      *
      * @param method 模块Java方法

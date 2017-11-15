@@ -551,7 +551,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     }
 
     /**
-     * 软刷新<br/>
+     * 软刷新
      * 找出有变动的模块文件，有且仅有改变这些文件所对应的模块
      *
      * @throws ModuleException 模块操作失败
@@ -617,7 +617,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     }
 
     /**
-     * 强制刷新<br/>
+     * 强制刷新
      * 对所有已经加载的用户模块进行强行卸载并重新加载
      *
      * @throws ModuleException 模块操作失败

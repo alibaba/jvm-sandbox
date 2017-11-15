@@ -5,7 +5,7 @@ import com.alibaba.jvm.sandbox.core.manager.ModuleLifeCycleEventBus.ModuleLifeCy
 import java.lang.ref.WeakReference;
 
 /**
- * 模块可释放资源管理<br/>
+ * 模块可释放资源管理
  * 通常用来管理围绕Module所展开的http/websocket连接
  * Created by luanjia@taobao.com on 2017/2/4.
  */

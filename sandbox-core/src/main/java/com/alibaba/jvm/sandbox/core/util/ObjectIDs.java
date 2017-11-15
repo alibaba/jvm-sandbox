@@ -164,9 +164,7 @@ public class ObjectIDs {
 
     }
 
-    /**
-     * 带ObjectID标记的弱对象引用
-     */
+    // 带ObjectID标记的弱对象引用
     private class IdentityWeakReference extends WeakReference<Object> {
 
         // 对应的对象ID

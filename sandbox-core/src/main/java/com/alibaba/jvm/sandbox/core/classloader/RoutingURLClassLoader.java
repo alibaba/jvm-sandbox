@@ -96,7 +96,7 @@ public class RoutingURLClassLoader extends URLClassLoader {
         }
 
         /**
-         * 当前参与匹配的Java类名是否命中路由匹配规则 <br/>
+         * 当前参与匹配的Java类名是否命中路由匹配规则
          * 命中匹配规则的类加载,将会从此ClassLoader中完成对应的加载行为
          *
          * @param javaClassName 参与匹配的Java类名

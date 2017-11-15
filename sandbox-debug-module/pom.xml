@@ -9,22 +9,11 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>sandbox-debug-module</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-    <name>sandbox-debug-module</name>
-    <url>http://maven.apache.org</url>
+    <name>sandbox-debug-module ${project.version}</name>
 
     <build>
+        <finalName>sandbox-debug-module-${project.version}</finalName>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <encoding>UTF-8</encoding>
-                    <showDeprecation>true</showDeprecation>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -84,13 +73,13 @@
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
         </dependency>
+
+        <!-- 这个是DEBUG模块独有的，所以单独配置并指定了版本 -->
         <dependency>
             <groupId>ognl</groupId>
             <artifactId>ognl</artifactId>
             <version>3.0.8</version>
         </dependency>
+
     </dependencies>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
 </project>

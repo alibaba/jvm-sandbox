@@ -16,6 +16,7 @@ public class NetworkUtils {
      * 测试主机Host的port端口是否被使用
      * @param host 指定IP
      * @param port 指定端口
+     * @return TRUE:端口已经被占用;FALSE:端口尚未被占用
      */
     public static boolean isPortInUsing(String host, int port) {
         Socket socket = null;

@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 public class SandboxReflectUtils {
 
     /**
-     * 获取Java类的方法<br/>
+     * 获取Java类的方法
      * 该方法不会抛出任何声明式异常
      *
      * @param clazz               类
@@ -92,8 +92,8 @@ public class SandboxReflectUtils {
      * @param javaClassName  类名称
      * @param classByteArray 类字节码数组
      * @return 定义的类
-     * @throws InvocationTargetException
-     * @throws IllegalAccessException
+     * @throws InvocationTargetException 目标方法调用发生异常
+     * @throws IllegalAccessException    目标方法不可进入
      */
     public static Class<?> defineClass(final ClassLoader loader,
                                        final String javaClassName,

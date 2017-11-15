@@ -5,7 +5,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.AdviceAdapter;
 
 /**
- * ASM代码锁<br/>
+ * ASM代码锁
  * Created by oldmanpushcart@gmail.com on 15/5/28.
  */
 public class AsmCodeLock implements CodeLock, Opcodes {
@@ -71,7 +71,7 @@ public class AsmCodeLock implements CodeLock, Opcodes {
     }
 
     /*
-     * 重置索引<br/>
+     * 重置索引
      * 一般在代码序列判断失败时，则会对索引进行重置，冲头开始匹配特征序列
      */
     private void reset() {

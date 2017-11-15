@@ -3,14 +3,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- 这个如果开源之后，不再需要
-    <parent>
-        <groupId>com.taobao</groupId>
-        <artifactId>parent</artifactId>
-        <version>1.0.3</version>
-    </parent>
-    -->
-
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
     <version>1.0.0-SNAPSHOT</version>
@@ -36,6 +28,31 @@
                     <encoding>UTF-8</encoding>
                     <showDeprecation>true</showDeprecation>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.0-M1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -174,17 +191,18 @@
         <module>sandbox-mgr-provider</module>
     </modules>
 
-    <!--
+
+    <!-- 这里是为了发布到MAVEN中央仓库所做的配置 -->
     <distributionManagement>
-        <repository>
-            <id>alibaba-releases</id>
-            <url>http://mvnrepo.alibaba-inc.com/mvn/releases</url>
-        </repository>
         <snapshotRepository>
-            <id>alibaba-snapshots</id>
-            <url>http://mvnrepo.alibaba-inc.com/mvn/snapshots</url>
+            <id>luanjia-ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
+        <repository>
+            <id>luanjia-ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
     </distributionManagement>
-    -->
+
 
 </project>

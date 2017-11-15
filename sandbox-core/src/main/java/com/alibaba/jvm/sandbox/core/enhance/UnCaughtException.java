@@ -1,7 +1,7 @@
 package com.alibaba.jvm.sandbox.core.enhance;
 
 /**
- * 未捕获异常<br/>
+ * 未捕获异常
  * 用来封装不希望抛出的异常
  * Created by luanjia@taobao.com on 16/5/21.
  */

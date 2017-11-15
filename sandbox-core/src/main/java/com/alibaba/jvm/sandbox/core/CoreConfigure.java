@@ -215,7 +215,7 @@ public class CoreConfigure {
     }
 
     /**
-     * 获取沙箱的启动模式<br/>
+     * 获取沙箱的启动模式
      * 默认按照ATTACH模式启动
      *
      * @return 沙箱的启动模式

@@ -38,7 +38,7 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
 
 
     /**
-     * 构造模块的WebSocket通讯连接<br/>
+     * 构造模块的WebSocket通讯连接
      * <p>对应的模块必须实现了{@link WebSocketAcceptor}接口</p>
      * <p>访问的路径为/sandbox/module/websocket/MODULE_NAME</p>
      *

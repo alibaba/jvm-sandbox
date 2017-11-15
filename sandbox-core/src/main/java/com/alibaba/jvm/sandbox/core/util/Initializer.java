@@ -4,7 +4,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * 初始化工具<br/>
+ * 初始化工具
  * 线程安全
  * Created by luanjia@taobao.com on 15/11/20.
  */
@@ -123,13 +123,13 @@ public class Initializer {
     }
 
     /**
-     * 状态枚举<br/>
+     * 状态枚举
      * <p>
-     * 非循环状态<br/>
+     * 非循环状态
      * NEW -> INITIALIZED -> DESTROYED
      * </p>
      * <p>
-     * 循环状态<br/>
+     * 循环状态
      * NEW -> INITIALIZED -> NEW
      * </p>
      */

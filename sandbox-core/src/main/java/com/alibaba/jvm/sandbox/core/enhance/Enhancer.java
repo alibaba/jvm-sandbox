@@ -7,7 +7,7 @@ package com.alibaba.jvm.sandbox.core.enhance;
 public interface Enhancer {
 
     /**
-     * 转换为增强后的字节码数组<br/>
+     * 转换为增强后的字节码数组
      *
      * @param loader           目标类加载器
      * @param srcByteCodeArray 源字节码数组
