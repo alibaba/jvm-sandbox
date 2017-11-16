@@ -5,6 +5,7 @@
 #!/usr/bin/env bash
 
 typeset SANDBOX_INSTALL_PREFIX
+typeset DEFAULT_SANDBOX_INSTALL_PREFIX="${HOME}/.opt"
 
 # exit shell with err_code
 # $1 : err_code
@@ -17,7 +18,7 @@ exit_on_err()
 
 # display usage
 function usage() {
-echo '
+echo "
 usage: ${0} [h] [l:]
 
     -h : help
@@ -25,9 +26,9 @@ usage: ${0} [h] [l:]
 
 
     -p : install local path
-         Install local path in this compute. Default install local path is ${SANDBOX_INSTALL_PREFIX}
+         Install local path in this compute. Default install local PATH=${DEFAULT_SANDBOX_INSTALL_PREFIX}
 
-'
+"
 }
 
 # the sandbox main function
@@ -49,7 +50,7 @@ function main() {
 
     # if not appoint the install local, default is ${HOME}/.opt
     if [[ -z ${SANDBOX_INSTALL_PREFIX} ]]; then
-        SANDBOX_INSTALL_PREFIX="${HOME}/.opt"
+        SANDBOX_INSTALL_PREFIX=${DEFAULT_SANDBOX_INSTALL_PREFIX}
     fi
 
     # check permission
