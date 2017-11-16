@@ -46,13 +46,15 @@ function main() {
         esac
     done
 
+
+    # if not appoint the install local, default is ${HOME}/.opt
+    if [[ -z ${SANDBOX_INSTALL_PREFIX} ]]; then
+        SANDBOX_INSTALL_PREFIX="${HOME}/.opt"
+    fi
+
     # check permission
     # [[ ! -w ${SANDBOX_INSTALL_PREFIX} ]] \
     #    && exit_on_err 1 "permission denied, ${SANDBOX_INSTALL_PREFIX} is not writable."
-    if [[ -z ${SANDBOX_INSTALL_PREFIX} ]]; then
-        usage
-        exit_on_err 1
-    fi
 
 
     local SANDBOX_INSTALL_LOCAL=${SANDBOX_INSTALL_PREFIX}/sandbox
