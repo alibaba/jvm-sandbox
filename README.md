@@ -1,5 +1,18 @@
-# JVM-SANDBOX
-> 基于JVM的实时无侵入AOP框架容器
+## ![BANNER](https://github.com/alibaba/jvm-sandbox/wiki/img/BANNER.png)
+> JVM沙箱容器，一种JVM的非侵入式运行期AOP解决方案<br/>
+> Real - time non-invasive AOP framework container based on JVM
+
+##### 2014年[GREYS](https://github.com/oldmanpushcart/greys-anatomy)第一版正式发布，一路看着他从无到有，并不断优化强大，感慨羡慕之余，也在想GREYS是不是只能做问题定位。
+
+##### 2015年开始根据GREYS的底层代码完成了人生的第一个字节码增强工具——动态日志。之后又萌生了将其拆解成***录制回放***、***故障模拟***等工具的想法。扪心自问，我是想以一人一个团队的力量建立大而全的工具平台，还是做一个底层中台，让每一位技术人员都可以在它的基础上快速的实现业务功能。我选择了后者。
+
+## 相关文档
+
+- [README（English）](#for-english)
+- [WIKI](https://github.com/alibaba/jvm-sandbox/wiki/Home)
+- [用户手册](https://github.com/alibaba/jvm-sandbox/wiki/USER-GUIDE)
+- [模块研发手册](https://github.com/alibaba/jvm-sandbox/wiki/MODULE-DEVELOPER-GUIDE)
+- [发布日志](https://github.com/alibaba/jvm-sandbox/wiki/RELEASE-NOTES)
 
 
 ## 项目简介
@@ -10,19 +23,19 @@
 
 在常见的AOP框架实现方案中，有静态编织和动态编织两种。
 
-1. **静态编织**
+1. **静态编织**  
   静态编织发生在字节码生成时根据一定框架的规则提前将AOP字节码插入到目标类和方法中，实现AOP；
 
-1. **动态编织**
+1. **动态编织**  
   动态编织则允许在JVM运行过程中完成指定方法的AOP字节码增强.常见的动态编织方案大多采用重命名原有方法，再新建一个同签名的方法来做代理的工作模式来完成AOP的功能(常见的实现方案如CgLib)，但这种方式存在一些应用边界：
 
-   - **侵入性**
-     对被代理的目标类需要进行侵入式改造。比如：在Spring中必须是托管于Spring容器中的Bean。
+   - **侵入性**  
+     对被代理的目标类需要进行侵入式改造。比如：在Spring中必须是托管于Spring容器中的Bean
 
-   - **固化性**
-     目标代理方法在启动之后即固化，无法重新对一个已有方法进行AOP增强。
+   - **固化性**  
+     目标代理方法在启动之后即固化，无法重新对一个已有方法进行AOP增强
 
-#### 热部署
+#### 热部署特性
 
 还有一些实现AOP的方式是通过类似热部署的方式完成，但现有的热部署实现方案也存在一些应用边界：
 
@@ -34,25 +47,25 @@
 
 #### 动态可插拔容器
 
-为了实现沙箱模块的动态热插拔，容器客户端和沙箱动态可插拔容器采用HTTP协议进行通讯，底层用Jetty6作为HTTP服务器。
+为了实现沙箱模块的动态热插拔，容器客户端和沙箱动态可插拔容器采用HTTP协议进行通讯，底层用Jetty8作为HTTP服务器。
 
 ### JVM-SANDBOX能做什么？
 
 在JVM沙箱（以下简称沙箱）的世界观中，任何一个Java方法的调用都可以分解为`BEFORE`、`RETURN`和`THROWS`三个环节，由此在三个环节上引申出对应环节的事件探测和流程控制机制。
 
 ```java
-// BEFORE-EVENT
+// BEFORE
 try {
 
    /*
     * do something...
     */
 
-    // RETURN-EVENT
+    // RETURN
     return;
 
 } catch (Throwable cause) {
-    // THROWS-EVENT
+    // THROWS
 }
 ```
 

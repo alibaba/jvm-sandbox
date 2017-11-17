@@ -24,7 +24,6 @@ usage: ${0} [h] [l:]
     -h : help
          Prints the ${0} help
 
-
     -p : install local path
          Install local path in this compute. Default install local PATH=${DEFAULT_SANDBOX_INSTALL_PREFIX}
 
