@@ -4,6 +4,7 @@ import com.alibaba.jvm.sandbox.api.http.Http;
 import com.alibaba.jvm.sandbox.core.domain.CoreModule;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.ModuleResourceManager;
+import com.alibaba.jvm.sandbox.util.SandboxStringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -174,8 +175,12 @@ public class ModuleHttpServlet extends HttpServlet {
 
         for (final Method method : MethodUtils.getMethodsListWithAnnotation(classOfModule, Http.class)) {
             final Http httpAnnotation = method.getAnnotation(Http.class);
+            if(null == httpAnnotation) {
+                continue;
+            }
+            final String pathPattern = "/"+uniqueId+httpAnnotation.value();
             if (ArrayUtils.contains(httpAnnotation.method(), httpMethod)
-                    && StringUtils.equals(path, URI.create("/" + uniqueId + httpAnnotation.value()).getPath())) {
+                    && SandboxStringUtils.matching(path, pathPattern)) {
                 return method;
             }
         }
