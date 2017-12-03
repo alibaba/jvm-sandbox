@@ -23,6 +23,11 @@ public class DefaultConfigInfo implements ConfigInfo {
     }
 
     @Override
+    public String getNamespace() {
+        return cfg.getNamespace();
+    }
+
+    @Override
     public Information.Mode getMode() {
         return cfg.getLaunchMode();
     }

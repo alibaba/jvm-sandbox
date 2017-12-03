@@ -12,6 +12,14 @@ import java.net.InetSocketAddress;
 public interface ConfigInfo {
 
     /**
+     * 获取沙箱的命名空间
+     *
+     * @return 沙箱的命名空间
+     * @since {@code sandbox-common-api:1.0.2}
+     */
+    String getNamespace();
+
+    /**
      * 获取沙箱的加载模式
      *
      * @return 沙箱加载模式

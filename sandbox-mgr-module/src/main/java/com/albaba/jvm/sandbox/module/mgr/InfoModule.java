@@ -16,7 +16,7 @@ import java.io.IOException;
  *
  * @author luanjia@taobao.com
  */
-@Information(id = "info", version = "0.0.2", author = "luanjia@taobao.com")
+@Information(id = "info", version = "0.0.3", author = "luanjia@taobao.com")
 public class InfoModule implements Module {
 
     @Resource
@@ -29,6 +29,7 @@ public class InfoModule implements Module {
     public void version(final HttpServletResponse resp) throws IOException {
 
         final StringBuilder versionSB = new StringBuilder()
+                .append("                    NAMESPACE : ").append(configInfo.getNamespace()).append("\n")
                 .append("                      VERSION : ").append(configInfo.getVersion()).append("\n")
                 .append("                         MODE : ").append(configInfo.getMode()).append("\n")
                 .append("                  SERVER_ADDR : ").append(configInfo.getServerAddress().getHostName()).append("\n")

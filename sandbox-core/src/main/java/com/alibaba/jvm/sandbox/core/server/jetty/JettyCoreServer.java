@@ -133,7 +133,7 @@ public class JettyCoreServer implements CoreServer {
     /*
      * 初始化Jetty's ContextHandler
      */
-    private void initJettyContextHandler() {
+    private void initJettyContextHandler(final CoreConfigure cfg) {
         final ServletContextHandler context = new ServletContextHandler(SESSIONS);
 
         // websocket-servlet
@@ -142,7 +142,7 @@ public class JettyCoreServer implements CoreServer {
         // module-http-servlet
         context.addServlet(new ServletHolder(new ModuleHttpServlet(coreModuleManager, moduleResourceManager)), "/module/http/*");
 
-        context.setContextPath("/sandbox");
+        context.setContextPath("/sandbox/" + cfg.getNamespace());
         context.setClassLoader(getClass().getClassLoader());
         httpServer.setHandler(context);
     }
@@ -224,7 +224,7 @@ public class JettyCoreServer implements CoreServer {
                     initHttpServer(cfg);
                     logger.debug("init http-server finished.");
 
-                    initJettyContextHandler();
+                    initJettyContextHandler(cfg);
                     logger.debug("init servlet finished.");
 
                     httpServer.start();

@@ -38,7 +38,7 @@ Based on this I am through the JDK6 provided Instrumentation-API implementation 
 
 
 ##### Provides a plug-and-play module management container
-In order to realize the dynamic hot-swapping of the sandbox module, the container client and the sandbox dynamic pluggable container communicate with the HTTP protocol. The bottom layer uses Jetty6 as the HTTP server.
+In order to realize the dynamic hot-swapping of the sandbox module, the container client and the sandbox dynamic pluggable container communicate with the HTTP protocol. The bottom layer uses Jetty8 as the HTTP server.
 
 #### What can the JVM-SANDBOX do？
 
