@@ -23,6 +23,9 @@ import java.util.Properties;
  */
 public class CoreConfigure {
 
+    private static final String KEY_NAMESPACE="namespace";
+    private static final String DEFAULT_VAL_NAMESPACE="default";
+
     private static final String KEY_SANDBOX_HOME = "sandbox_home";
     private static final String KEY_LAUNCH_MODE = "mode";
     private static final String KEY_SERVER_IP = "server.ip";
@@ -48,7 +51,7 @@ public class CoreConfigure {
     private static final String KEY_UNSAFE_ENABLE = "unsafe.enable";
 
     // 受保护key数组，在保护key范围之内，如果前端已经传递过参数了，只能认前端，后端无法修改
-    private static final String[] PROTECT_KEY_ARRAY = {KEY_SANDBOX_HOME, KEY_LAUNCH_MODE, KEY_SERVER_IP, KEY_SERVER_PORT};
+    private static final String[] PROTECT_KEY_ARRAY = {KEY_NAMESPACE, KEY_SANDBOX_HOME, KEY_LAUNCH_MODE, KEY_SERVER_IP, KEY_SERVER_PORT};
 
     private static final FeatureCodec codec = new FeatureCodec(';', '=');
 
@@ -105,6 +108,16 @@ public class CoreConfigure {
         return instance;
     }
 
+    /**
+     * 获取容器的命名空间
+     * @return 容器的命名空间
+     */
+    public String getNamespace() {
+        final String namespace = featureMap.get(KEY_NAMESPACE);
+        return StringUtils.isNotBlank(namespace)
+                ? namespace
+                : DEFAULT_VAL_NAMESPACE;
+    }
 
     /**
      * 获取系统模块加载路径

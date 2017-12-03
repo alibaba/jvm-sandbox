@@ -7,12 +7,12 @@
 
 # define sandbox's home
 # will be replace by install-local.sh
-typeset SANDBOX_HOME_DIR;
+typeset SANDBOX_HOME_DIR
 [[ -z ${SANDBOX_HOME_DIR} ]] \
     && SANDBOX_HOME_DIR=$(cd `dirname $0`; pwd)/..
 
 # define sandbox's network
-typeset SANDBOX_SERVER_NETWORK;
+typeset SANDBOX_SERVER_NETWORK
 
 # define sandbox's lib
 typeset SANDBOX_LIB_DIR=${SANDBOX_HOME_DIR}/lib
@@ -24,13 +24,18 @@ typeset SANDBOX_TOKEN_FILE=${HOME}/.sandbox.token
 typeset SANDBOX_JVM_OPS="-Xms128M -Xmx128M -Xnoclassgc -ea";
 
 # define target JVM Process ID
-typeset TARGET_JVM_PID;
+typeset TARGET_JVM_PID
 
 # define target SERVER network interface
-typeset TARGET_SERVER_IP;
+typeset TARGET_SERVER_IP
+typeset DEFAULT_TARGET_SERVER_IP="0.0.0.0"
 
 # define target SERVER network port
-typeset TARGET_SERVER_PORT;
+typeset TARGET_SERVER_PORT
+
+# define target NAMESPACE
+typeset TARGET_NAMESPACE
+typeset DEFAULT_NAMESPACE="default"
 
 
 # exit shell with err_code
@@ -44,7 +49,7 @@ exit_on_err()
 
 # display usage
 function usage() {
-echo '
+echo "
 usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:]]
 
     -h : help
@@ -130,7 +135,7 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:]]
 
     -I : IP address
          Appoint the network interface (bind ip address)
-         when default, use localhost
+         when default, use \"${DEFAULT_TARGET_SERVER_IP}\"
 
          EXAMPLE:
             ${0} -p <PID> -I 192.168.0.1 -v
@@ -153,7 +158,11 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:]]
     -S : Shutdown server
          Shutdown jvm-sandbox\` server
 
-'
+    -n : Namespace
+         Appoint the jvm-sandbox\` namespace
+         when default, use \"${DEFAULT_NAMESPACE}\"
+
+"
 }
 
 # check sandbox permission
@@ -208,11 +217,11 @@ function attach_jvm() {
         -jar ${SANDBOX_LIB_DIR}/sandbox-core.jar \
         ${TARGET_JVM_PID} \
         "${SANDBOX_LIB_DIR}/sandbox-agent.jar" \
-        "${token};${TARGET_SERVER_IP};${TARGET_SERVER_PORT}" \
+        "token=${token};ip=${TARGET_SERVER_IP};port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" \
     || exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail."
 
     # get network from attach result
-    SANDBOX_SERVER_NETWORK=$(grep ${token} ${SANDBOX_TOKEN_FILE}|tail -1|awk -F ";" '{print $2";"$3}');
+    SANDBOX_SERVER_NETWORK=$(grep ${token} ${SANDBOX_TOKEN_FILE}|grep ${TARGET_NAMESPACE}|tail -1|awk -F ";" '{print $3";"$4}');
     [[ -z ${SANDBOX_SERVER_NETWORK} ]]  \
         && exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail, attach lose response."
 
@@ -234,7 +243,7 @@ function sandbox_curl_with_exit() {
 function sandbox_debug_curl() {
     local host=$(echo "${SANDBOX_SERVER_NETWORK}"|awk -F ";" '{print $1}')
     local port=$(echo "${SANDBOX_SERVER_NETWORK}"|awk -F ";" '{print $2}')
-    curl -N -s "http://${host}:${port}/sandbox/${1}" \
+    curl -N -s "http://${host}:${port}/sandbox/${TARGET_NAMESPACE}/${1}" \
         || exit_on_err 1 "target JVM ${TARGET_JVM_PID} lose response."
 }
 
@@ -243,7 +252,7 @@ function main() {
 
     check_permission
 
-    while getopts "hp:vFfRu:a:A:d:m:I:P:ClS" ARG
+    while getopts "hp:vFfRu:a:A:d:m:I:P:ClSn:" ARG
     do
         case ${ARG} in
             h) usage;exit;;
@@ -262,6 +271,7 @@ function main() {
             P) TARGET_SERVER_PORT=${OPTARG};;
             C) OP_CONNECT_ONLY=1;;
             S) OP_SHUTDOWN=1;;
+            n) OP_NAMESPACE=1;ARG_NAMESPACE=${OPTARG};;
             ?) usage;exit_on_err 1;;
         esac
     done
@@ -269,10 +279,16 @@ function main() {
     reset_for_env
 
     # reset IP
-    [ -z ${TARGET_SERVER_IP} ] && TARGET_SERVER_IP="0.0.0.0";
+    [ -z ${TARGET_SERVER_IP} ] && TARGET_SERVER_IP="${DEFAULT_TARGET_SERVER_IP}";
 
     # reset PORT
     [ -z ${TARGET_SERVER_PORT} ] && TARGET_SERVER_PORT=0;
+
+    # reset NAMESPACE
+    [[ ${OP_NAMESPACE} ]] \
+        && TARGET_NAMESPACE=${ARG_NAMESPACE}
+    [[ -z ${TARGET_NAMESPACE} ]] \
+        && TARGET_NAMESPACE=${DEFAULT_NAMESPACE}
 
     if [[ ${OP_CONNECT_ONLY} ]]; then
         [[ 0 -eq ${TARGET_SERVER_PORT} ]] \
@@ -282,7 +298,6 @@ function main() {
         # -p was missing
         [[ -z ${TARGET_JVM_PID} ]] \
             && exit_on_err 1 "PID (-p) was missing.";
-
         attach_jvm
     fi
 

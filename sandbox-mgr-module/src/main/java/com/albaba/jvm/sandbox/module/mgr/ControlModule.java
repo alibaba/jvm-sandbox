@@ -4,9 +4,11 @@ import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.ModuleException;
 import com.alibaba.jvm.sandbox.api.http.Http;
+import com.alibaba.jvm.sandbox.api.resource.ConfigInfo;
 import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,20 +25,27 @@ public class ControlModule implements Module {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Resource
+    private ConfigInfo configInfo;
+
+    @Resource
     private ModuleManager moduleManager;
 
-    // 清道夫，清理SandboxClassLoader和Spy中对Method的引用
-    private void cleanRef(final Class<?> classOfAgentLauncher) throws IllegalAccessException, ClassNotFoundException {
-
-        // 清理AgentLauncher.sandboxClassLoader
-        FieldUtils.writeDeclaredStaticField(
+    // 清理命名空间所对应的SandboxClassLoader
+    private ClassLoader cleanSandboxClassLoader(final Class<?> classOfAgentLauncher)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        // 清理AgentLauncher.sandboxClassLoaderMap
+        final ClassLoader sandboxClassLoader = (ClassLoader) MethodUtils.invokeStaticMethod(
                 classOfAgentLauncher,
-                "sandboxClassLoader",
-                null,
-                true
+                "cleanClassLoader",
+                configInfo.getNamespace()
         );
-        logger.info("clean jvm-sandbox ClassLoader success, for jvm-sandbox shutdown.");
+        logger.info("clean jvm-sandbox ClassLoader[namespace={}] success, for jvm-sandbox shutdown.",
+                configInfo.getNamespace());
+        return sandboxClassLoader;
+    }
 
+    // 清理Spy中对Method的引用
+    private void cleanSpy() throws ClassNotFoundException, IllegalAccessException {
         // 清理Spy中的所有方法
         final Class<?> classOfSpy = getClass().getClassLoader()
                 .loadClass("java.com.alibaba.jvm.sandbox.spy.Spy");
@@ -85,6 +94,12 @@ public class ControlModule implements Module {
     private void shutdownServer(final ClassLoader sandboxClassLoader)
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
+        if (null == sandboxClassLoader) {
+            logger.warn("detection an warning, target SandboxClassLoader[namespace={}] is null, shutdown server will be ignore",
+                    configInfo.getNamespace());
+            return;
+        }
+
         final Class<?> classOfJettyCoreServer = sandboxClassLoader
                 .loadClass("com.alibaba.jvm.sandbox.core.server.jetty.JettyCoreServer");
         final Object objectOfJettyCoreServer = classOfJettyCoreServer.getMethod("getInstance").invoke(null);
@@ -101,14 +116,9 @@ public class ControlModule implements Module {
         final Class<?> classOfAgentLauncher = getClass().getClassLoader()
                 .loadClass("com.alibaba.jvm.sandbox.agent.AgentLauncher");
 
-        final ClassLoader sandboxClassLoader = (ClassLoader) FieldUtils.getDeclaredField(
-                classOfAgentLauncher,
-                "sandboxClassLoader",
-                true
-        ).get(null);
-
         // 清理引用
-        cleanRef(classOfAgentLauncher);
+        final ClassLoader sandboxClassLoader = cleanSandboxClassLoader(classOfAgentLauncher);
+        cleanSpy();
 
         // 卸载模块
         unloadModules();

@@ -10,8 +10,14 @@ import java.net.URLClassLoader;
  */
 class SandboxClassLoader extends URLClassLoader {
 
-    SandboxClassLoader(final String sandboxCoreJarFilePath) throws MalformedURLException {
+    private final String namespace;
+    private final String path;
+
+    SandboxClassLoader(final String namespace,
+                       final String sandboxCoreJarFilePath) throws MalformedURLException {
         super(new URL[]{new URL("file:" + sandboxCoreJarFilePath)});
+        this.namespace = namespace;
+        this.path = sandboxCoreJarFilePath;
     }
 
     @Override
@@ -37,4 +43,8 @@ class SandboxClassLoader extends URLClassLoader {
         }
     }
 
+    @Override
+    public String toString() {
+        return String.format("SandboxClassLoader[namespace=%s;path=%s;]", namespace, path);
+    }
 }

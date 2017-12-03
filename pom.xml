@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sandbox.api.version>1.0.9</sandbox.api.version>
         <sandbox.provider.api.version>1.0.1</sandbox.provider.api.version>
-        <sandbox.common.api.version>1.0.1</sandbox.common.api.version>
+        <sandbox.common.api.version>1.0.2</sandbox.common.api.version>
     </properties>
 
     <build>
