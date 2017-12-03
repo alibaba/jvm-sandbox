@@ -29,7 +29,7 @@
 基于此我通过JDK6所提供的Instrumentation-API实现了利用HotSwap技术在不重启JVM的情况下实现对任意方法的AOP增强。而且性能开销还在可以接受的范围之内。
 
 #####2. 动态可插拔容器
-为了实现沙箱模块的动态热插拔，容器客户端和沙箱动态可插拔容器采用HTTP协议进行通讯，底层用Jetty6作为HTTP服务器。
+为了实现沙箱模块的动态热插拔，容器客户端和沙箱动态可插拔容器采用HTTP协议进行通讯，底层用Jetty8作为HTTP服务器。
 
 #### What can the JVM-SANDBOX do？
 

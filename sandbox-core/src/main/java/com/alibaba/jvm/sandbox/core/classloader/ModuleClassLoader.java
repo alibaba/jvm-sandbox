@@ -52,7 +52,8 @@ public class ModuleClassLoader extends RoutingURLClassLoader {
                 new Routing(
                         sandboxClassLoader,
                         "^com\\.alibaba\\.jvm\\.sandbox\\.api\\..*",
-                        "^javax\\.servlet\\..*"
+                        "^javax\\.servlet\\..*",
+                        "^javax\\.annotation\\.Resource*$"
                 )
         );
         this.checksumCRC32 = FileUtils.checksumCRC32(moduleJarFile);
