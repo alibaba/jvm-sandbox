@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
 import java.net.InetSocketAddress;
 
+import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
 
 /**
@@ -134,7 +135,7 @@ public class JettyCoreServer implements CoreServer {
      * 初始化Jetty's ContextHandler
      */
     private void initJettyContextHandler(final CoreConfigure cfg) {
-        final ServletContextHandler context = new ServletContextHandler(SESSIONS);
+        final ServletContextHandler context = new ServletContextHandler(NO_SESSIONS);
 
         // websocket-servlet
         context.addServlet(new ServletHolder(new WebSocketAcceptorServlet(coreModuleManager, moduleResourceManager)), "/module/websocket/*");

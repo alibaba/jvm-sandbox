@@ -225,6 +225,28 @@ public class EventEnhancer implements Enhancer {
                 || isNative(access);
     }
 
+
+    // 是否BootstrapClassLoader
+    private boolean isBootstrapClassLoader(final ClassLoader loader) {
+        return null == loader;
+    }
+
+    // 是否沙箱容器本体的ClassLoader(SandboxClassLoader)
+    private boolean isSelfClassLoader(final ClassLoader loader) {
+        return getClass().getClassLoader() == loader;
+    }
+
+    // 是否加载源自于指定的ClassLoader
+    private boolean isClassLoaderAssignableFrom(final Class<? extends ClassLoader> classLoaderType,
+                                                final ClassLoader classLoader) {
+        if (null == classLoader) {
+            return false;
+        }
+
+        return classLoaderType.isInstance(classLoader)
+                || isClassLoaderAssignableFrom(classLoaderType, classLoader.getParent());
+    }
+
     /**
      * 是否需要忽略的ClassLoader
      *
@@ -232,18 +254,21 @@ public class EventEnhancer implements Enhancer {
      * @return TRUE:需要被忽略；FALSE:不能被忽略
      */
     private boolean isIgnoreClassLoader(final ClassLoader loader) {
+        return false
 
-        // 如果沙箱没有开启Unsafe模式，是不允许增强BootStrapClassLoader的类
-        return (!isEnableUnsafe && null == loader)
+                // 如果沙箱没有开启Unsafe模式，是不允许增强BootstrapClassLoader的类
+                || (!isEnableUnsafe && isBootstrapClassLoader(loader))
 
                 // 不允许增强沙箱自己的类
-                || loader == getClass().getClassLoader()
+                || isSelfClassLoader(loader)
 
                 // 不允许增强来自模块的类
-                || loader instanceof ModuleClassLoader
+                // || loader instanceof ModuleClassLoader
+                || isClassLoaderAssignableFrom(ModuleClassLoader.class, loader)
 
                 // 不允许增强来自服务提供库的类
-                || loader instanceof ProviderClassLoader;
+                // || loader instanceof ProviderClassLoader;
+                || isClassLoaderAssignableFrom(ProviderClassLoader.class, loader);
 
     }
 
