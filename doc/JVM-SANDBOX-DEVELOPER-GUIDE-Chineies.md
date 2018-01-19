@@ -333,7 +333,7 @@ public void repairDelay() {
 
     moduleEventWatcher.watch(
 
-            // 匹配到Clock$BrokenClock#checkState()
+            // 匹配到Clock$BrokenClock#delay()
             new NameRegexFilter("Clock\\$BrokenClock", "delay"),
 
             // 监听THROWS事件并且改变原有方法抛出异常为正常返回
