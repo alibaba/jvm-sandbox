@@ -234,7 +234,7 @@ public class BrokenClockTinkerModule implements Module {
 
 #### 根据SPI规范注册
 
-1. 创建`META-INF/service/com.alibaba.jvm.sandbox.api.Module`文件
+1. 创建`META-INF/services/com.alibaba.jvm.sandbox.api.Module`文件
 2. 往文件内容中将之前的模块注入进来
 
      ```
