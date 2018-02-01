@@ -170,7 +170,7 @@ public class DebugModule implements Module {
 
         int expand;
         try {
-            expand = Integer.getInteger(req.getParameter("expand"));
+            expand = Integer.parseInt(req.getParameter("expand"));
         } catch (Throwable cause) {
             expand = 1;
         }
