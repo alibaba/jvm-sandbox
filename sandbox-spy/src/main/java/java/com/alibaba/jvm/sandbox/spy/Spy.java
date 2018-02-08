@@ -191,6 +191,8 @@ public class Spy {
             if (null != node.next) {
                 node.next.pre = node.pre;
             }
+            // help gc
+            node.pre = node.next = null;
         }
 
         // 插入节点
