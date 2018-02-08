@@ -16,14 +16,10 @@ import java.util.jar.JarFile;
  */
 public class AgentLauncher {
 
-    private static String substringBeforeLast(String str, String separator) {
-        return str.substring(0, str.lastIndexOf(separator));
-    }
-
     // sandbox主目录
     private static final String SANDBOX_HOME
-            = substringBeforeLast(AgentLauncher.class.getProtectionDomain().getCodeSource().getLocation().getFile(), File.separator)
-            + File.separator + "..";
+            = new File(Module.class.getProtectionDomain().getCodeSource().getLocation().getFile())
+            .getParentFile().getParent();
 
     // sandbox配置文件目录
     private static final String SANDBOX_CFG_PATH
