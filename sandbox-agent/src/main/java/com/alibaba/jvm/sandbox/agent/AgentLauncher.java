@@ -18,7 +18,7 @@ public class AgentLauncher {
 
     // sandbox主目录
     private static final String SANDBOX_HOME
-            = new File(Module.class.getProtectionDomain().getCodeSource().getLocation().getFile())
+            = new File(AgentLauncher.class.getProtectionDomain().getCodeSource().getLocation().getFile())
             .getParentFile().getParent();
 
     // sandbox配置文件目录
