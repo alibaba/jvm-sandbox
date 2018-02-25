@@ -15,12 +15,20 @@
     </properties>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.8.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2-beta-5</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
-            <plugin>
-                <artifactId>versions-maven-plugin</artifactId>
-                <groupId>org.codehaus.mojo</groupId>
-                <version>2.2</version>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -86,6 +94,19 @@
 
         </plugins>
     </build>
+
+    <modules>
+        <module>sandbox-agent</module>
+        <module>sandbox-core</module>
+        <module>sandbox-api</module>
+        <module>sandbox-spy</module>
+        <module>sandbox-mgr-module</module>
+        <module>sandbox-provider-api</module>
+        <module>sandbox-common-api</module>
+        <module>sandbox-mgr-provider</module>
+        <module>sandbox-module-starter</module>
+        <module>sandbox-debug-module</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
@@ -200,21 +221,15 @@
                 <version>1.2</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.kohsuke.metainf-services</groupId>
+                <artifactId>metainf-services</artifactId>
+                <version>1.7</version>
+                <scope>compile</scope>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
-
-
-    <modules>
-        <module>sandbox-agent</module>
-        <module>sandbox-core</module>
-        <module>sandbox-api</module>
-        <module>sandbox-spy</module>
-        <module>sandbox-debug-module</module>
-        <module>sandbox-mgr-module</module>
-        <module>sandbox-provider-api</module>
-        <module>sandbox-common-api</module>
-        <module>sandbox-mgr-provider</module>
-    </modules>
 
 
     <!-- 这里是为了发布到MAVEN中央仓库所做的配置 -->
@@ -229,8 +244,8 @@
         </repository>
     </distributionManagement>
 
-    <description>Alibaba JVM-Sandbox OpenSource Project</description>
-    <url>https://github.com/alibaba/JVM-Sandbox</url>
+    <description>Alibaba jvm-sandbox OpenSource Project</description>
+    <url>https://github.com/alibaba/jvm-Sandbox</url>
 
     <licenses>
         <license>
@@ -238,6 +253,11 @@
             <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
         </license>
     </licenses>
+
+    <organization>
+        <name>Alibaba Open Source</name>
+        <url>https://github.com/alibaba</url>
+    </organization>
 
     <developers>
         <developer>

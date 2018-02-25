@@ -1,18 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>sandbox</artifactId>
         <groupId>com.alibaba.jvm.sandbox</groupId>
+        <artifactId>sandbox</artifactId>
         <version>1.0.11-SNAPSHOT</version>
     </parent>
-    <artifactId>sandbox-mgr-module</artifactId>
-    <name>sandbox-mgr-module ${project.version}</name>
+    <artifactId>sandbox-module-starter</artifactId>
+    <name>sandbox-module-starter ${project.version}</name>
+    <packaging>pom</packaging>
 
     <build>
-        <finalName>sandbox-mgr-module-${project.version}</finalName>
+        <finalName>sandbox-debug-module-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -31,13 +32,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
@@ -48,16 +42,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
+            <groupId>org.kohsuke.metainf-services</groupId>
+            <artifactId>metainf-services</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
