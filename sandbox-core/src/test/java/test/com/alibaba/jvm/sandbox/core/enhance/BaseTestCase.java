@@ -2,6 +2,7 @@ package test.com.alibaba.jvm.sandbox.core.enhance;
 
 import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
 import com.alibaba.jvm.sandbox.api.event.Event;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
@@ -55,7 +56,7 @@ public class BaseTestCase {
         final ClassLoader loader = newTestClassLoader();
         final byte[] srcByteCodeArray = toByteArray(targetClass);
 
-        final ExtFilterMatcher matcher = new ExtFilterMatcher(new Filter() {
+        final ExtFilterMatcher matcher = new ExtFilterMatcher(ExtFilter.ExtFilterFactory.make(new Filter() {
             @Override
             public boolean doClassFilter(final int access,
                                          final String javaClassName,
@@ -73,7 +74,7 @@ public class BaseTestCase {
                                           final String[] annotationTypeJavaClassNameArray) {
                 return javaMethodName.equals(targetJavaMethodName);
             }
-        });
+        }));
 
 
         final Enhancer enhancer = new EventEnhancer();
