@@ -1,15 +1,9 @@
 package com.alibaba.jvm.sandbox.core.enhance;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
-import com.alibaba.jvm.sandbox.api.filter.Filter;
-import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
-import com.alibaba.jvm.sandbox.core.classloader.ProviderClassLoader;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
-import com.alibaba.jvm.sandbox.util.SandboxStringUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -17,10 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.alibaba.jvm.sandbox.util.SandboxStringUtils.toJavaClassName;
-import static com.alibaba.jvm.sandbox.util.SandboxStringUtils.toJavaClassNameArray;
+import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
+import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
@@ -32,278 +25,6 @@ import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
 public class EventEnhancer implements Enhancer {
 
     private static final Logger logger = LoggerFactory.getLogger(EventEnhancer.class);
-
-    // 类&方法过滤器(过滤目标类和方法是否参与到本次增强中)
-    private final Filter filter;
-
-    private final int listenerId;
-
-    private final String uniqueCodePrefix;
-    private final Set<String> affectMethodUniqueSet;
-    private final boolean isEnableUnsafe;
-    private final Event.Type[] eventTypeArray;
-
-    public EventEnhancer(final int listenerId,
-                         final Filter filter,
-                         final String uniqueCodePrefix,
-                         final Set<String> affectMethodUniqueSet,
-                         final boolean isEnableUnsafe,
-                         final Event.Type[] eventTypeArray) {
-        this.filter = filter;
-        this.listenerId = listenerId;
-        this.uniqueCodePrefix = uniqueCodePrefix;
-        this.affectMethodUniqueSet = affectMethodUniqueSet;
-        this.isEnableUnsafe = isEnableUnsafe;
-        this.eventTypeArray = eventTypeArray;
-    }
-
-//    /*
-//     * 在目标ClassLoader中尝试定义间谍类(Spy.class)
-//     */
-//    private void defineSpyIfNecessary(final ClassLoader targetClassLoader) throws IOException, InvocationTargetException, IllegalAccessException {
-//
-//        final String spyClassName = Spy.class.getName();
-//        final String retInSpyClassName = Spy.Ret.class.getName();
-//        final String selfCallBarrierInSpyClassName = Spy.SelfCallBarrier.class.getName();
-//        final String nodeInSelfCallBarrierInSpyClassName = Spy.SelfCallBarrier.Node.class.getName();
-//
-//        // 从目标ClassLoader中尝试加载或定义ClassLoader
-//        Class<?> spyClassFromTargetClassLoader = null;
-//        try {
-//
-//            // 如果对方是bootstrap就算了
-//            if (null == targetClassLoader) {
-//                logger.debug("target ClassLoader is BootstrapClassLoader, ignore define Spy.");
-//                spyClassFromTargetClassLoader = Spy.class;
-//                return;
-//            }
-//
-//            // 去目标类加载器中找下是否已经存在间谍
-//            // 如果间谍已经存在就算了
-//            spyClassFromTargetClassLoader = targetClassLoader.loadClass(spyClassName);
-//            logger.debug("target ClassLoader={} was already have Spy, ignore define.", targetClassLoader);
-//
-//        }
-//
-//        // 看来间谍不存在啊
-//        catch (ClassNotFoundException cnfe) {
-//
-//            logger.debug("target ClassLoader={} was not have Spy yet, prepare define Spy.", targetClassLoader);
-//
-//            try {
-//                // 在目标类加载起中混入间谍
-//                SandboxReflectUtils.defineClass(
-//                        targetClassLoader,
-//                        retInSpyClassName,
-//                        toByteArray(EventEnhancer.class.getResourceAsStream("/" + retInSpyClassName.replace('.', '/') + ".class"))
-//                );
-//                SandboxReflectUtils.defineClass(
-//                        targetClassLoader,
-//                        selfCallBarrierInSpyClassName,
-//                        toByteArray(EventEnhancer.class.getResourceAsStream("/" + selfCallBarrierInSpyClassName.replace('.', '/') + ".class"))
-//                );
-//                SandboxReflectUtils.defineClass(
-//                        targetClassLoader,
-//                        nodeInSelfCallBarrierInSpyClassName,
-//                        toByteArray(EventEnhancer.class.getResourceAsStream("/" + nodeInSelfCallBarrierInSpyClassName.replace('.', '/') + ".class"))
-//                );
-//                spyClassFromTargetClassLoader = SandboxReflectUtils.defineClass(
-//                        targetClassLoader,
-//                        spyClassName,
-//                        toByteArray(EventEnhancer.class.getResourceAsStream("/" + spyClassName.replace('.', '/') + ".class"))
-//                );
-//                logger.info("define Spy to target ClassLoader={} success.", targetClassLoader);
-//            } catch (InvocationTargetException ite) {
-//                if (ite.getTargetException() instanceof LinkageError) {
-//                    // CloudEngine 由于 loadClass 不到,会导致
-//                    // java.lang.LinkageError: targetClassLoader
-//                    // (instance of  com/alipay/cloudengine/extensions/equinox/KernelAceClassLoader): attempted
-//                    // duplicate class definition for name: "com/taobao/arthas/core/advisor/Spy"
-//                    // 这里尝试忽略
-//                    logger.debug("define Spy to target ClassLoader={} failed, but was LinkageError, ignore this error.", targetClassLoader, ite);
-//                } else {
-//                    throw ite;
-//                }
-//            }
-//
-//        }
-//
-//        // 无论从哪里取到spyClass，都需要重新初始化一次
-//        // 用以兼容重新加载的场景
-//        // 当然，这样做会给渲染的过程带来一定的性能开销，不过能简化编码复杂度
-//        finally {
-//
-//            if (null != spyClassFromTargetClassLoader) {
-//                // 初始化间谍
-//                try {
-//                    invokeStaticMethod(
-//                            spyClassFromTargetClassLoader,
-//                            "init",
-//                            unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onBefore",
-//                                    int.class,
-//                                    int.class,
-//                                    Class.class,
-//                                    String.class,
-//                                    String.class,
-//                                    String.class,
-//                                    Object.class,
-//                                    Object[].class
-//                            ),
-//                            unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onReturn",
-//                                    int.class,
-//                                    Class.class,
-//                                    Object.class
-//                            ),
-//                            unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onThrows",
-//                                    int.class,
-//                                    Class.class,
-//                                    Throwable.class
-//                            ),
-//                            unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onLine",
-//                                    int.class,
-//                                    int.class
-//                            ),
-//                            unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallBefore",
-//                                    int.class,
-//                                    int.class,
-//                                    String.class,
-//                                    String.class,
-//                                    String.class
-//                            ),
-//                            unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallReturn",
-//                                    int.class
-//                            ),
-//                            unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallThrows",
-//                                    int.class,
-//                                    String.class
-//                            )
-//                    );
-//                } catch (Throwable throwable) {
-//                    logger.warn("Spy.init method invoke failed, is impossible!!!", throwable);
-//                }
-//            }
-//
-//        }
-//
-//    }
-
-
-    private boolean isInterface(int access) {
-        return (Opcodes.ACC_INTERFACE & access) == Opcodes.ACC_INTERFACE;
-    }
-
-    private boolean isAnnotation(int access) {
-        return (Opcodes.ACC_ANNOTATION & access) == Opcodes.ACC_ANNOTATION;
-    }
-
-    private boolean isEnum(int access) {
-        return (Opcodes.ACC_ENUM & access) == Opcodes.ACC_ENUM;
-    }
-
-    private boolean isNative(int access) {
-        return (Opcodes.ACC_NATIVE & access) == Opcodes.ACC_NATIVE;
-    }
-
-    /**
-     * 是否需要忽略的access
-     *
-     * @param access class's access
-     * @return TRUE:需要被忽略；FALSE:不能被忽略
-     */
-    private boolean isIgnoreAccess(final int access) {
-
-        // 接口就没有必要增强了吧
-        return isInterface(access)
-
-                // annotation目前没有增强的必要，因为一眼就能看出答案
-                || isAnnotation(access)
-
-                // 枚举类也没有增强的必要，也是一眼就能看出答案
-                || isEnum(access)
-
-                // Native的方法暂时不支持
-                || isNative(access);
-    }
-
-
-    // 是否BootstrapClassLoader
-    private boolean isBootstrapClassLoader(final ClassLoader loader) {
-        return null == loader;
-    }
-
-    // 是否沙箱容器本体的ClassLoader(SandboxClassLoader)
-    private boolean isSelfClassLoader(final ClassLoader loader) {
-        return getClass().getClassLoader() == loader;
-    }
-
-    // 是否加载源自于指定的ClassLoader
-    private boolean isClassLoaderAssignableFrom(final Class<? extends ClassLoader> classLoaderType,
-                                                final ClassLoader classLoader) {
-        if (null == classLoader) {
-            return false;
-        }
-
-        return classLoaderType.isInstance(classLoader)
-                || isClassLoaderAssignableFrom(classLoaderType, classLoader.getParent());
-    }
-
-    /**
-     * 是否需要忽略的ClassLoader
-     *
-     * @param loader 目标加载类的ClassLoader
-     * @return TRUE:需要被忽略；FALSE:不能被忽略
-     */
-    private boolean isIgnoreClassLoader(final ClassLoader loader) {
-        return false
-
-                // 如果沙箱没有开启Unsafe模式，是不允许增强BootstrapClassLoader的类
-                || (!isEnableUnsafe && isBootstrapClassLoader(loader))
-
-                // 不允许增强沙箱自己的类
-                || isSelfClassLoader(loader)
-
-                // 不允许增强来自模块的类
-                // || loader instanceof ModuleClassLoader
-                || isClassLoaderAssignableFrom(ModuleClassLoader.class, loader)
-
-                // 不允许增强来自服务提供库的类
-                // || loader instanceof ProviderClassLoader;
-                || isClassLoaderAssignableFrom(ProviderClassLoader.class, loader);
-
-    }
-
-    /**
-     * 是否需要忽略增强的类
-     *
-     * @param cr                ClassReader
-     * @param targetClassLoader 目标ClassLoader
-     * @return true:忽略增强;false:需要增强
-     */
-    private boolean isIgnoreClass(final ClassReader cr,
-                                  final ClassLoader targetClassLoader) {
-        final String[] annotationTypeArray = null;
-        final int access = cr.getAccess();
-
-        // 对一些需要忽略的access进行过滤
-        return isIgnoreAccess(access)
-
-                // 对一系列的ClassLoader进行过滤
-                || isIgnoreClassLoader(targetClassLoader)
-
-                // 如果目标类的前缀是Sandbox的前缀，则放弃
-                || StringUtils.startsWith(toJavaClassName(cr.getClassName()), "com.alibaba.jvm.sandbox.")
-
-                // 如果目标类是Lambda表达式生成的临时类，则放弃
-                || StringUtils.contains(toJavaClassName(cr.getClassName()), "$$Lambda$")
-
-                // 按照Filter#doClassFilter()完成过滤
-                || !filter.doClassFilter(access,
-                toJavaClassName(cr.getClassName()),
-                toJavaClassName(cr.getSuperName()),
-                toJavaClassNameArray(cr.getInterfaces()),
-                toJavaClassNameArray(annotationTypeArray));
-
-    }
 
     /**
      * 创建ClassWriter for asm
@@ -345,7 +66,7 @@ public class EventEnhancer implements Enhancer {
                     do {
                         c = c.getSuperclass();
                     } while (!c.isAssignableFrom(d));
-                    return SandboxStringUtils.toInternalClassName(c.getName());
+                    return toInternalClassName(c.getName());
                 }
             }
 
@@ -360,19 +81,18 @@ public class EventEnhancer implements Enhancer {
      */
     private byte[] weavingEvent(final ClassLoader targetClassLoader,
                                 final byte[] sourceByteCodeArray,
-                                final AtomicBoolean reWriteMark) {
+                                final Set<String> signCodes,
+                                final int listenerId,
+                                final Event.Type[] eventTypeArray) {
         final ClassReader cr = new ClassReader(sourceByteCodeArray);
         final ClassWriter cw = createClassWriter(targetClassLoader, cr);
         final int targetClassLoaderObjectID = ObjectIDs.instance.identity(targetClassLoader);
         cr.accept(
                 new EventWeaver(
-                        Opcodes.ASM5, cw, listenerId,
+                        Opcodes.ASM6, cw, listenerId,
                         targetClassLoaderObjectID,
                         cr.getClassName(),
-                        filter,
-                        reWriteMark,
-                        uniqueCodePrefix,
-                        affectMethodUniqueSet,
+                        signCodes,
                         eventTypeArray
                 ),
                 EXPAND_FRAMES
@@ -410,40 +130,21 @@ public class EventEnhancer implements Enhancer {
 
     @Override
     public byte[] toByteCodeArray(final ClassLoader targetClassLoader,
-                                  final byte[] byteCodeArray) {
-
-        final AtomicBoolean reWriteMark = new AtomicBoolean(false);
-        final ClassReader cr = new ClassReader(byteCodeArray);
-
-        // 如果目标对象不在类匹配范围,则主动忽略增强
-        if (isIgnoreClass(cr, targetClassLoader)) {
-            logger.debug("class={} is ignore by filter, return origin bytecode", cr.getClassName());
-            return byteCodeArray;
-        }
-        logger.debug("class={} is matched filter, prepare to enhance.", cr.getClassName());
-
+                                  final byte[] byteCodeArray,
+                                  final Set<String> signCodes,
+                                  final int listenerId,
+                                  final Event.Type[] eventTypeArray) {
         // 如果定义间谍类失败了,则后续不需要增强
         try {
             SpyUtils.init();
             // defineSpyIfNecessary(targetClassLoader);
         } catch (Throwable cause) {
-            logger.warn("define Spy to target ClassLoader={} failed. class={}", targetClassLoader, cr.getClassName(), cause);
+            logger.warn("define Spy to target ClassLoader={} failed.", targetClassLoader, cause);
             return byteCodeArray;
         }
 
         // 返回增强后字节码
-        final byte[] returnByteCodeArray = weavingEvent(targetClassLoader, byteCodeArray, reWriteMark);
-        logger.debug("enhance class={} success, before bytecode.size={}; after bytecode.size={}; reWriteMark={}",
-                cr.getClassName(),
-                ArrayUtils.getLength(byteCodeArray),
-                ArrayUtils.getLength(returnByteCodeArray),
-                reWriteMark.get()
-        );
-        if (reWriteMark.get()) {
-            return returnByteCodeArray;
-        } else {
-            return byteCodeArray;
-        }
+        return weavingEvent(targetClassLoader, byteCodeArray, signCodes, listenerId, eventTypeArray);
     }
 
 }

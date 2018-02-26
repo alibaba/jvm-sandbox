@@ -115,7 +115,7 @@ public class ModuleJarLoader {
 
                     final String uniqueId = info.id();
                     if (!ArrayUtils.contains(info.mode(), mode)) {
-                        logger.info("module[id={};class={};mode={};] was not matching sandbox launch mode : {}, ignore this SPI.",
+                        logger.info("module[id={};class={};mode={};] was not matched sandbox launch mode : {}, ignore this SPI.",
                                 uniqueId, classOfModule, Arrays.asList(info.mode()), mode);
                         continue;
                     }

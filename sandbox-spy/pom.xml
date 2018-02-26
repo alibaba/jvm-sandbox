@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.alibaba.jvm.sandbox</groupId>
         <artifactId>sandbox</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.11</version>
     </parent>
     <artifactId>sandbox-spy</artifactId>
     <name>sandbox-spy ${project.version}</name>
@@ -30,6 +30,13 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

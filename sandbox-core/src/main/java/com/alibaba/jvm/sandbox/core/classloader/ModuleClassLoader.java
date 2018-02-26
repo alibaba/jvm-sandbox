@@ -1,5 +1,6 @@
 package com.alibaba.jvm.sandbox.core.classloader;
 
+import com.alibaba.jvm.sandbox.api.annotation.Stealth;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -23,8 +24,10 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.*;
 
 /**
  * 模块类加载器
- * Created by luanjia on 16/10/5.
+ *
+ * @author luanjia@taobao.com
  */
+@Stealth
 public class ModuleClassLoader extends RoutingURLClassLoader {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

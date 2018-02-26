@@ -15,6 +15,10 @@ public class ProgressPrinter implements ModuleEventWatcher.Progress {
     private final Printer printer;
     private int total;
 
+    public ProgressPrinter(Printer printer) {
+        this("", 50, printer);
+    }
+
     public ProgressPrinter(String prefix, int width, Printer printer) {
         this.prefix = prefix;
         this.width = width;

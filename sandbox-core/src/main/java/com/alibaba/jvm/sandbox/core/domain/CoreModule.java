@@ -95,7 +95,7 @@ public class CoreModule {
     public int cCnt() {
         int cCnt = 0;
         for (final SandboxClassFileTransformer sandboxClassFileTransformer : sandboxClassFileTransformers) {
-            cCnt += sandboxClassFileTransformer.cCnt();
+            cCnt += sandboxClassFileTransformer.getAffectStatistic().cCnt();
         }
         return cCnt;
     }
@@ -103,9 +103,17 @@ public class CoreModule {
     public int mCnt() {
         int mCnt = 0;
         for (final SandboxClassFileTransformer sandboxClassFileTransformer : sandboxClassFileTransformers) {
-            mCnt += sandboxClassFileTransformer.mCnt();
+            mCnt += sandboxClassFileTransformer.getAffectStatistic().mCnt();
         }
         return mCnt;
     }
 
+    @Override
+    public String toString() {
+        return String.format(
+                "module[id:%s;class:%s;]",
+                uniqueId,
+                module.getClass()
+        );
+    }
 }

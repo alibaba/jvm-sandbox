@@ -4,7 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
-import static com.alibaba.jvm.sandbox.util.SandboxStringUtils.getCauseMessage;
+import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.getCauseMessage;
 
 /**
  * 沙箱内核启动器

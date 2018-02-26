@@ -4,7 +4,6 @@ import com.alibaba.jvm.sandbox.api.http.Http;
 import com.alibaba.jvm.sandbox.core.domain.CoreModule;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.ModuleResourceManager;
-import com.alibaba.jvm.sandbox.util.SandboxStringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -20,7 +19,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
+
+import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.matching;
 
 /**
  * 用于处理模块的HTTP请求
@@ -180,7 +180,7 @@ public class ModuleHttpServlet extends HttpServlet {
             }
             final String pathPattern = "/"+uniqueId+httpAnnotation.value();
             if (ArrayUtils.contains(httpAnnotation.method(), httpMethod)
-                    && SandboxStringUtils.matching(path, pathPattern)) {
+                    && matching(path, pathPattern)) {
                 return method;
             }
         }

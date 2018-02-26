@@ -51,7 +51,7 @@ public final class ProcessControlException extends Exception {
     }
 
     @Override
-    public synchronized Throwable fillInStackTrace() {
+    public Throwable fillInStackTrace() {
         return null;
     }
 

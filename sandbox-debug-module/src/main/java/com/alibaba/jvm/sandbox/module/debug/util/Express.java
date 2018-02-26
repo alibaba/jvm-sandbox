@@ -6,7 +6,8 @@ import ognl.OgnlContext;
 
 /**
  * 表达式
- * Created by oldmanpushcart@gmail.com on 15/5/20.
+ *
+ * @author oldmanpushcart@gamil.com
  */
 public interface Express {
 

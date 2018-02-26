@@ -5,7 +5,7 @@ package com.alibaba.jvm.sandbox.api;
  *
  * @author luanjia@taobao.com
  */
-public interface ModuleLifecycle {
+public interface ModuleLifecycle extends LoadCompleted {
 
     /**
      * 模块加载，模块开始加载之前调用！
@@ -17,18 +17,6 @@ public interface ModuleLifecycle {
      * @throws Throwable 加载模块失败
      */
     void onLoad() throws Throwable;
-
-    /**
-     * 模块加载完成，模块完成加载后调用！
-     * <p>
-     * 模块完成加载是在模块完成所有资源加载、分配之后的回调，在模块生命中期中有且只会调用一次。
-     * 这里抛出异常不会影响模块被加载成功的结果。
-     * </p>
-     * <p>
-     * 模块加载完成之后，所有的基于模块的操作都可以在这个回调中进行
-     * </p>
-     */
-    void loadCompleted();
 
     /**
      * 模块卸载，模块开始卸载之前调用！

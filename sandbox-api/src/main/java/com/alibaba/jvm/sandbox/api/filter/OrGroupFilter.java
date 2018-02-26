@@ -1,11 +1,15 @@
 package com.alibaba.jvm.sandbox.api.filter;
 
+import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder;
+
 /**
  * 分组匹配匹配
  * 当多个过滤器需要以OR关系进行综合判断时，可以使用此类来帮助完成
  *
  * @author luanjia@taobao.com
+ * @deprecated 请改用 {@link EventWatchBuilder} 来完成Filter的构建
  */
+@Deprecated
 public final class OrGroupFilter implements Filter {
 
     private final Filter[] filterArray;

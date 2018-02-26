@@ -21,7 +21,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static com.alibaba.jvm.sandbox.util.SandboxStringUtils.matching;
+import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.matching;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 

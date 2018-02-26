@@ -18,7 +18,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
      * Creates a new {@link AdviceAdapter}.
      *
      * @param api    the ASM API version implemented by this visitor. Must be one
-     *               of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
+     *               of {@link Opcodes#ASM4} or {@link Opcodes#ASM6}.
      * @param mv     the method visitor to which this adapter delegates calls.
      * @param access the method's access flags (see {@link Opcodes}).
      * @param name   the method's name.

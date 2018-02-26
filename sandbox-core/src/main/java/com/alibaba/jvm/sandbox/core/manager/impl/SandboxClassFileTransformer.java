@@ -1,19 +1,22 @@
 package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
-import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
-import com.alibaba.jvm.sandbox.core.enhance.Enhancer;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
+import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
+import com.alibaba.jvm.sandbox.core.util.matcher.UnsupportedMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.HashSet;
 import java.util.Set;
+
+import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory.createClassStructure;
 
 /**
  * 沙箱类形变器
@@ -24,76 +27,124 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final int watchId;
     private final String uniqueId;
-    private final int listenerId;
-    private final Filter filter;
+    private final Matcher matcher;
     private final EventListener eventListener;
     private final boolean isEnableUnsafe;
     private final Event.Type[] eventTypeArray;
 
-    // 影响类去重码集合
-    private final Set<String> affectClassUniqueSet = new HashSet<String>();
-
-    // 影响方法去重码集合
-    private final Set<String> affectMethodUniqueSet = new HashSet<String>();
-
+    private final int listenerId;
+    private final AffectStatistic affectStatistic = new AffectStatistic();
 
     SandboxClassFileTransformer(final int watchId,
                                 final String uniqueId,
-                                final Filter filter,
+                                final Matcher matcher,
                                 final EventListener eventListener,
                                 final boolean isEnableUnsafe,
                                 final Event.Type[] eventTypeArray) {
         this.watchId = watchId;
         this.uniqueId = uniqueId;
-        this.listenerId = ObjectIDs.instance.identity(eventListener);
-        this.filter = filter;
+        this.matcher = matcher;
         this.eventListener = eventListener;
         this.isEnableUnsafe = isEnableUnsafe;
         this.eventTypeArray = eventTypeArray;
+        this.listenerId = ObjectIDs.instance.identity(eventListener);
     }
 
-    // 计算唯一编码前缀
-    private String computeUniqueCodePrefix(final ClassLoader loader, final String javaClassName) {
-        final StringBuilder codeSB = new StringBuilder();
-        return codeSB.append(ObjectIDs.instance.identity(loader)).append("_").append(javaClassName).toString();
-
+    // 获取当前类结构
+    private ClassStructure getClassStructure(final ClassLoader loader,
+                                             final Class<?> classBeingRedefined,
+                                             final byte[] srcByteCodeArray) {
+        return null == classBeingRedefined
+                ? createClassStructure(srcByteCodeArray, loader)
+                : createClassStructure(classBeingRedefined);
     }
 
     @Override
     public byte[] transform(final ClassLoader loader,
-                            final String javaClassName,
+                            final String internalClassName,
                             final Class<?> classBeingRedefined,
                             final ProtectionDomain protectionDomain,
                             final byte[] srcByteCodeArray) throws IllegalClassFormatException {
 
-        final String uniqueCodePrefix = computeUniqueCodePrefix(loader, javaClassName);
-
-        final Enhancer enhancer = new EventEnhancer(
-                listenerId,
-                filter,
-                uniqueCodePrefix,
-                affectMethodUniqueSet,
-                isEnableUnsafe,
-                eventTypeArray
-        );
         try {
-            final byte[] toByteCodeArray = enhancer.toByteCodeArray(loader, srcByteCodeArray);
-            if (srcByteCodeArray == toByteCodeArray) {
-                logger.debug("enhancer ignore this class={}", javaClassName);
+
+            // 这里过滤掉Sandbox所需要的类，防止ClassCircularityError的发生
+            if (null != internalClassName
+                    && internalClassName.startsWith("com/alibaba/jvm/sandbox/")) {
                 return null;
             }
 
-            // affect count
-            affectClassUniqueSet.add(uniqueCodePrefix);
+            // 这里过滤掉来自SandboxClassLoader的类，防止ClassCircularityError的发生
+            if (loader == SandboxClassFileTransformer.class.getClassLoader()) {
+                return null;
+            }
 
-            logger.info("enhancer toByteCode success, module[id={}];class={};loader={};", uniqueId, javaClassName, loader);
-            return toByteCodeArray;
+            return _transform(
+                    loader,
+                    internalClassName,
+                    classBeingRedefined,
+                    protectionDomain,
+                    srcByteCodeArray
+            );
+
+
         } catch (Throwable cause) {
-            logger.warn("enhancer toByteCode failed, module[id={}];class={};loader={};", uniqueId, javaClassName, loader, cause);
-            // throw new IllegalClassFormatException(cause.getMessage());
+            logger.warn("sandbox transform class:{} in loader:{} failed, module[id:{}] at watch[id:{}] will ignore this transform.",
+                    internalClassName, loader,
+                    uniqueId, watchId,
+                    cause
+            );
             return null;
         }
     }
+
+    private byte[] _transform(final ClassLoader loader,
+                              final String internalClassName,
+                              final Class<?> classBeingRedefined,
+                              final ProtectionDomain protectionDomain,
+                              final byte[] srcByteCodeArray) throws IllegalClassFormatException {
+        // 如果未开启unsafe开关，是不允许增强来自BootStrapClassLoader的类
+        if (!isEnableUnsafe
+                && null == loader) {
+            logger.debug("transform ignore class:{}, class from bootstrap but unsafe.enable:false.", internalClassName);
+            return null;
+        }
+
+        final ClassStructure classStructure = getClassStructure(loader, classBeingRedefined, srcByteCodeArray);
+        final MatchingResult matchingResult = new UnsupportedMatcher(loader, isEnableUnsafe).and(matcher).matching(classStructure);
+        final Set<String> behaviorSignCodes = matchingResult.getBehaviorSignCodes();
+
+        // 如果一个行为都没匹配上也不用继续了
+        if (!matchingResult.isMatched()) {
+            logger.debug("transform ignore class:{}, no behaviors matched in loader:{}", internalClassName, loader);
+            return null;
+        }
+
+        // 开始进行类匹配
+        try {
+            final byte[] toByteCodeArray = new EventEnhancer().toByteCodeArray(
+                    loader,
+                    srcByteCodeArray,
+                    behaviorSignCodes,
+                    listenerId,
+                    eventTypeArray
+            );
+            if (srcByteCodeArray == toByteCodeArray) {
+                logger.debug("transform ignore class:{}, nothing changed in loader:{}.", internalClassName, loader);
+                return null;
+            }
+
+            // statistic affect
+            affectStatistic.statisticAffect(loader, internalClassName, behaviorSignCodes);
+
+            logger.info("transform class:{} finished, by module[id:{}] in loader:{};", internalClassName, uniqueId, loader);
+            return toByteCodeArray;
+        } catch (Throwable cause) {
+            logger.warn("transform class:{} failed, by module[id={}] in loader:{};", internalClassName, uniqueId, loader, cause);
+            return null;
+        }
+    }
+
 
     /**
      * 获取观察ID
@@ -123,12 +174,12 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
     }
 
     /**
-     * 获取类和方法过滤器
+     * 获取本次匹配器
      *
-     * @return 类和方法过滤器
+     * @return 匹配器
      */
-    Filter getFilter() {
-        return filter;
+    Matcher getMatcher() {
+        return matcher;
     }
 
     /**
@@ -141,21 +192,12 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
     }
 
     /**
-     * 获取影响类数量
+     * 获取本次增强的影响统计
      *
-     * @return 影响类数量
+     * @return 本次增强的影响统计
      */
-    public int cCnt() {
-        return affectClassUniqueSet.size();
-    }
-
-    /**
-     * 获取影响方法数量
-     *
-     * @return 影响方法数量
-     */
-    public int mCnt() {
-        return affectMethodUniqueSet.size();
+    public AffectStatistic getAffectStatistic() {
+        return affectStatistic;
     }
 
 }

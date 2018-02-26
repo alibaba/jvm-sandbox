@@ -10,7 +10,8 @@ import java.util.Set;
 
 /**
  * 枚举工具类
- * Created by luanjia@taobao.com on 2017/2/23.
+ *
+ * @author oldmanpushcart@gmail.com
  */
 public class GaEnumUtils {
 

@@ -1,5 +1,7 @@
 package com.alibaba.jvm.sandbox.core.classloader;
 
+import com.alibaba.jvm.sandbox.api.annotation.Stealth;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -9,6 +11,7 @@ import java.net.URL;
  *
  * @author luanjia@taobao.com
  */
+@Stealth
 public class ProviderClassLoader extends RoutingURLClassLoader {
 
     public ProviderClassLoader(final File providerJarFile,

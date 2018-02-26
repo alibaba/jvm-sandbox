@@ -1,27 +1,29 @@
 package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
-import com.alibaba.jvm.sandbox.api.filter.OrGroupFilter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
-import com.alibaba.jvm.sandbox.api.resource.LoadedClassDataSource;
+import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.core.domain.CoreModule;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.ModuleLifeCycleEventBus;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
+import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.GroupMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
-import static com.alibaba.jvm.sandbox.util.SandboxStringUtils.getCauseMessage;
+import static com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory.make;
+import static com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher.toOrGroupMatcher;
 
 /**
  * 默认事件观察者实现
@@ -32,7 +34,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Instrumentation inst;
-    private final LoadedClassDataSource classDataSource;
+    private final CoreLoadedClassDataSource classDataSource;
     private final CoreModule coreModule;
     private final boolean isEnableUnsafe;
 
@@ -40,7 +42,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
     private final Sequencer watchIdSequencer = new Sequencer(1000);
 
     DefaultModuleEventWatcher(final Instrumentation inst,
-                              final LoadedClassDataSource classDataSource,
+                              final CoreLoadedClassDataSource classDataSource,
                               final CoreModule coreModule,
                               final boolean isEnableUnsafe) {
         this.inst = inst;
@@ -77,33 +79,33 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
      * 形变观察所影响的类
      */
     private void reTransformClasses(final int watchId,
-                                    final Set<Class<?>> waitingReTransformClassSet,
+                                    final List<Class<?>> waitingReTransformClasses,
                                     final Progress progress) {
 
-        // 找出当前已经被加载的所有类
-        // final Set<Class<?>> waitingReTransformClassSet = classDataSource.find(filter);
-
         // 需要形变总数
-        final int total = waitingReTransformClassSet.size();
+        final int total = waitingReTransformClasses.size();
 
         // 如果找不到需要被重新增强的类则直接返回
-        if (CollectionUtils.isEmpty(waitingReTransformClassSet)) {
-            logger.info("waitingReTransformClassSet is empty, ignore reTransformClasses. module[id={};];watchId={};",
-                    coreModule.getUniqueId(), watchId);
+        if (CollectionUtils.isEmpty(waitingReTransformClasses)) {
             return;
         }
 
-        logger.debug("reTransformClasses={};module[id={};];watchId={};",
-                waitingReTransformClassSet, coreModule.getUniqueId(), watchId);
+        if (logger.isDebugEnabled()) {
+            logger.debug("reTransformClasses:{};module[id:{}];watch[Id:{}];",
+                    waitingReTransformClasses, coreModule.getUniqueId(), watchId);
+        }
+
 
         // 如果不需要进行进度汇报,则可以进行批量形变
         boolean batchReTransformSuccess = true;
         if (null == progress) {
             try {
-                inst.retransformClasses(waitingReTransformClassSet.toArray(new Class[waitingReTransformClassSet.size()]));
-                logger.info("batch reTransform classes, watchId={};total={};", watchId, waitingReTransformClassSet.size());
+                inst.retransformClasses(waitingReTransformClasses.toArray(new Class[waitingReTransformClasses.size()]));
+                logger.info("module[id:{}] watch[id:{}] batch reTransform classes[count:{}] success.",
+                        coreModule.getUniqueId(), watchId, waitingReTransformClasses.size());
             } catch (Throwable e) {
-                logger.warn("batch reTransform class failed, watchId={};", watchId, e);
+                logger.warn("module[id:{}] watch[id:{}] batch reTransform classes[count:{}] failed.",
+                        coreModule.getUniqueId(), watchId, waitingReTransformClasses.size(), e);
                 batchReTransformSuccess = false;
             }
         }
@@ -113,9 +115,8 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
         // 2. 批量形变失败,需要转换为单个形变,以观察具体是哪个形变失败
         if (!batchReTransformSuccess
                 || null != progress) {
-            int failTotal = 0;
             int index = 0;
-            for (final Class<?> waitingReTransformClass : waitingReTransformClassSet) {
+            for (final Class<?> waitingReTransformClass : waitingReTransformClasses) {
                 index++;
                 try {
                     if (null != progress) {
@@ -124,60 +125,73 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
                         } catch (Throwable cause) {
                             // 在进行进度汇报的过程中抛出异常,直接进行忽略,因为不影响形变的主体流程
                             // 仅仅只是一个汇报作用而已
-                            logger.warn("report progressOnSuccess occur exception, watchId={};waitingReTransformClass={};index={};total={};",
-                                    watchId, waitingReTransformClass, index - 1, total, cause);
+                            logger.warn("module[id:{}] watch[id:{}] on class:{} report progressOnSuccess occur exception at index:{},total:{},class:{};",
+                                    coreModule.getUniqueId(), watchId, waitingReTransformClass,
+                                    index - 1, total,
+                                    cause
+                            );
                         }
                     }
                     inst.retransformClasses(waitingReTransformClass);
-                    logger.debug("single reTransform class={};index={};total={};", waitingReTransformClass, index - 1, total);
+                    logger.info("module[id:{}] watch[id:{}] single reTransform class:{} success, at index:{},total:{};",
+                            coreModule.getUniqueId(), watchId, waitingReTransformClass,
+                            index - 1, total
+                    );
                 } catch (Throwable causeOfReTransform) {
-                    logger.warn("reTransformClass={}; failed, ignore this class.", waitingReTransformClass, causeOfReTransform);
+                    logger.warn("module[id:{}] watch[id:{}] single reTransform class:{} failed, at index:{},total:{}. ignore this class.",
+                            coreModule.getUniqueId(), watchId, waitingReTransformClass,
+                            index - 1, total,
+                            causeOfReTransform
+                    );
                     if (null != progress) {
                         try {
                             progress.progressOnFailed(waitingReTransformClass, index, causeOfReTransform);
                         } catch (Throwable cause) {
-                            logger.warn("report progressOnFailed occur exception, watchId={};waitingReTransformClass={};index={};total={};cause={};",
-                                    watchId, waitingReTransformClass, index - 1, total, getCauseMessage(causeOfReTransform), cause);
+                            logger.warn("module[id:{}] watch[id:{}] on class:{} report progressOnFailed occur exception, at index:{},total:{};",
+                                    coreModule.getUniqueId(), watchId, waitingReTransformClass,
+                                    index - 1, total,
+                                    cause
+                            );
                         }
                     }
-                    failTotal++;
                 }
             }//for
-            logger.info("single reTransform classes, total={};failed={};", waitingReTransformClassSet.size(), failTotal);
         }
 
     }
 
-    // 因为JVM直接操作$$Lambda$的类会有问题,所以这里直接过滤掉这种临时类
-    private Set<Class<?>> remove$$Lambda$(final Set<Class<?>> classSet) {
-        final Iterator<Class<?>> classIt = classSet.iterator();
-        while (classIt.hasNext()) {
-            final Class<?> clazz = classIt.next();
-            if (StringUtils.contains(clazz.getName(), "$$Lambda$")) {
-                logger.debug("remove $$Lambda$ temp class=", clazz.getName());
-                classIt.remove();
-            }
-        }
-        return classSet;
+    @Override
+    public int watch(final Filter filter,
+                     final EventListener listener,
+                     final Event.Type... eventType) {
+        return watch(filter, listener, null, eventType);
     }
-
 
     @Override
     public int watch(final Filter filter,
                      final EventListener listener,
                      final Progress progress,
                      final Event.Type... eventType) {
-        final int watchId = watchIdSequencer.next();
+        return watch(new ExtFilterMatcher(make(filter)), listener, progress, eventType);
+    }
 
+    @Override
+    public int watch(final EventWatchCondition condition,
+                     final EventListener listener,
+                     final Progress progress,
+                     final Event.Type... eventType) {
+        return watch(toOrGroupMatcher(condition.getOrFilterArray()), listener, progress, eventType);
+    }
+
+    // 这里是用matcher重制过后的watch
+    private int watch(final Matcher matcher,
+                      final EventListener listener,
+                      final Progress progress,
+                      final Event.Type... eventType) {
+        final int watchId = watchIdSequencer.next();
         // 给对应的模块追加ClassFileTransformer
         final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(
-                watchId,
-                coreModule.getUniqueId(),
-                filter,
-                listener,
-                isEnableUnsafe,
-                eventType
-        );
+                watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType);
 
         // 注册到CoreModule中
         coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
@@ -186,20 +200,22 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
         inst.addTransformer(sandClassFileTransformer, true);
 
         // 查找需要渲染的类集合
-        final Set<Class<?>> waitingReTransformClassSet = remove$$Lambda$(classDataSource.find(filter));
+        final List<Class<?>> waitingReTransformClasses = classDataSource.findForReTransform(matcher);
+        logger.info("{} watch[id:{}] found classes:{} in loaded for watch(ing).",
+                coreModule, watchId, waitingReTransformClasses.size());
 
         int cCnt = 0, mCnt = 0;
 
         // 进度通知启动
-        beginProgress(progress, waitingReTransformClassSet.size());
+        beginProgress(progress, waitingReTransformClasses.size());
         try {
 
             // 应用JVM
-            reTransformClasses(watchId, waitingReTransformClassSet, progress);
+            reTransformClasses(watchId, waitingReTransformClasses, progress);
 
             // 计数
-            cCnt += sandClassFileTransformer.cCnt();
-            mCnt += sandClassFileTransformer.mCnt();
+            cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();
+            mCnt += sandClassFileTransformer.getAffectStatistic().mCnt();
 
 
             // 激活增强类
@@ -217,15 +233,10 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
     }
 
     @Override
-    public int watch(Filter filter, EventListener listener, Event.Type... eventType) {
-        return watch(filter, listener, null, eventType);
-    }
-
-    @Override
     public void delete(final int watcherId,
                        final Progress progress) {
 
-        final Set<Filter> waitingRemoveFilterSet = new LinkedHashSet<Filter>();
+        final Set<Matcher> waitingRemoveMatcherSet = new LinkedHashSet<Matcher>();
 
         // 找出待删除的SandboxClassFileTransformer
         final Iterator<SandboxClassFileTransformer> cftIt = coreModule.getSandboxClassFileTransformers().iterator();
@@ -242,11 +253,11 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
                 inst.removeTransformer(sandboxClassFileTransformer);
 
                 // 计数
-                cCnt += sandboxClassFileTransformer.cCnt();
-                mCnt += sandboxClassFileTransformer.mCnt();
+                cCnt += sandboxClassFileTransformer.getAffectStatistic().cCnt();
+                mCnt += sandboxClassFileTransformer.getAffectStatistic().mCnt();
 
                 // 追加到待删除过滤器集合
-                waitingRemoveFilterSet.add(sandboxClassFileTransformer.getFilter());
+                waitingRemoveMatcherSet.add(sandboxClassFileTransformer.getMatcher());
 
                 // 清除掉该SandboxClassFileTransformer
                 cftIt.remove();
@@ -255,14 +266,16 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
         }
 
         // 查找需要删除后重新渲染的类集合
-        final Set<Class<?>> waitingReTransformClassSet = remove$$Lambda$(
-                classDataSource.find(new OrGroupFilter(waitingRemoveFilterSet.toArray(new Filter[]{})))
+        final List<Class<?>> waitingReTransformClasses = classDataSource.findForReTransform(
+                new GroupMatcher.Or(waitingRemoveMatcherSet.toArray(new Matcher[0]))
         );
+        logger.info("{} found classes:{} in loaded for delete.",
+                coreModule, waitingReTransformClasses.size());
 
-        beginProgress(progress, waitingReTransformClassSet.size());
+        beginProgress(progress, waitingReTransformClasses.size());
         try {
             // 应用JVM
-            reTransformClasses(watcherId, waitingReTransformClassSet, progress);
+            reTransformClasses(watcherId, waitingReTransformClasses, progress);
         } finally {
             finishProgress(progress, cCnt, mCnt);
         }
@@ -271,6 +284,11 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
     @Override
     public void delete(int watcherId) {
         delete(watcherId, null);
+    }
+
+    @Override
+    public void watching(Filter filter, EventListener listener, WatchCallback watchCb, Event.Type... eventType) throws Throwable {
+        watching(filter, listener, null, watchCb, null, eventType);
     }
 
     @Override
@@ -286,11 +304,6 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
         } finally {
             delete(watchId, dProgress);
         }
-    }
-
-    @Override
-    public void watching(Filter filter, EventListener listener, WatchCallback watchCb, Event.Type... eventType) throws Throwable {
-        watching(filter, listener, null, watchCb, null, eventType);
     }
 
     @Override

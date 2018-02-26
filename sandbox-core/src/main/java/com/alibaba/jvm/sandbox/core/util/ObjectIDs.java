@@ -139,8 +139,10 @@ public class ObjectIDs {
      * 映射{@code objectID}为Java对象
      *
      * @param objectID 对象ID
+     * @param <T>      映射回的对象类型
      * @return Java对象
      */
+
     public <T> T getObject(final int objectID) {
 
         if (NULL_ID == objectID) {
