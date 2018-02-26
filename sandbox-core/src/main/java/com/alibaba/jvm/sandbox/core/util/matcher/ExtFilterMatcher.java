@@ -1,12 +1,14 @@
 package com.alibaba.jvm.sandbox.core.util.matcher;
 
-import com.alibaba.jvm.sandbox.api.annotation.IncludeBootstrap;
-import com.alibaba.jvm.sandbox.api.annotation.IncludeSubClasses;
 import com.alibaba.jvm.sandbox.api.filter.AccessFlags;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
+import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.Access;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,16 +22,12 @@ import static com.alibaba.jvm.sandbox.api.filter.AccessFlags.*;
  *
  * @author luanjia@taobao.com
  */
-public class FilterMatcher implements Matcher {
+public class ExtFilterMatcher implements Matcher {
 
-    private final Filter filter;
-    private final boolean isIncludeSubClass;
-    private final boolean isIncludeBootstrap;
+    private final ExtFilter extFilter;
 
-    public FilterMatcher(final Filter filter) {
-        this.filter = filter;
-        this.isIncludeSubClass = filter.getClass().isAnnotationPresent(IncludeSubClasses.class);
-        this.isIncludeBootstrap = filter.getClass().isAnnotationPresent(IncludeBootstrap.class);
+    public ExtFilterMatcher(final ExtFilter extFilter) {
+        this.extFilter = extFilter;
     }
 
     // 获取需要匹配的类结构
@@ -37,7 +35,7 @@ public class FilterMatcher implements Matcher {
     private Collection<ClassStructure> getWaitingMatchClassStructures(final ClassStructure classStructure) {
         final Collection<ClassStructure> waitingMatchClassStructures = new ArrayList<ClassStructure>();
         waitingMatchClassStructures.add(classStructure);
-        if (isIncludeSubClass) {
+        if (extFilter.isIncludeSubClasses()) {
             waitingMatchClassStructures.addAll(classStructure.getFamilyTypeClassStructures());
         }
         return waitingMatchClassStructures;
@@ -58,7 +56,7 @@ public class FilterMatcher implements Matcher {
         for (final ClassStructure wmCs : getWaitingMatchClassStructures(classStructure)) {
 
             // 匹配类结构
-            if (filter.doClassFilter(
+            if (extFilter.doClassFilter(
                     toFilterAccess(wmCs.getAccess()),
                     wmCs.getJavaClassName(),
                     null == wmCs.getSuperClassStructure()
@@ -83,14 +81,14 @@ public class FilterMatcher implements Matcher {
         }
 
         // 如果不开启加载Bootstrap的类，遇到就过滤掉
-        if (!isIncludeBootstrap
+        if (!extFilter.isIncludeBootstrap()
                 && classStructure.getClassLoader() == null) {
             return result;
         }
 
         // 2. 匹配BehaviorStructure
         for (final BehaviorStructure behaviorStructure : classStructure.getBehaviorStructures()) {
-            if (filter.doMethodFilter(
+            if (extFilter.doMethodFilter(
                     toFilterAccess(behaviorStructure.getAccess()),
                     behaviorStructure.getName(),
                     toJavaClassNameArray(behaviorStructure.getParameterTypeClassStructures()),
@@ -123,6 +121,41 @@ public class FilterMatcher implements Matcher {
         if (access.isEnum()) flag |= ACF_ENUM;
         if (access.isAnnotation()) flag |= ACF_ANNOTATION;
         return flag;
+    }
+
+    /**
+     * 兼容{@code sandbox-api:1.0.10}时
+     * 在{@link EventWatchCondition#getOrFilterArray()}中将{@link Filter}直接暴露出来的问题，
+     * 所以这里做一个兼容性的强制转换
+     * <p>
+     * <ul>
+     * <li>如果filterArray[index]是一个{@link ExtFilter}，则不需要再次转换</li>
+     * <li>如果filterArray[index]是一个{@link Filter}，则需要进行{@link ExtFilterFactory#make(Filter)}的转换</li>
+     * </ul>
+     *
+     * @param filterArray 过滤器数组
+     * @return 兼容的Matcher
+     */
+    public static Matcher toOrGroupMatcher(final Filter[] filterArray) {
+        final ExtFilter[] extFilterArray = new ExtFilter[filterArray.length];
+        for (int index = 0; index < filterArray.length; index++) {
+            extFilterArray[index] = ExtFilterFactory.make(filterArray[index]);
+        }
+        return toOrGroupMatcher(extFilterArray);
+    }
+
+    /**
+     * 将{@link ExtFilter}数组转换为Or关系的Matcher
+     *
+     * @param extFilterArray 增强过滤器数组
+     * @return Or关系Matcher
+     */
+    public static Matcher toOrGroupMatcher(final ExtFilter[] extFilterArray) {
+        final Matcher[] matcherArray = new Matcher[ArrayUtils.getLength(extFilterArray)];
+        for (int index = 0; index < matcherArray.length; index++) {
+            matcherArray[index] = new ExtFilterMatcher(extFilterArray[index]);
+        }
+        return new GroupMatcher.Or(matcherArray);
     }
 
 }

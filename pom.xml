@@ -5,7 +5,7 @@
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
-    <version>1.0.11-SNAPSHOT</version>
+    <version>1.0.11</version>
     <packaging>pom</packaging>
 
     <name>sandbox ${project.version}</name>

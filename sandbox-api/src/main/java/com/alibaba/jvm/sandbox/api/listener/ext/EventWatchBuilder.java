@@ -1,9 +1,8 @@
 package com.alibaba.jvm.sandbox.api.listener.ext;
 
-import com.alibaba.jvm.sandbox.api.annotation.IncludeBootstrap;
-import com.alibaba.jvm.sandbox.api.annotation.IncludeSubClasses;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.AccessFlags;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
@@ -571,7 +570,7 @@ public class EventWatchBuilder {
                 }
             };//filter
 
-            filters.add(wrap(filter, bfClass));
+            filters.add(makeExtFilter(filter, bfClass));
         }
         return new EventWatchCondition() {
             @Override
@@ -581,16 +580,13 @@ public class EventWatchBuilder {
         };
     }
 
-    private Filter wrap(final Filter filter,
-                        final BuildingForClass bfClass) {
-        Filter targetFilter = filter;
-        if (bfClass.isIncludeSubClasses) {
-            targetFilter = new IncludeSubClassWrapFilter(targetFilter);
-        }
-        if (bfClass.isIncludeBootstrap) {
-            targetFilter = new IncludeBootstrapWrapFilter(targetFilter);
-        }
-        return targetFilter;
+    private Filter makeExtFilter(final Filter filter,
+                                 final BuildingForClass bfClass) {
+        return ExtFilter.ExtFilterFactory.make(
+                filter,
+                bfClass.isIncludeSubClasses,
+                bfClass.isIncludeBootstrap
+        );
     }
 
     private ProgressGroup toProgressGroup(final List<Progress> progresses) {
@@ -634,63 +630,6 @@ public class EventWatchBuilder {
             }
 
         };
-    }
-
-    /**
-     * Filter的代理类，
-     * 很多FilterWrap要基于这个类玩
-     */
-    private class ProxyFilter implements Filter {
-
-        final Filter filter;
-
-        ProxyFilter(Filter filter) {
-            this.filter = filter;
-        }
-
-        @Override
-        public boolean doClassFilter(final int access,
-                                     final String javaClassName,
-                                     final String superClassTypeJavaClassName,
-                                     final String[] interfaceTypeJavaClassNameArray,
-                                     final String[] annotationTypeJavaClassNameArray) {
-            return filter.doClassFilter(
-                    access,
-                    javaClassName,
-                    superClassTypeJavaClassName,
-                    interfaceTypeJavaClassNameArray,
-                    annotationTypeJavaClassNameArray
-            );
-        }
-
-        @Override
-        public boolean doMethodFilter(final int access,
-                                      final String javaMethodName,
-                                      final String[] parameterTypeJavaClassNameArray,
-                                      final String[] throwsTypeJavaClassNameArray,
-                                      final String[] annotationTypeJavaClassNameArray) {
-            return filter.doMethodFilter(
-                    access,
-                    javaMethodName,
-                    parameterTypeJavaClassNameArray,
-                    throwsTypeJavaClassNameArray,
-                    annotationTypeJavaClassNameArray
-            );
-        }
-    }
-
-    @IncludeSubClasses
-    private class IncludeSubClassWrapFilter extends ProxyFilter {
-        IncludeSubClassWrapFilter(Filter filter) {
-            super(filter);
-        }
-    }
-
-    @IncludeBootstrap
-    private class IncludeBootstrapWrapFilter extends ProxyFilter {
-        IncludeBootstrapWrapFilter(Filter filter) {
-            super(filter);
-        }
     }
 
     /**

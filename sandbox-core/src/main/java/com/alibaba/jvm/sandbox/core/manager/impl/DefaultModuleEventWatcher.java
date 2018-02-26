@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
@@ -10,7 +11,7 @@ import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.ModuleLifeCycleEventBus;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
-import com.alibaba.jvm.sandbox.core.util.matcher.FilterMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.GroupMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 import org.apache.commons.collections.CollectionUtils;
@@ -20,6 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
 import java.util.*;
+
+import static com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory.make;
+import static com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher.toOrGroupMatcher;
 
 /**
  * 默认事件观察者实现
@@ -159,25 +163,16 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
     @Override
     public int watch(final Filter filter,
                      final EventListener listener,
-                     final Progress progress,
                      final Event.Type... eventType) {
-        return watch(new FilterMatcher(filter), listener, progress, eventType);
+        return watch(filter, listener, null, eventType);
     }
 
     @Override
     public int watch(final Filter filter,
                      final EventListener listener,
+                     final Progress progress,
                      final Event.Type... eventType) {
-        return watch(filter, listener, null, eventType);
-    }
-
-
-    private Matcher toMatcher(final Filter[] filterArray) {
-        final Matcher[] matcherArray = new Matcher[ArrayUtils.getLength(filterArray)];
-        for (int index = 0; index < matcherArray.length; index++) {
-            matcherArray[index] = new FilterMatcher(filterArray[index]);
-        }
-        return new GroupMatcher.Or(matcherArray);
+        return watch(new ExtFilterMatcher(make(filter)), listener, progress, eventType);
     }
 
     @Override
@@ -185,7 +180,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
                      final EventListener listener,
                      final Progress progress,
                      final Event.Type... eventType) {
-        return watch(toMatcher(condition.getOrFilterArray()), listener, progress, eventType);
+        return watch(toOrGroupMatcher(condition.getOrFilterArray()), listener, progress, eventType);
     }
 
     // 这里是用matcher重制过后的watch
@@ -292,6 +287,11 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
     }
 
     @Override
+    public void watching(Filter filter, EventListener listener, WatchCallback watchCb, Event.Type... eventType) throws Throwable {
+        watching(filter, listener, null, watchCb, null, eventType);
+    }
+
+    @Override
     public void watching(final Filter filter,
                          final EventListener listener,
                          final Progress wProgress,
@@ -304,11 +304,6 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
         } finally {
             delete(watchId, dProgress);
         }
-    }
-
-    @Override
-    public void watching(Filter filter, EventListener listener, WatchCallback watchCb, Event.Type... eventType) throws Throwable {
-        watching(filter, listener, null, watchCb, null, eventType);
     }
 
     @Override

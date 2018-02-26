@@ -9,7 +9,7 @@ import com.alibaba.jvm.sandbox.core.enhance.Enhancer;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.util.SandboxStringUtils;
-import com.alibaba.jvm.sandbox.core.util.matcher.FilterMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByJDK;
 import junit.framework.Assert;
 import org.apache.commons.io.IOUtils;
@@ -55,7 +55,7 @@ public class BaseTestCase {
         final ClassLoader loader = newTestClassLoader();
         final byte[] srcByteCodeArray = toByteArray(targetClass);
 
-        final FilterMatcher matcher = new FilterMatcher(new Filter() {
+        final ExtFilterMatcher matcher = new ExtFilterMatcher(new Filter() {
             @Override
             public boolean doClassFilter(final int access,
                                          final String javaClassName,

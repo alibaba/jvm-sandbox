@@ -30,7 +30,7 @@ public class ExceptionLoggerModule implements Module, LoadCompleted {
     @Override
     public void loadCompleted() {
         new EventWatchBuilder(moduleEventWatcher)
-                .onClass(Exception.class).includeSubClasses().includeBootstrap()
+                .onClass(Exception.class).includeBootstrap()
                 .onBehavior("<init>")
                 .onWatch(new AdviceListener() {
 

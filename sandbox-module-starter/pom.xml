@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.alibaba.jvm.sandbox</groupId>
         <artifactId>sandbox</artifactId>
-        <version>1.0.11-SNAPSHOT</version>
+        <version>1.0.11</version>
     </parent>
     <artifactId>sandbox-module-starter</artifactId>
     <name>sandbox-module-starter ${project.version}</name>

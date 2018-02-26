@@ -3,7 +3,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
-import com.alibaba.jvm.sandbox.core.util.matcher.FilterMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.UnsupportedMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
 import java.util.*;
+
+import static com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory.make;
 
 /**
  * 已加载类数据源默认实现
@@ -120,7 +122,7 @@ public class DefaultLoadedClassDataSource implements CoreLoadedClassDataSource {
      */
     @Override
     public Set<Class<?>> find(Filter filter) {
-        return new LinkedHashSet<Class<?>>(find(new FilterMatcher(filter), false));
+        return new LinkedHashSet<Class<?>>(find(new ExtFilterMatcher(make(filter)), false));
     }
 
 }
