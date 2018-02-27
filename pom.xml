@@ -5,13 +5,14 @@
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
-    <version>1.0.11</version>
+    <version>1.0.12</version>
     <packaging>pom</packaging>
 
-    <name>sandbox ${project.version}</name>
+    <name>sandbox ${sandbox.version}</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <sandbox.version>1.0.12-SNAPSHOT</sandbox.version>
     </properties>
 
     <build>
@@ -20,9 +21,10 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
-                    <version>2.8.2</version>
+                    <version>2.4</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>2.2-beta-5</version>
                 </plugin>
@@ -113,22 +115,22 @@
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-api</artifactId>
-                <version>${project.version}</version>
+                <version>${sandbox.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-provider-api</artifactId>
-                <version>${project.version}</version>
+                <version>${sandbox.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-common-api</artifactId>
-                <version>${project.version}</version>
+                <version>${sandbox.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-spy</artifactId>
-                <version>${project.version}</version>
+                <version>${sandbox.version}</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
@@ -273,9 +275,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/alibaba/jvm-Sandbox.git</connection>
-        <developerConnection>scm:git:https://github.com/alibaba/jvm-Sandbox.git</developerConnection>
-        <url>https://github.com/alibaba/jvm-Sandbox</url>
+        <connection>scm:git:https://github.com/alibaba/jvm-sandbox.git</connection>
+        <developerConnection>scm:git:https://github.com/alibaba/jvm-sandbox.git</developerConnection>
+        <url>https://github.com/alibaba/jvm-sandbox</url>
     </scm>
 
 

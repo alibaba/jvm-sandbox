@@ -10,10 +10,7 @@ import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 import static com.alibaba.jvm.sandbox.api.filter.AccessFlags.*;
 
@@ -45,7 +42,7 @@ public class ExtFilterMatcher implements Matcher {
         if (null == classStructures) {
             return null;
         }
-        final Set<String> javaClassNames = new LinkedHashSet<String>();
+        final List<String> javaClassNames = new ArrayList<String>();
         for (final ClassStructure classStructure : classStructures) {
             javaClassNames.add(classStructure.getJavaClassName());
         }

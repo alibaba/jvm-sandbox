@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.*;
+import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.resource.*;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
@@ -559,6 +560,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
      */
     private void softFlush() throws ModuleException {
 
+        final File systemModuleLibDir = new File(cfg.getSystemModuleLibPath());
         final File[] userModuleLibDirArray = cfg.getUserModuleLibFilesWithCache();
         for (final File userModuleLibDir : userModuleLibDirArray) {
 
@@ -588,10 +590,16 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 // 2. 找出所有待卸载的已加载用户模块
                 for (final CoreModule coreModule : loadedModuleBOMap.values()) {
                     final ModuleClassLoader moduleClassLoader = coreModule.getLoader();
-                    // 如果不是用户模块目录，忽略
-                    if (!isOptimisticDirectoryContainsFile(userModuleLibDir, coreModule.getJarFile())) {
+
+                    // 如果是系统模块目录则跳过
+                    if(isOptimisticDirectoryContainsFile(systemModuleLibDir, coreModule.getJarFile())) {
                         continue;
                     }
+//
+//                    // 如果不是用户模块目录，忽略
+//                    if (!isOptimisticDirectoryContainsFile(userModuleLibDir, coreModule.getJarFile())) {
+//                        continue;
+//                    }
                     // 如果CRC32已经在这次待加载的集合中，则说明这个文件没有变动，忽略
                     if (checksumCRC32s.contains(moduleClassLoader.getChecksumCRC32())) {
                         continue;

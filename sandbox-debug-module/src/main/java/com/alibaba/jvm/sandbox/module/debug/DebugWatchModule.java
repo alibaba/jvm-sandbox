@@ -124,7 +124,7 @@ public class DebugWatchModule extends HttpSupported implements Module {
                 });
         try {
             printer.println(String.format(
-                    "watching on [%s#%s], at %s, watch:%s.\nPress CTRL_C about it!",
+                    "watching on [%s#%s], at %s, watch:%s.\nPress CTRL_C abort it!",
                     cnPattern,
                     mnPattern,
                     triggers,

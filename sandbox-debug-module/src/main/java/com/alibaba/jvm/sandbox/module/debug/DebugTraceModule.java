@@ -140,7 +140,7 @@ public class DebugTraceModule extends HttpSupported implements Module {
 
         try {
             printer.println(String.format(
-                    "tracing on [%s#%s].\nPress CTRL_C about it!",
+                    "tracing on [%s#%s].\nPress CTRL_C abort it!",
                     cnPattern,
                     mnPattern
             ));

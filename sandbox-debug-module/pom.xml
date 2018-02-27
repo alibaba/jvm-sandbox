@@ -6,13 +6,14 @@
     <parent>
         <groupId>com.alibaba.jvm.sandbox</groupId>
         <artifactId>sandbox-module-starter</artifactId>
-        <version>1.0.11</version>
+        <version>1.0.12</version>
         <relativePath>../sandbox-module-starter/pom.xml</relativePath>
     </parent>
     <artifactId>sandbox-debug-module</artifactId>
-    <name>sandbox-debug-module ${project.version}</name>
+    <name>sandbox-debug-module ${sandbox.version}</name>
 
     <build>
+        <finalName>sandbox-debug-module-${sandbox.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

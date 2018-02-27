@@ -6,10 +6,10 @@
     <parent>
         <groupId>com.alibaba.jvm.sandbox</groupId>
         <artifactId>sandbox</artifactId>
-        <version>1.0.11</version>
+        <version>1.0.12</version>
     </parent>
     <artifactId>sandbox-spy</artifactId>
-    <name>sandbox-spy ${project.version}</name>
+    <name>sandbox-spy ${sandbox.version}</name>
 
     <build>
         <finalName>sandbox-spy-${project.version}</finalName>

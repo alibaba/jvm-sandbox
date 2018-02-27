@@ -176,8 +176,6 @@ class AdviceAdapterListener implements EventListener {
     }
 
 
-
-
     // --- 以下为内部操作实现 ---
 
 
@@ -298,7 +296,8 @@ class AdviceAdapterListener implements EventListener {
                 }
             } else {
                 for (final Method method : key.clazz.getDeclaredMethods()) {
-                    if (key.javaMethodDesc.equals(new BehaviorDescriptor(method).getDescriptor())) {
+                    if (key.javaMethodName.equals(method.getName())
+                            && key.javaMethodDesc.equals(new BehaviorDescriptor(method).getDescriptor())) {
                         return new Behavior.MethodImpl(method);
                     }
                 }

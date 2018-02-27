@@ -129,7 +129,7 @@ public class DebugRalphModule extends HttpSupported implements Module {
 
             try {
                 printer.println(String.format(
-                        "concurrent-limit on [%s#%s] concurrent:%s.\nPress CTRL_C about it!",
+                        "concurrent-limit on [%s#%s] concurrent:%s.\nPress CTRL_C abort it!",
                         cnPattern,
                         mnPattern,
                         concurrent
@@ -213,7 +213,7 @@ public class DebugRalphModule extends HttpSupported implements Module {
 
             try {
                 printer.println(String.format(
-                        "rate-limit on [%s#%s] rate:%.2f(TPS).\nPress CTRL_C about it!",
+                        "rate-limit on [%s#%s] rate:%.2f(TPS).\nPress CTRL_C abort it!",
                         cnPattern,
                         mnPattern,
                         rate
@@ -337,7 +337,7 @@ public class DebugRalphModule extends HttpSupported implements Module {
 
             try {
                 printer.println(String.format(
-                        "exception on [%s#%s] exception: %s.\nPress CTRL_C about it!",
+                        "exception on [%s#%s] exception: %s.\nPress CTRL_C abort it!",
                         cnPattern,
                         mnPattern,
                         exType.name()
@@ -414,7 +414,7 @@ public class DebugRalphModule extends HttpSupported implements Module {
 
             try {
                 printer.println(String.format(
-                        "delay on [%s#%s] %s(ms).\nPress CTRL_C about it!",
+                        "delay on [%s#%s] %s(ms).\nPress CTRL_C abort it!",
                         cnPattern,
                         mnPattern,
                         delayMs
