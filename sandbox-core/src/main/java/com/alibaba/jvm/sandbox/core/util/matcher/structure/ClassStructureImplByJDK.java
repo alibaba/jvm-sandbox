@@ -140,10 +140,15 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
         if (null != javaClassName) {
             return javaClassName;
         }
-        final String canonicalName = clazz.getCanonicalName();
-        return javaClassName = StringUtils.isEmpty(canonicalName)
-                ? clazz.getName()
-                : canonicalName;
+
+        return javaClassName = clazz.isArray()
+                ? clazz.getCanonicalName()
+                : clazz.getName();
+
+//        final String canonicalName = clazz.getCanonicalName();
+//        return javaClassName = StringUtils.isEmpty(canonicalName)
+//                ? clazz.getName()
+//                : canonicalName;
     }
 
     @Override

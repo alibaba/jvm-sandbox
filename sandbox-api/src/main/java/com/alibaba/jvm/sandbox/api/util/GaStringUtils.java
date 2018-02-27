@@ -18,10 +18,13 @@ public class GaStringUtils {
      * @return Class类名
      */
     public static String getJavaClassName(final Class<?> clazz) {
-        final String canonicalName = clazz.getCanonicalName();
-        return isEmpty(canonicalName)
-                ? clazz.getName()
-                : canonicalName;
+        return clazz.isArray()
+                ? clazz.getCanonicalName()
+                : clazz.getName();
+//        final String canonicalName = clazz.getCanonicalName();
+//        return isEmpty(canonicalName)
+//                ? clazz.getName()
+//                : canonicalName;
     }
 
     /**

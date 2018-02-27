@@ -5,14 +5,14 @@
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
-    <version>1.0.13</version>
+    <version>1.0.14</version>
     <packaging>pom</packaging>
 
     <name>sandbox ${sandbox.version}</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sandbox.version>1.0.13</sandbox.version>
+        <sandbox.version>1.0.14</sandbox.version>
     </properties>
 
     <build>
