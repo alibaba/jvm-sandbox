@@ -12,6 +12,7 @@
 - [WIKI](https://github.com/alibaba/jvm-sandbox/wiki/Home)
 - [用户手册](https://github.com/alibaba/jvm-sandbox/wiki/USER-GUIDE)
 - [模块研发手册](https://github.com/alibaba/jvm-sandbox/wiki/MODULE-DEVELOPER-GUIDE)
+- [模块研发例子](https://github.com/alibaba/jvm-sandbox/wiki/FOR-EXAMPLE)
 - [发布日志](https://github.com/alibaba/jvm-sandbox/wiki/RELEASE-NOTES)
 
 
