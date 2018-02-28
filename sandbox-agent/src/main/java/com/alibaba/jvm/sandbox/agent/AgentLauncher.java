@@ -62,8 +62,8 @@ public class AgentLauncher {
             + File.separator + ".sandbox.token";
 
     // 全局持有ClassLoader用于隔离sandbox实现
-    private static volatile Map<String/*NAMESPACE*/, ClassLoader> sandboxClassLoaderMap
-            = new ConcurrentHashMap<String, ClassLoader>();
+    private static volatile Map<String/*NAMESPACE*/, SandboxClassLoader> sandboxClassLoaderMap
+            = new ConcurrentHashMap<String, SandboxClassLoader>();
 
     private static final String CLASS_OF_CORE_CONFIGURE = "com.alibaba.jvm.sandbox.core.CoreConfigure";
     private static final String CLASS_OF_JETTY_CORE_SERVER = "com.alibaba.jvm.sandbox.core.server.jetty.JettyCoreServer";
@@ -148,7 +148,7 @@ public class AgentLauncher {
     private static synchronized ClassLoader loadOrDefineClassLoader(final String namespace,
                                                                     final String coreJar) throws Throwable {
 
-        final ClassLoader classLoader;
+        final SandboxClassLoader classLoader;
 
         // 如果已经被启动则返回之前启动的ClassLoader
         if (sandboxClassLoaderMap.containsKey(namespace)
@@ -172,7 +172,11 @@ public class AgentLauncher {
      * @return 被清理的ClassLoader
      */
     public static synchronized ClassLoader cleanClassLoader(final String namespace) {
-        return sandboxClassLoaderMap.remove(namespace);
+        final SandboxClassLoader sandboxClassLoader = sandboxClassLoaderMap.remove(namespace);
+        if (null != sandboxClassLoader) {
+            sandboxClassLoader.closeIfPossible();
+        }
+        return sandboxClassLoader;
     }
 
     private static synchronized InetSocketAddress main(final Map<String, String> featureMap,

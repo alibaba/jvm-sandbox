@@ -1,8 +1,12 @@
 package com.alibaba.jvm.sandbox.agent;
 
+import java.io.Closeable;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collection;
+import java.util.jar.JarFile;
 
 /**
  * 加载Sandbox用的ClassLoader
@@ -47,4 +51,42 @@ class SandboxClassLoader extends URLClassLoader {
     public String toString() {
         return String.format("SandboxClassLoader[namespace=%s;path=%s;]", namespace, path);
     }
+
+
+    public void closeIfPossible() {
+
+        // 如果是JDK7+的版本, URLClassLoader实现了Closeable接口，直接调用即可
+        if (this instanceof Closeable) {
+            try {
+                final Method closeMethod = URLClassLoader.class.getMethod("close");
+                closeMethod.invoke(this);
+            } catch (Throwable cause) {
+                // ignore...
+            }
+            return;
+        }
+
+
+        // 对于JDK6的版本，URLClassLoader要关闭起来就显得有点麻烦，这里弄了一大段代码来稍微处理下
+        // 而且还不能保证一定释放干净了，至少释放JAR文件句柄是没有什么问题了
+        try {
+            final Object sun_misc_URLClassPath = URLClassLoader.class.getDeclaredField("ucp").get(this);
+            final Object java_util_Collection = sun_misc_URLClassPath.getClass().getDeclaredField("loaders").get(sun_misc_URLClassPath);
+
+            for (Object sun_misc_URLClassPath_JarLoader :
+                    ((Collection) java_util_Collection).toArray()) {
+                try {
+                    final JarFile java_util_jar_JarFile = (JarFile) sun_misc_URLClassPath_JarLoader.getClass().getDeclaredField("jar").get(sun_misc_URLClassPath_JarLoader);
+                    java_util_jar_JarFile.close();
+                } catch (Throwable t) {
+                    // if we got this far, this is probably not a JAR loader so skip it
+                }
+            }
+
+        } catch (Throwable cause) {
+            // ignore...
+        }
+
+    }
+
 }
