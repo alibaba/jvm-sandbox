@@ -187,18 +187,19 @@ reset_for_env()
     # if env define the JAVA_HOME, use it first
     # if is alibaba opts, use alibaba ops's default JAVA_HOME
     # [ -z ${JAVA_HOME} ] && JAVA_HOME=/opt/taobao/java
-    if [[ -z ${JAVA_HOME} ]]; then
+    if [[ -z "${JAVA_HOME}" ]]; then
         JAVA_HOME=$(ps aux|grep ${TARGET_JVM_PID}|grep java|awk '{print $11}'|xargs ls -l|awk '{if($1~/^l/){print $11}else{print $9}}'|sed 's/\/bin\/java//g')
     fi
 
+	
     # check the jvm version, we need 1.6+
-    local JAVA_VERSION=$(${JAVA_HOME}/bin/java -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
-    [[ ! -x ${JAVA_HOME} || -z ${JAVA_VERSION} ]] \
+    local JAVA_VERSION=$("${JAVA_HOME}"/bin/java -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
+    [[ ! -x "${JAVA_HOME}" || -z ${JAVA_VERSION} ]] \
         && exit_on_err 1 "illegal ENV, please set \$JAVA_HOME to JDK6+"
 
     # reset BOOT_CLASSPATH
-    [ -f ${JAVA_HOME}/lib/tools.jar ] \
-        && BOOT_CLASSPATH=-Xbootclasspath/a:${JAVA_HOME}/lib/tools.jar
+    [ -f "${JAVA_HOME}"/lib/tools.jar ] \
+        && BOOT_CLASSPATH=-Xbootclasspath/a:"${JAVA_HOME}"/lib/tools.jar
 
 }
 
@@ -211,8 +212,8 @@ function attach_jvm() {
     local token=`date |head|cksum|sed 's/ //g'`
 
     # attach target jvm
-    ${JAVA_HOME}/bin/java \
-        ${BOOT_CLASSPATH} \
+    "${JAVA_HOME}"/bin/java \
+        "${BOOT_CLASSPATH}" \
         ${SANDBOX_JVM_OPS} \
         -jar ${SANDBOX_LIB_DIR}/sandbox-core.jar \
         ${TARGET_JVM_PID} \
