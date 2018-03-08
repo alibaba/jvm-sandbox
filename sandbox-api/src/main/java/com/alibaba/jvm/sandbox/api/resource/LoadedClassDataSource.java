@@ -2,6 +2,7 @@ package com.alibaba.jvm.sandbox.api.resource;
 
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -25,5 +26,15 @@ public interface LoadedClassDataSource {
      * @return 匹配的类集合
      */
     Set<Class<?>> find(Filter filter);
+
+    /**
+     * 获取所有已加载类的集合迭代器
+     * <p>
+     * 对比 {@link #list()} 而言，有更优的内存、CPU开销
+     *
+     * @return 所有已加载的类集合迭代器
+     * @since {@code sandbox-api:1.0.15}
+     */
+    Iterator<Class<?>> iteratorForLoadedClasses();
 
 }

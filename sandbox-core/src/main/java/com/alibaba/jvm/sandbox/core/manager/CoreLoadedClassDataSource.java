@@ -13,8 +13,6 @@ import java.util.List;
  */
 public interface CoreLoadedClassDataSource extends LoadedClassDataSource {
 
-    Iterator<Class<?>> iteratorForLoadedClasses();
-
     /**
      * 使用{@link Matcher}来完成类的检索
      * <p>

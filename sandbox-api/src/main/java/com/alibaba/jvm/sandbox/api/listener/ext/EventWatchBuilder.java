@@ -48,6 +48,16 @@ public class EventWatchBuilder {
         IBuildingForClass includeBootstrap();
 
         /**
+         * 是否包含被Bootstrap所加载的类
+         *
+         * @param isIncludeBootstrap TRUE:包含Bootstrap;FALSE:不包含Bootstrap;
+         * @return IBuildingForClass
+         * @see #includeBootstrap()
+         * @since {@code sandbox-api:1.0.15}
+         */
+        IBuildingForClass isIncludeBootstrap(boolean isIncludeBootstrap);
+
+        /**
          * {@link #onClass}所指定的类，检索路径是否包含子类（实现类）
          * <ul>
          * <li>如果onClass()了一个接口，则匹配时会搜索这个接口的所有实现类</li>
@@ -57,6 +67,16 @@ public class EventWatchBuilder {
          * @return IBuildingForClass
          */
         IBuildingForClass includeSubClasses();
+
+        /**
+         * 是否包含被Bootstrap所加载的类
+         *
+         * @param isIncludeSubClasses TRUE:包含子类（实现类）;FALSE:不包含子类（实现类）;
+         * @return IBuildingForClass
+         * @see #includeSubClasses()
+         * @since {@code sandbox-api:1.0.15}
+         */
+        IBuildingForClass isIncludeSubClasses(boolean isIncludeSubClasses);
 
         /**
          * 类修饰匹配
@@ -336,8 +356,24 @@ public class EventWatchBuilder {
         }
 
         @Override
+        public IBuildingForClass isIncludeBootstrap(boolean isIncludeBootstrap) {
+            if (isIncludeBootstrap) {
+                includeBootstrap();
+            }
+            return this;
+        }
+
+        @Override
         public IBuildingForClass includeSubClasses() {
             this.isIncludeSubClasses = true;
+            return this;
+        }
+
+        @Override
+        public IBuildingForClass isIncludeSubClasses(boolean isIncludeSubClasses) {
+            if (isIncludeSubClasses) {
+                includeSubClasses();
+            }
             return this;
         }
 
