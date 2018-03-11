@@ -30,6 +30,16 @@ public class ControlModule implements Module {
     @Resource
     private ModuleManager moduleManager;
 
+    private ClassLoader getSandboxClassLoader(final Class<?> classOfAgentLauncher)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        final ClassLoader sandboxClassLoader = (ClassLoader) MethodUtils.invokeStaticMethod(
+                classOfAgentLauncher,
+                "getClassLoader",
+                configInfo.getNamespace()
+        );
+        return sandboxClassLoader;
+    }
+
     // 清理命名空间所对应的SandboxClassLoader
     private ClassLoader cleanSandboxClassLoader(final Class<?> classOfAgentLauncher)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -116,8 +126,6 @@ public class ControlModule implements Module {
         final Class<?> classOfAgentLauncher = getClass().getClassLoader()
                 .loadClass("com.alibaba.jvm.sandbox.agent.AgentLauncher");
 
-        // 清理引用
-        final ClassLoader sandboxClassLoader = cleanSandboxClassLoader(classOfAgentLauncher);
         cleanSpy();
 
         // 卸载模块
@@ -128,9 +136,14 @@ public class ControlModule implements Module {
             @Override
             public void run() {
                 try {
-                    unloadSelf();
-                    shutdownServer(sandboxClassLoader);
+
+                    shutdownServer(getSandboxClassLoader(classOfAgentLauncher));
                     logger.info("shutdown jvm-sandbox finished.");
+
+                    // 清理引用
+                    unloadSelf();
+                    cleanSandboxClassLoader(classOfAgentLauncher);
+
                 } catch (Throwable cause) {
                     logger.warn("shutdown jvm-sandbox failed.", cause);
                 }

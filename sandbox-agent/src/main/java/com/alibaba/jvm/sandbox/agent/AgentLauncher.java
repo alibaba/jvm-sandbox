@@ -166,6 +166,17 @@ public class AgentLauncher {
     }
 
     /**
+     * 获取当前命名空间下的ClassLoader
+     *
+     * @param namespace 命名空间
+     * @return 当前的ClassLoader
+     * @since {@code sandbox-api:1.0.15}
+     */
+    public static ClassLoader getClassLoader(final String namespace) {
+        return sandboxClassLoaderMap.get(namespace);
+    }
+
+    /**
      * 清理namespace所指定的ClassLoader
      *
      * @param namespace 命名空间
