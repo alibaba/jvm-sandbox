@@ -14,7 +14,12 @@ import static java.lang.String.format;
 
 /**
  * SandboxAgent启动器
- * Created by luanjia@taobao.com on 16/7/30.
+ * <ul>
+ *     <li>这个类的所有静态属性都必须和版本、环境无关</li>
+ *     <li>这个类删除、修改方法时必须考虑多版本情况下，兼容性问题!</li>
+ * </ul>
+ *
+ * @author luanjia@taobao.com
  */
 public class AgentLauncher {
 
@@ -56,11 +61,11 @@ public class AgentLauncher {
     }
 
     private static String getSandboxSpyJarPath(String sandboxHome) {
-        return getSandboxCfgPath(sandboxHome) + File.separatorChar + "lib" + File.separator + "sandbox-spy.jar";
+        return sandboxHome + File.separatorChar + "lib" + File.separator + "sandbox-spy.jar";
     }
 
     private static String getSandboxPropertiesPath(String sandboxHome) {
-        return sandboxHome + File.separator + "sandbox.properties";
+        return getSandboxCfgPath(sandboxHome) + File.separator + "sandbox.properties";
     }
 
     private static String getSandboxProviderPath(String sandboxHome) {
@@ -69,11 +74,10 @@ public class AgentLauncher {
 
 
     // sandbox默认主目录
-    private static final String SANDBOX_HOME
+    private static final String DEFAULT_SANDBOX_HOME
             = new File(AgentLauncher.class.getProtectionDomain().getCodeSource().getLocation().getFile())
             .getParentFile()
             .getParent();
-    private static final String DEFAULT_SANDBOX_HOME = SANDBOX_HOME;
 
     private static final String SANDBOX_USER_MODULE_PATH
             = System.getProperties().getProperty("user.home")
@@ -97,7 +101,8 @@ public class AgentLauncher {
             = new ConcurrentHashMap<String, SandboxClassLoader>();
 
     private static final String CLASS_OF_CORE_CONFIGURE = "com.alibaba.jvm.sandbox.core.CoreConfigure";
-    private static final String CLASS_OF_JETTY_CORE_SERVER = "com.alibaba.jvm.sandbox.core.server.jetty.JettyCoreServer";
+    // private static final String CLASS_OF_JETTY_CORE_SERVER = "com.alibaba.jvm.sandbox.core.server.jetty.JettyCoreServer";
+    private static final String CLASS_OF_PROXY_CORE_SERVER = "com.alibaba.jvm.sandbox.core.server.ProxyCoreServer";
 
 
     /**
@@ -258,35 +263,35 @@ public class AgentLauncher {
             final Object objectOfCoreConfigure = classOfConfigure.getMethod("toConfigure", String.class, String.class)
                     .invoke(null, coreFeatureString, propertiesFilePath);
 
-            // JtServer类定义
-            final Class<?> classOfJtServer = agentLoader.loadClass(CLASS_OF_JETTY_CORE_SERVER);
+            // CoreServer类定义
+            final Class<?> classOfProxyServer = agentLoader.loadClass(CLASS_OF_PROXY_CORE_SERVER);
 
-            // 获取JtServer单例
-            final Object objectOfJtServer = classOfJtServer
+            // 获取CoreServer单例
+            final Object objectOfCoreServer = classOfProxyServer
                     .getMethod("getInstance")
                     .invoke(null);
 
-            // gaServer.isBind()
-            final boolean isBind = (Boolean) classOfJtServer.getMethod("isBind").invoke(objectOfJtServer);
+            // CoreServer.isBind()
+            final boolean isBind = (Boolean) classOfProxyServer.getMethod("isBind").invoke(objectOfCoreServer);
 
 
             // 如果未绑定,则需要绑定一个地址
             if (!isBind) {
                 try {
-                    classOfJtServer
+                    classOfProxyServer
                             .getMethod("bind", classOfConfigure, Instrumentation.class)
-                            .invoke(objectOfJtServer, objectOfCoreConfigure, inst);
+                            .invoke(objectOfCoreServer, objectOfCoreConfigure, inst);
                 } catch (Throwable t) {
-                    classOfJtServer.getMethod("destroy").invoke(objectOfJtServer);
+                    classOfProxyServer.getMethod("destroy").invoke(objectOfCoreServer);
                     throw t;
                 }
 
             }
 
             // 返回服务器绑定的地址
-            return (InetSocketAddress) classOfJtServer
+            return (InetSocketAddress) classOfProxyServer
                     .getMethod("getLocal")
-                    .invoke(objectOfJtServer);
+                    .invoke(objectOfCoreServer);
 
 
         } catch (Throwable cause) {

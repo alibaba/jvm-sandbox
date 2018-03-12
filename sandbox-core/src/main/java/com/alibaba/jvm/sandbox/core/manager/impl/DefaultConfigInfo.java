@@ -3,6 +3,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.resource.ConfigInfo;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
+import com.alibaba.jvm.sandbox.core.server.ProxyCoreServer;
 import com.alibaba.jvm.sandbox.core.server.jetty.JettyCoreServer;
 import org.apache.commons.io.IOUtils;
 
@@ -113,7 +114,7 @@ public class DefaultConfigInfo implements ConfigInfo {
     @Override
     public InetSocketAddress getServerAddress() {
         try {
-            return JettyCoreServer.getInstance().getLocal();
+            return ProxyCoreServer.getInstance().getLocal();
         } catch (Throwable cause) {
             return new InetSocketAddress("0.0.0.0", 0);
         }

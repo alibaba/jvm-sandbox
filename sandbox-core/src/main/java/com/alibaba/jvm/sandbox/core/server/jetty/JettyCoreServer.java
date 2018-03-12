@@ -178,8 +178,6 @@ public class JettyCoreServer implements CoreServer {
             final QueuedThreadPool qtp = (QueuedThreadPool) httpServer.getThreadPool();
             qtp.setName("sandbox-jetty-qtp" + qtp.hashCode());
         }
-
-        logger.info("init httpSrv success. bind to {}:{}", cfg.getServerIp(), cfg.getServerPort());
     }
 
     // 初始化各种manager
@@ -227,6 +225,8 @@ public class JettyCoreServer implements CoreServer {
                     httpServer.start();
                 }
             });
+            final InetSocketAddress local = getLocal();
+            logger.info("init httpSrv success. bind to {}:{}", local.getHostName(), local.getPort());
         } catch (Throwable cause) {
             logger.warn("{} bind failed.", this);
             throw new IOException(
