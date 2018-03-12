@@ -53,6 +53,18 @@ class SandboxClassLoader extends URLClassLoader {
     }
 
 
+    /**
+     * 尽可能关闭ClassLoader
+     * <p>
+     * URLClassLoader会打开指定的URL资源，在SANDBOX中则是对应的Jar文件，如果不在shutdown的时候关闭ClassLoader，会导致下次再次加载
+     * 的时候，依然会访问到上次所打开的文件（底层被缓存起来了）
+     * <p>
+     * 在JDK1.7版本中，URLClassLoader提供了{@code close()}方法来完成这件事；但在JDK1.6版本就要下点手段了；
+     * <p>
+     * 该方法将会被{@code ControlModule#shutdown}通过反射调用，
+     * 请保持方法声明一致
+     */
+    @SuppressWarnings("unused")
     public void closeIfPossible() {
 
         // 如果是JDK7+的版本, URLClassLoader实现了Closeable接口，直接调用即可

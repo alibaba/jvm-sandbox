@@ -1,7 +1,7 @@
 # program : sandbox
 #  author : luanjia@taobao.com
-#    date : 2017-01-01
-# version : 0.0.0.1
+#    date : 2018-03-12
+# version : 0.0.0.2
 
 #!/usr/bin/env bash
 
@@ -218,7 +218,7 @@ function attach_jvm() {
         -jar ${SANDBOX_LIB_DIR}/sandbox-core.jar \
         ${TARGET_JVM_PID} \
         "${SANDBOX_LIB_DIR}/sandbox-agent.jar" \
-        "token=${token};ip=${TARGET_SERVER_IP};port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" \
+        "home=${SANDBOX_HOME_DIR};token=${token};ip=${TARGET_SERVER_IP};port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" \
     || exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail."
 
     # get network from attach result
