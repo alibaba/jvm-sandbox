@@ -110,10 +110,10 @@ public class ControlModule implements Module {
             return;
         }
 
-        final Class<?> classOfJettyCoreServer = sandboxClassLoader
-                .loadClass("com.alibaba.jvm.sandbox.core.server.jetty.JettyCoreServer");
-        final Object objectOfJettyCoreServer = classOfJettyCoreServer.getMethod("getInstance").invoke(null);
-        final Method methodOfDestroy = classOfJettyCoreServer.getMethod("destroy");
+        final Class<?> classOfCoreServer = sandboxClassLoader
+                .loadClass("com.alibaba.jvm.sandbox.core.server.ProxyCoreServer");
+        final Object objectOfJettyCoreServer = classOfCoreServer.getMethod("getInstance").invoke(null);
+        final Method methodOfDestroy = classOfCoreServer.getMethod("destroy");
         methodOfDestroy.invoke(objectOfJettyCoreServer, null);
         logger.info("shutdown http-server success, for shutdown jvm-sandbox.");
     }
