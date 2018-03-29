@@ -14,13 +14,10 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.getCauseMessa
  */
 public class CoreLauncher {
 
-    private static final Logger Log = LoggerFactory.getLogger(CoreLauncher.class);
 
     public CoreLauncher(final String targetJvmPid,
                         final String agentJarPath,
                         final String token) throws Exception {
-
-        Log.info("pid:{},agentJarPath:{},token:{}",targetJvmPid,agentJarPath,token);
 
         // 加载agent
         attachAgent(targetJvmPid, agentJarPath, token);
@@ -48,8 +45,8 @@ public class CoreLauncher {
 
             new CoreLauncher(args[0],args[1],args[2]);
         } catch (Throwable t) {
-            Log.error("",t);
-            Log.error("sandbox load jvm failed : {}",getCauseMessage(t));
+            t.printStackTrace(System.err);
+            System.err.println("sandbox load jvm failed : " + getCauseMessage(t));
             System.exit(-1);
         }
     }
@@ -65,7 +62,6 @@ public class CoreLauncher {
             vmObj = VirtualMachine.attach(targetJvmPid);
             if(vmObj!=null){
                 vmObj.loadAgent(agentJarPath,cfg);
-                Log.info("load agent success");
             }
 
         } finally {
