@@ -310,10 +310,10 @@ public class AgentLauncher {
     private static final String KEY_NAMESPACE = "namespace";
     private static final String DEFAULT_NAMESPACE = "default";
 
-    private static final String KEY_SERVER_IP = "ip";
+    private static final String KEY_SERVER_IP = "server.ip";
     private static final String DEFAULT_IP = "0.0.0.0";
 
-    private static final String KEY_SERVER_PORT = "port";
+    private static final String KEY_SERVER_PORT = "server.port";
     private static final String DEFAULT_PORT = "0";
 
     private static final String KEY_TOKEN = "token";
