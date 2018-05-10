@@ -1,9 +1,9 @@
+#!/usr/bin/env bash
+
 # program : sandbox
 #  author : luanjia@taobao.com
 #    date : 2018-03-12
 # version : 0.0.0.2
-
-#!/usr/bin/env bash
 
 # define sandbox's home
 # will be replace by install-local.sh
