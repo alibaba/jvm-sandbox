@@ -36,6 +36,10 @@ public class ModuleClassLoader extends RoutingURLClassLoader {
     private final long checksumCRC32;
 
     private static File copyToTempFile(final File moduleJarFile) throws IOException {
+
+        //https://github.com/alibaba/jvm-sandbox/issues/75
+        com.alibaba.jvm.sandbox.core.util.FileUtils.makeTmpDirIfNeeded();
+
         File tempFile = File.createTempFile("sandbox_module_jar_", ".jar");
         tempFile.deleteOnExit();
         FileUtils.copyFile(moduleJarFile, tempFile);
