@@ -218,7 +218,7 @@ function attach_jvm() {
         -jar ${SANDBOX_LIB_DIR}/sandbox-core.jar \
         ${TARGET_JVM_PID} \
         "${SANDBOX_LIB_DIR}/sandbox-agent.jar" \
-        "home=${SANDBOX_HOME_DIR};token=${token};ip=${TARGET_SERVER_IP};port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" \
+        "home=${SANDBOX_HOME_DIR};token=${token};server.ip=${TARGET_SERVER_IP};server.port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" \
     || exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail."
 
     # get network from attach result
