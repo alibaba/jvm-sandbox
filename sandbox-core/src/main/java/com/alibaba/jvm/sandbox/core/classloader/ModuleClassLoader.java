@@ -15,8 +15,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessControlContext;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.jar.JarFile;
 
@@ -43,21 +46,22 @@ public class ModuleClassLoader extends RoutingURLClassLoader {
     }
 
     public ModuleClassLoader(final File moduleJarFile,
-                             final ClassLoader sandboxClassLoader) throws IOException {
-        this(moduleJarFile, copyToTempFile(moduleJarFile), sandboxClassLoader);
+                             final ClassLoader sandboxClassLoader,
+                             final Routing... routingArray) throws IOException {
+        this(moduleJarFile, copyToTempFile(moduleJarFile), sandboxClassLoader, routingArray);
     }
 
     private ModuleClassLoader(final File moduleJarFile,
                               final File tempModuleJarFile,
-                              final ClassLoader sandboxClassLoader) throws IOException {
+                              final ClassLoader sandboxClassLoader,
+                              final Routing... routingArray) throws IOException {
         super(
-                new URL[]{new URL("file:" + tempModuleJarFile.getPath())},
-                new Routing(
-                        sandboxClassLoader,
-                        "^com\\.alibaba\\.jvm\\.sandbox\\.api\\..*",
-                        "^javax\\.servlet\\..*",
-                        "^javax\\.annotation\\.Resource.*$"
-                )
+            new URL[] {new URL("file:" + tempModuleJarFile.getPath())},
+            assembleRouting(new Routing(sandboxClassLoader,
+                "^com\\.alibaba\\.jvm\\.sandbox\\.api\\..*",
+                "^javax\\.servlet\\..*",
+                "^javax\\.annotation\\.Resource.*$"
+            ), routingArray)
         );
         this.checksumCRC32 = FileUtils.checksumCRC32(moduleJarFile);
         this.moduleJarFile = moduleJarFile;
@@ -70,6 +74,22 @@ public class ModuleClassLoader extends RoutingURLClassLoader {
             logger.warn("clean ProtectionDomain in {}'s acc failed.", this, e);
         }
 
+    }
+
+    /**
+     * 组装路由表
+     *
+     * @param selfRouting  自身路由表
+     * @param routingArray 扩展路由表
+     * @return
+     */
+    private static Routing[] assembleRouting(final Routing selfRouting, final Routing... routingArray) {
+        List<Routing> rs = new ArrayList<Routing>();
+        if (routingArray != null && routingArray.length > 0) {
+            rs.addAll(Arrays.asList(routingArray));
+        }
+        rs.add(selfRouting);
+        return rs.toArray(new Routing[rs.size()]);
     }
 
     /**

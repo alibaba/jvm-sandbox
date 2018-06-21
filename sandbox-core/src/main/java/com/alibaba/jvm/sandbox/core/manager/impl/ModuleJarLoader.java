@@ -2,15 +2,23 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
+import com.alibaba.jvm.sandbox.api.resource.LoadedClassDataSource;
+import com.alibaba.jvm.sandbox.api.routing.RoutingExt;
+import com.alibaba.jvm.sandbox.api.routing.RoutingInfo;
+import com.alibaba.jvm.sandbox.api.routing.RoutingInfo.Type;
 import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
+import com.alibaba.jvm.sandbox.core.classloader.RoutingURLClassLoader.Routing;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ServiceLoader;
 
 import static org.apache.commons.io.FileUtils.convertFileCollectionToFileArray;
@@ -34,12 +42,16 @@ public class ModuleJarLoader {
     // 沙箱加载ClassLoader
     private final ClassLoader sandboxClassLoader;
 
+    private final LoadedClassDataSource loadedClassDataSource;
+
     public ModuleJarLoader(final File moduleLibDir,
                            final Information.Mode mode,
-                           final ClassLoader sandboxClassLoader) {
+                           final ClassLoader sandboxClassLoader,
+                           final LoadedClassDataSource loadedClassDataSource) {
         this.moduleLibDir = moduleLibDir;
         this.mode = mode;
         this.sandboxClassLoader = sandboxClassLoader;
+        this.loadedClassDataSource = loadedClassDataSource;
     }
 
     private File[] toModuleJarFileArray() {
@@ -76,6 +88,32 @@ public class ModuleJarLoader {
 
             ModuleClassLoader moduleClassLoader = null;
 
+            Routing[] routingArray = null;
+
+            /**
+             * 尝试获取路由列表
+             */
+            try {
+                moduleClassLoader = new ModuleClassLoader(moduleJarFile, sandboxClassLoader);
+                ServiceLoader<RoutingExt> rExtServiceLoader = ServiceLoader.load(RoutingExt.class, moduleClassLoader);
+                Iterator<RoutingExt> iterator = rExtServiceLoader.iterator();
+                List<Routing> rs = new ArrayList<Routing>();
+                while (iterator.hasNext()) {
+                    RoutingExt routingExt = iterator.next();
+                    Routing routing = toRoutingRule(routingExt.getSpecialRouting());
+                    if (routing != null) {
+                        rs.add(routing);
+                    }
+                }
+                routingArray = rs.toArray(new Routing[0]);
+                moduleClassLoader.closeIfPossible();
+            } catch (Throwable cause) {
+                logger.warn("load sandbox module JAR[file={}] failed.", moduleJarFile, cause);
+                if (null != moduleClassLoader) {
+                    moduleClassLoader.closeIfPossible();
+                }
+            }
+
             try {
 
                 // 是否有模块加载成功
@@ -86,7 +124,7 @@ public class ModuleJarLoader {
                 }
 
                 // 模块ClassLoader
-                moduleClassLoader = new ModuleClassLoader(moduleJarFile, sandboxClassLoader);
+                moduleClassLoader = new ModuleClassLoader(moduleJarFile, sandboxClassLoader, routingArray);
 
                 final ServiceLoader<Module> moduleServiceLoader = ServiceLoader.load(Module.class, moduleClassLoader);
                 final Iterator<Module> moduleIt = moduleServiceLoader.iterator();
@@ -149,6 +187,38 @@ public class ModuleJarLoader {
 
         }
 
+    }
+
+    /**
+     * 转换成真正的路由表
+     *
+     * @param routingInfo 模块传递的路由
+     * @return
+     */
+    private Routing toRoutingRule(final RoutingInfo routingInfo) {
+        if (routingInfo == null) {
+            return null;
+        }
+        // 自定义目标类加载器
+        if (routingInfo.getType() == Type.TARGET_CLASS_LOADER) {
+            ClassLoader classLoader = routingInfo.getTargetClassloader();
+            if (classLoader != null) {
+                logger.info("use target classloader routing rule,classloader={},pattern={}",classLoader,
+                    routingInfo.getPattern());
+                return new Routing(classLoader, routingInfo.getPattern());
+            }
+            // 使用目标类的类加载器
+        } else if (routingInfo.getType() == Type.TARGET_CLASS) {
+            String className = routingInfo.getTargetClass();
+            for (Class<?> clazz : loadedClassDataSource.list()) {
+                if (StringUtils.equals(className, clazz.getName())) {
+                    logger.info("find target routing rule,class={},classloader={},pattern={}",className,
+                        clazz.getClassLoader(),routingInfo.getPattern());
+                    return new Routing(clazz.getClassLoader(), routingInfo.getPattern());
+                }
+            }
+        }
+        return null;
     }
 
     /**
