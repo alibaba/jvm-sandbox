@@ -4,6 +4,7 @@ import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.resource.ConfigInfo;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.server.ProxyCoreServer;
+import com.alibaba.jvm.sandbox.core.server.jetty.JettyCoreServer;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -115,7 +116,7 @@ public class DefaultConfigInfo implements ConfigInfo {
         try {
             return ProxyCoreServer.getInstance().getLocal();
         } catch (Throwable cause) {
-            return new InetSocketAddress(cfg.getServerIp(), cfg.getServerPort());
+            return new InetSocketAddress("0.0.0.0", 0);
         }
     }
 
