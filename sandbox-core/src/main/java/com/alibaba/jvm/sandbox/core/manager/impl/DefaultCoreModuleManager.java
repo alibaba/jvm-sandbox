@@ -505,7 +505,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
             // 对模块访问权限进行校验
             if (moduleLibDir.exists()
                     && moduleLibDir.canRead()) {
-                new ModuleJarLoader(moduleLibDir, cfg.getLaunchMode(), sandboxClassLoader)
+                new ModuleJarLoader(moduleLibDir, cfg.getLaunchMode(), sandboxClassLoader, classDataSource)
                         .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
             } else {
                 logger.warn("MODULE-LIB[{}] can not access, ignore flush load this lib.", moduleLibDir);
@@ -614,7 +614,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
                 // 4. 加载add
                 for (final File jarFile : appendJarFiles) {
-                    new ModuleJarLoader(jarFile, cfg.getLaunchMode(), sandboxClassLoader)
+                    new ModuleJarLoader(jarFile, cfg.getLaunchMode(), sandboxClassLoader, classDataSource)
                             .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
                 }
             } catch (Throwable cause) {
@@ -659,7 +659,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         for (final File userModuleLibDir : userModuleLibFileArray) {
             if (userModuleLibDir.exists()
                     && userModuleLibDir.canRead()) {
-                new ModuleJarLoader(userModuleLibDir, cfg.getLaunchMode(), sandboxClassLoader)
+                new ModuleJarLoader(userModuleLibDir, cfg.getLaunchMode(), sandboxClassLoader, classDataSource)
                         .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
             } else {
                 logger.warn("MODULE-LIB[{}] can not access, ignore flush load this lib.", userModuleLibDir);
