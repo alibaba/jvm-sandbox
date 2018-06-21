@@ -6,7 +6,7 @@
     <parent>
         <artifactId>sandbox</artifactId>
         <groupId>com.alibaba.jvm.sandbox</groupId>
-        <version>1.0.15</version>
+        <version>1.0.16-SNAPSHOT</version>
     </parent>
     <artifactId>sandbox-mgr-module</artifactId>
     <name>sandbox-mgr-module ${sandbox.version}</name>
