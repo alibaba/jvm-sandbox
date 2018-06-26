@@ -1,8 +1,9 @@
+#!/usr/bin/env bash
+
 # program : install-local.sh
 #  author : luanjia@taobao.com
 #    date : 2017-01-01
 # version : 0.0.0.1
-#!/usr/bin/env bash
 
 typeset SANDBOX_INSTALL_PREFIX
 typeset DEFAULT_SANDBOX_INSTALL_PREFIX="${HOME}/.opt"
