@@ -2,6 +2,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
+import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
@@ -76,6 +77,11 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
 
             // 这里过滤掉来自SandboxClassLoader的类，防止ClassCircularityError的发生
             if (loader == SandboxClassFileTransformer.class.getClassLoader()) {
+                return null;
+            }
+
+            // 过滤掉来自ModuleClassLoader加载的类
+            if(loader instanceof ModuleClassLoader) {
                 return null;
             }
 
