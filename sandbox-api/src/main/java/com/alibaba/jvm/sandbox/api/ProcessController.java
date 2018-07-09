@@ -1,6 +1,10 @@
 package com.alibaba.jvm.sandbox.api;
 
+import static com.alibaba.jvm.sandbox.api.ProcessControlException.State.NONE_IMMEDIATELY;
+import static com.alibaba.jvm.sandbox.api.ProcessControlException.State.RETURN_IMMEDIATELY;
+import static com.alibaba.jvm.sandbox.api.ProcessControlException.State.THROWS_IMMEDIATELY;
 import static com.alibaba.jvm.sandbox.api.ProcessControlException.throwReturnImmediately;
+import static com.alibaba.jvm.sandbox.api.ProcessControlException.throwThrowsImmediately;
 
 /**
  * 流程控制
@@ -33,7 +37,49 @@ public final class ProcessController {
      * @throws ProcessControlException 抛出立即抛出异常流程控制异常
      */
     public static void throwsImmediately(final Throwable throwable) throws ProcessControlException {
-        ProcessControlException.throwThrowsImmediately(throwable);
+        throwThrowsImmediately(throwable);
+    }
+
+    /**
+     * 中断当前代码处理流程,并立即返回指定对象,且忽略后续所有事件处理
+     *
+     * @param object
+     * @throws ProcessControlException 抛出立即返回流程控制异常
+     * @since {@code sandbox-api:1.0.16}
+     */
+    public static void returnImmediatelyWithIgnoreProcessEvent(final Object object) throws ProcessControlException {
+        throw new ProcessControlException(true, RETURN_IMMEDIATELY, object);
+    }
+
+    /**
+     * 中断当前代码处理流程,并抛出指定异常,且忽略后续所有事件处理
+     *
+     * @param throwable
+     * @throws ProcessControlException 抛出立即抛出异常流程控制异常
+     * @since {@code sandbox-api:1.0.16}
+     */
+    public static void throwsImmediatelyWithIgnoreProcessEvent(final Throwable throwable) throws ProcessControlException {
+        throw new ProcessControlException(true, THROWS_IMMEDIATELY, throwable);
+    }
+
+    /**
+     * 不干预当前处理流程
+     *
+     * @throws ProcessControlException 抛出不干预流程处理异常
+     * @since {@code sandbox-api:1.0.16}
+     */
+    public static void noneImmediately() throws ProcessControlException {
+        throw new ProcessControlException(NONE_IMMEDIATELY, null);
+    }
+
+    /**
+     * 不干预当前处理流程,但忽略后续所有事件处理
+     *
+     * @throws ProcessControlException 抛出不干预流程处理异常
+     * @since {@code sandbox-api:1.0.16}
+     */
+    public static void noneImmediatelyWithIgnoreProcessEvent() throws ProcessControlException {
+        throw new ProcessControlException(true, NONE_IMMEDIATELY, null);
     }
 
 }
