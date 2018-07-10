@@ -94,8 +94,7 @@ public class CoreConfigure {
         for (String key : properties.stringPropertyNames()) {
 
             // 过滤掉受保护的key
-            if (ArrayUtils.contains(PROTECT_KEY_ARRAY, key)
-                    && map.containsKey(key)) {
+            if (ArrayUtils.contains(PROTECT_KEY_ARRAY, key)) {
                 continue;
             }
 
