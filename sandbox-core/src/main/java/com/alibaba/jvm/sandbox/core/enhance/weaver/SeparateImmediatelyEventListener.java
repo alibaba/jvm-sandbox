@@ -79,9 +79,14 @@ public class SeparateImmediatelyEventListener implements EventListener {
                     stepRef.set(Step.STEP_IMMEDIATELY_RETURN_EVENT);
                     break;
                 }
-                case THROWS_IMMEDIATELY:
-                default: {
+                case THROWS_IMMEDIATELY: {
                     stepRef.set(Step.STEP_IMMEDIATELY_THROWS_EVENT);
+                    break;
+                }
+                case NONE_IMMEDIATELY:
+                default: {
+                    stepRef.set(Step.STEP_ORIGINAL_EVENT);
+                    break;
                 }
             }
 
