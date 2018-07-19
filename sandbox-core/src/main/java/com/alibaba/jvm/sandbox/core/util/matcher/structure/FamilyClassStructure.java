@@ -72,7 +72,7 @@ public abstract class FamilyClassStructure implements ClassStructure {
 
     // 过滤掉没有@Inherited标注的Annotation，因为他们不能继承
     private Set<ClassStructure> filterInheritedAnnotationTypeClassStructure(final Set<ClassStructure> classStructures) {
-        final Iterator<ClassStructure> itCs = classStructures.iterator();
+        final Iterator<ClassStructure> itCs = new HashSet<ClassStructure>(classStructures).iterator();
         while (itCs.hasNext()) {
             final ClassStructure annotationTypeClassStructure = itCs.next();
             if (!isInheritedAnnotationType(annotationTypeClassStructure)) {
