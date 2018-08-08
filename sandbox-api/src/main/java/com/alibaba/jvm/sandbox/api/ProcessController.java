@@ -62,6 +62,12 @@ public final class ProcessController {
         throw new ProcessControlException(true, THROWS_IMMEDIATELY, throwable);
     }
 
+    private static final ProcessControlException noneImmediatelyException
+            = new ProcessControlException(NONE_IMMEDIATELY, null);
+
+    private static final ProcessControlException noneImmediatelyWithIgnoreProcessEventException
+            = new ProcessControlException(true, NONE_IMMEDIATELY, null);
+
     /**
      * 不干预当前处理流程
      *
@@ -69,7 +75,7 @@ public final class ProcessController {
      * @since {@code sandbox-api:1.0.16}
      */
     public static void noneImmediately() throws ProcessControlException {
-        throw new ProcessControlException(NONE_IMMEDIATELY, null);
+        throw noneImmediatelyException;
     }
 
     /**
@@ -79,7 +85,7 @@ public final class ProcessController {
      * @since {@code sandbox-api:1.0.16}
      */
     public static void noneImmediatelyWithIgnoreProcessEvent() throws ProcessControlException {
-        throw new ProcessControlException(true, NONE_IMMEDIATELY, null);
+        throw noneImmediatelyWithIgnoreProcessEventException;
     }
 
 }
