@@ -12,7 +12,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sandbox.version>1.0.15</sandbox.version>
+        <sandbox.version>1.0.16</sandbox.version>
     </properties>
 
     <build>
@@ -175,17 +175,17 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-server</artifactId>
-                <version>8.2.0.v20160908</version>
+                <version>8.1.2.v20120308</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
-                <version>8.2.0.v20160908</version>
+                <version>8.1.2.v20120308</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-websocket</artifactId>
-                <version>8.2.0.v20160908</version>
+                <version>8.1.2.v20120308</version>
             </dependency>
 
             <!-- asm -->
