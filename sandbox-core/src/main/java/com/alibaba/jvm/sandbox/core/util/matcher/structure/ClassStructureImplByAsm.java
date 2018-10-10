@@ -1,6 +1,5 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
-import com.alibaba.jvm.sandbox.api.util.CacheGet;
 import com.alibaba.jvm.sandbox.core.util.BitUtils;
 import com.alibaba.jvm.sandbox.core.util.LazyGet;
 import com.alibaba.jvm.sandbox.core.util.collection.GaLRUCache;
@@ -13,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.instrument.Instrumentation;
 import java.util.*;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;

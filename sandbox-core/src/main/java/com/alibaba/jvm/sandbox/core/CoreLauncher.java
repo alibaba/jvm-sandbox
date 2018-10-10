@@ -3,7 +3,6 @@ package com.alibaba.jvm.sandbox.core;
 import com.sun.tools.attach.VirtualMachine;
 import org.apache.commons.lang3.StringUtils;
 
-
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.getCauseMessage;
 
 /**

@@ -1,8 +1,6 @@
 package com.alibaba.jvm.sandbox.api;
 
-import static com.alibaba.jvm.sandbox.api.ProcessControlException.State.NONE_IMMEDIATELY;
-import static com.alibaba.jvm.sandbox.api.ProcessControlException.State.RETURN_IMMEDIATELY;
-import static com.alibaba.jvm.sandbox.api.ProcessControlException.State.THROWS_IMMEDIATELY;
+import static com.alibaba.jvm.sandbox.api.ProcessControlException.State.*;
 import static com.alibaba.jvm.sandbox.api.ProcessControlException.throwReturnImmediately;
 import static com.alibaba.jvm.sandbox.api.ProcessControlException.throwThrowsImmediately;
 
@@ -43,7 +41,7 @@ public final class ProcessController {
     /**
      * 中断当前代码处理流程,并立即返回指定对象,且忽略后续所有事件处理
      *
-     * @param object
+     * @param object 返回对象
      * @throws ProcessControlException 抛出立即返回流程控制异常
      * @since {@code sandbox-api:1.0.16}
      */
@@ -54,7 +52,7 @@ public final class ProcessController {
     /**
      * 中断当前代码处理流程,并抛出指定异常,且忽略后续所有事件处理
      *
-     * @param throwable
+     * @param throwable 指定异常
      * @throws ProcessControlException 抛出立即抛出异常流程控制异常
      * @since {@code sandbox-api:1.0.16}
      */

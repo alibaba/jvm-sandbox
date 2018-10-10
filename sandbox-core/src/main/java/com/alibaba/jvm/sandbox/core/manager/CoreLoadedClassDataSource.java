@@ -3,7 +3,6 @@ package com.alibaba.jvm.sandbox.core.manager;
 import com.alibaba.jvm.sandbox.api.resource.LoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**

@@ -49,7 +49,7 @@ public class ControlModule implements Module {
                 "cleanClassLoader",
                 configInfo.getNamespace()
         );
-        logger.info("clean jvm-sandbox ClassLoader[namespace={}] success, for jvm-sandbox shutdown.",
+        logger.info("clean SandboxClassLoader from jvm-sandbox[{}] success, for shutdown.",
                 configInfo.getNamespace());
         return sandboxClassLoader;
     }
@@ -69,7 +69,7 @@ public class ControlModule implements Module {
                 );
             }
         }
-        logger.info("clean Spy's method success, for jvm-sandbox shutdown.");
+        logger.info("clean Spy's method from jvm-sandbox[{}] success, for shutdown.", configInfo.getNamespace());
     }
 
     // 卸载所有模块
@@ -87,7 +87,7 @@ public class ControlModule implements Module {
                 continue;
             }
             moduleManager.unload(information.id());
-            logger.info("unload module={} success, for shutdown jvm-sandbox.", information.id());
+            logger.info("unload module={} from jvm-sandbox[{}] success, for shutdown.", information.id(), configInfo.getNamespace());
         }
 
     }
@@ -97,7 +97,7 @@ public class ControlModule implements Module {
         // 卸载自己
         final String self = getClass().getAnnotation(Information.class).id();
         moduleManager.unload(self);
-        logger.info("unload module={} success, for shutdown jvm-sandbox.", self);
+        logger.info("unload module={} from jvm-sandbox[{}] success, for shutdown.", self, configInfo.getNamespace());
     }
 
     // 关闭HTTP服务器
@@ -114,14 +114,14 @@ public class ControlModule implements Module {
                 .loadClass("com.alibaba.jvm.sandbox.core.server.ProxyCoreServer");
         final Object objectOfJettyCoreServer = classOfCoreServer.getMethod("getInstance").invoke(null);
         final Method methodOfDestroy = classOfCoreServer.getMethod("destroy");
-        methodOfDestroy.invoke(objectOfJettyCoreServer, null);
-        logger.info("shutdown http-server success, for shutdown jvm-sandbox.");
+        methodOfDestroy.invoke(objectOfJettyCoreServer);
+        logger.info("shutdown jvm-sandbox[{}] server success for shutdown.", configInfo.getNamespace());
     }
 
     @Http("/shutdown")
     public void shutdown(final HttpServletResponse resp) throws Exception {
 
-        logger.info("prepare to shutdown jvm-sandbox.");
+        logger.info("prepare to shutdown jvm-sandbox[{}].", configInfo.getNamespace());
 
         final Class<?> classOfAgentLauncher = getClass().getClassLoader()
                 .loadClass("com.alibaba.jvm.sandbox.agent.AgentLauncher");
@@ -138,21 +138,18 @@ public class ControlModule implements Module {
                 try {
 
                     shutdownServer(getSandboxClassLoader(classOfAgentLauncher));
-                    logger.info("shutdown jvm-sandbox finished.");
-
-                    // 清理引用
                     unloadSelf();
                     cleanSandboxClassLoader(classOfAgentLauncher);
 
                 } catch (Throwable cause) {
-                    logger.warn("shutdown jvm-sandbox failed.", cause);
+                    logger.warn("shutdown jvm-sandbox[{}] failed.", configInfo.getNamespace(), cause);
                 }
             }
-        }, "shutdown-jvm-sandbox-hook");
+        }, String.format("shutdown-jvm-sandbox-%s-hook", configInfo.getNamespace()));
         shutdownJvmSandboxHook.setDaemon(true);
 
         // 在卸载自己之前，先向这个世界发出最后的呐喊吧！
-        resp.getWriter().println("jvm-sandbox shutdown finished.");
+        resp.getWriter().println(String.format("jvm-sandbox[%s] shutdown finished.", configInfo.getNamespace()));
         resp.getWriter().flush();
         resp.getWriter().close();
 

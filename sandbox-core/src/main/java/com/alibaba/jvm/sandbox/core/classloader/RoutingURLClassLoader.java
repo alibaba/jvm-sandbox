@@ -1,13 +1,17 @@
 package com.alibaba.jvm.sandbox.core.classloader;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 
 /**
  * 可路由的URLClassLoader
@@ -32,6 +36,25 @@ public class RoutingURLClassLoader extends URLClassLoader {
         this.routingArray = routingArray;
     }
 
+    @Override
+    public URL getResource(String name) {
+        URL url = findResource(name);
+        if(null != url) {
+            return url;
+        }
+        url = super.getResource(name);
+        return url;
+    }
+
+    @Override
+    public Enumeration<URL> getResources(String name) throws IOException {
+        Enumeration<URL> urls = findResources(name);
+        if( null != urls ) {
+            return urls;
+        }
+        urls = super.getResources(name);
+        return urls;
+    }
 
     @Override
     protected synchronized Class<?> loadClass(String javaClassName, boolean resolve) throws ClassNotFoundException {
@@ -44,7 +67,8 @@ public class RoutingURLClassLoader extends URLClassLoader {
                 }
                 final ClassLoader routingClassLoader = routing.classLoader;
                 try {
-                    return routingClassLoader.loadClass(javaClassName);
+                    final Class<?> returnClass = routingClassLoader.loadClass(javaClassName);
+                    return returnClass;
                 } catch (Exception cause) {
                     // 如果在当前routingClassLoader中找不到应该优先加载的类(应该不可能，但不排除有就是故意命名成同名类)
                     // 此时应该忽略异常，继续往下加载
@@ -86,11 +110,9 @@ public class RoutingURLClassLoader extends URLClassLoader {
          * @param classLoader       目标ClassLoader
          * @param regexExpressArray 匹配规则表达式数组
          */
-        public Routing(final ClassLoader classLoader, final String... regexExpressArray) {
+        Routing(final ClassLoader classLoader, final String... regexExpressArray) {
             if (ArrayUtils.isNotEmpty(regexExpressArray)) {
-                for (final String regexExpress : regexExpressArray) {
-                    regexExpresses.add(regexExpress);
-                }
+                regexExpresses.addAll(Arrays.asList(regexExpressArray));
             }
             this.classLoader = classLoader;
         }

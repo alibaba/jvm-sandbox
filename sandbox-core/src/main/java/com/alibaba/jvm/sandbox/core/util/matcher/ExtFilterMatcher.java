@@ -10,7 +10,9 @@ import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static com.alibaba.jvm.sandbox.api.filter.AccessFlags.*;
 
