@@ -126,10 +126,11 @@ public class ControlModule implements Module {
         final Class<?> classOfAgentLauncher = getClass().getClassLoader()
                 .loadClass("com.alibaba.jvm.sandbox.agent.AgentLauncher");
 
-        cleanSpy();
-
         // 卸载模块
         unloadModules();
+
+        // 清理Spy的注册方法回调
+        cleanSpy();
 
         // 关闭HTTP服务器
         final Thread shutdownJvmSandboxHook = new Thread(new Runnable() {
