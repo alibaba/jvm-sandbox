@@ -114,17 +114,36 @@ public class EventListenerHandlers {
         catch (ProcessControlException pce) {
 
             final ProcessControlException.State state = pce.getState();
-            logger.debug("listener onEvent change process, listener-id={};process-id={};invoke-id={};type={};state={};",
-                    listenerId, processId, invokeId, event.type, state
+            logger.debug("listener onEvent change process, listener-id={};process-id={};invoke-id={};type={};state={};isIgnoreProcessEvent={};",
+                    listenerId, processId, invokeId, event.type, state, pce.isIgnoreProcessEvent()
             );
+
+            final EventListenerWrap.EventProcess eventProcess = wrap.eventProcessRef.get();
+
+            // 如果流程控制要求忽略后续处理所有事件，则需要在此处进行标记
+            // 标记当前线程中、当前EventListener中需要主动忽略的ProcessId
+            if (pce.isIgnoreProcessEvent()) {
+                eventProcess.markIgnoreProcessEvent(processId);
+            }
 
             switch (state) {
 
                 // 立即返回对象
                 case RETURN_IMMEDIATELY: {
-                    logger.debug("enter process control flow, return immediately listener-id={};process-id={};invoke-id={};type={};return={};",
-                            listenerId, processId, invokeId, event.type, pce.getRespond()
+                    logger.debug("enter process control flow, return immediately "
+                                    + "listener-id={};"
+                                    + "process-id={};"
+                                    + "invoke-id={};"
+                                    + "type={};"
+                                    + "return={};"
+                                    + "isIgnoreProcessEvent={};",
+                            listenerId, processId, invokeId, event.type, pce.getRespond(), pce.isIgnoreProcessEvent()
                     );
+
+                    // 如果已经禁止后续返回任何事件了，则不进行后续的操作
+                    if (pce.isIgnoreProcessEvent()) {
+                        return Spy.Ret.newInstanceForReturn(pce.getRespond());
+                    }
 
                     final ReturnEvent replaceReturnEvent = eventPool.borrowReturnEvent(processId, invokeId, pce.getRespond());
                     final Spy.Ret ret;
@@ -153,9 +172,20 @@ public class EventListenerHandlers {
                 case THROWS_IMMEDIATELY: {
 
                     final Throwable throwable = (Throwable) pce.getRespond();
-                    logger.debug("enter process control flow, throws immediately listener-id={};process-id={};invoke-id={};type={};throws={};",
-                            listenerId, processId, invokeId, event.type, throwable
+                    logger.debug("enter process control flow, throws immediately "
+                                    + "listener-id={};"
+                                    + "process-id={};"
+                                    + "invoke-id={};"
+                                    + "type={};"
+                                    + "throws={};"
+                                    + "isIgnoreProcessEvent={}",
+                            listenerId, processId, invokeId, event.type, throwable, pce.isIgnoreProcessEvent()
                     );
+
+                    // 如果已经禁止后续返回任何事件了，则不进行后续的操作
+                    if (pce.isIgnoreProcessEvent()) {
+                        return Spy.Ret.newInstanceForThrows(throwable);
+                    }
 
                     if (!(event instanceof BeforeEvent)) {
 
@@ -183,6 +213,19 @@ public class EventListenerHandlers {
                         return Spy.Ret.newInstanceForThrows(throwable);
                     }
 
+                }
+
+                // 什么都不操作，立即返回
+                case NONE_IMMEDIATELY: {
+                    logger.debug("enter process control flow, none immediately "
+                                    + "listener-id={};"
+                                    + "process-id={};"
+                                    + "invoke-id={};"
+                                    + "type={};"
+                                    + "isIgnoreProcessEvent={}",
+                            listenerId, processId, invokeId, event.type, pce.isIgnoreProcessEvent()
+                    );
+                    return Spy.Ret.newInstanceForNone();
                 }
 
                 // 未知的流程变更状态,基本上而言,不可能到达这里
@@ -300,7 +343,8 @@ public class EventListenerHandlers {
         }
 
         // 获取调用跟踪信息
-        final GaStack<Integer> stack = wrap.processStackRef.get();
+        final EventListenerWrap.EventProcess eventProcess = wrap.eventProcessRef.get();
+        final GaStack<Integer> stack = eventProcess.processStack;
 
         // 调用ID
         final int invokeId = invokeIdSequencer.next();
@@ -312,6 +356,15 @@ public class EventListenerHandlers {
 
         // 将当前调用压栈
         stack.push(invokeId);
+
+        // 如果当前处理ID被忽略，则立即返回
+        // 放在stack.push后边是为了对齐执行栈
+        if (eventProcess.isIgnoreProcessEvent(processId)) {
+            return Spy.Ret.newInstanceForNone();
+        } else {
+            eventProcess.cleanIgnoreProcessEvent();
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug("push invoke stack, process-id={};invoke-id={};", processId, invokeId);
         }
@@ -345,7 +398,8 @@ public class EventListenerHandlers {
             return Spy.Ret.newInstanceForNone();
         }
 
-        final GaStack<Integer> stack = wrap.processStackRef.get();
+        final EventListenerWrap.EventProcess eventProcess = wrap.eventProcessRef.get();
+        final GaStack<Integer> stack = eventProcess.processStack;
 
         // 如果当前调用过程信息堆栈是空的,说明
         // 1. BEFORE/RETURN错位
@@ -357,6 +411,12 @@ public class EventListenerHandlers {
 
         final int processId = stack.peekLast();
         final int invokeId = stack.pop();
+
+        // 忽略事件处理
+        // 放在stack.pop()后边是为了对齐执行栈
+        if (eventProcess.isIgnoreProcessEvent(processId)) {
+            return Spy.Ret.newInstanceForNone();
+        }
 
         final Event event = isReturn
                 ? eventPool.borrowReturnEvent(processId, invokeId, object)
@@ -413,7 +473,8 @@ public class EventListenerHandlers {
             return;
         }
 
-        final GaStack<Integer> stack = wrap.processStackRef.get();
+        final EventListenerWrap.EventProcess eventProcess = wrap.eventProcessRef.get();
+        final GaStack<Integer> stack = eventProcess.processStack;
 
         // 如果当前调用过程信息堆栈是空的,说明BEFORE/LINE错位
         // 处理方式是直接返回,不做任何事件的处理和代码流程的改变
@@ -422,6 +483,11 @@ public class EventListenerHandlers {
         }
         final int processId = stack.peekLast();
         final int invokeId = stack.peek();
+
+        // 如果事件处理流被忽略，则直接返回，不产生后续事件
+        if (eventProcess.isIgnoreProcessEvent(processId)) {
+            return;
+        }
 
         final Event event = eventPool.borrowLineEvent(processId, invokeId, lineNumber);
         try {
@@ -443,7 +509,8 @@ public class EventListenerHandlers {
             return;
         }
 
-        final GaStack<Integer> stack = wrap.processStackRef.get();
+        final EventListenerWrap.EventProcess eventProcess = wrap.eventProcessRef.get();
+        final GaStack<Integer> stack = eventProcess.processStack;
 
 
         // 如果当前调用过程信息堆栈是空的,有两种情况
@@ -457,6 +524,11 @@ public class EventListenerHandlers {
 
         final int processId = stack.peekLast();
         final int invokeId = stack.peek();
+
+        // 如果事件处理流被忽略，则直接返回，不产生后续事件
+        if (eventProcess.isIgnoreProcessEvent(processId)) {
+            return;
+        }
 
         final Event event = eventPool.borrowCallBeforeEvent(processId, invokeId, lineNumber, owner, name, desc);
         try {
@@ -475,13 +547,19 @@ public class EventListenerHandlers {
             return;
         }
 
-        final GaStack<Integer> stack = wrap.processStackRef.get();
+        final EventListenerWrap.EventProcess eventProcess = wrap.eventProcessRef.get();
+        final GaStack<Integer> stack = eventProcess.processStack;
         if (stack.isEmpty()) {
             return;
         }
 
         final int processId = stack.peekLast();
         final int invokeId = stack.peek();
+
+        // 如果事件处理流被忽略，则直接返回，不产生后续事件
+        if (eventProcess.isIgnoreProcessEvent(processId)) {
+            return;
+        }
 
         final Event event = eventPool.borrowCallReturnEvent(processId, invokeId);
         try {
@@ -500,13 +578,19 @@ public class EventListenerHandlers {
             return;
         }
 
-        final GaStack<Integer> stack = wrap.processStackRef.get();
+        final EventListenerWrap.EventProcess eventProcess = wrap.eventProcessRef.get();
+        final GaStack<Integer> stack = eventProcess.processStack;
         if (stack.isEmpty()) {
             return;
         }
 
         final int processId = stack.peekLast();
         final int invokeId = stack.peek();
+
+        // 如果事件处理流被忽略，则直接返回，不产生后续事件
+        if (eventProcess.isIgnoreProcessEvent(processId)) {
+            return;
+        }
 
         final Event event = eventPool.borrowCallThrowsEvent(processId, invokeId, throwException);
         try {
@@ -521,11 +605,31 @@ public class EventListenerHandlers {
      */
     private final class EventListenerWrap {
 
+        class EventProcess {
+
+            final GaStack<Integer> processStack = new ThreadUnsafeGaStack<Integer>();
+            Integer ignoreProcessId = null;
+
+            boolean isIgnoreProcessEvent(int targetProcessId) {
+                return ignoreProcessId != null
+                        && ignoreProcessId == targetProcessId;
+            }
+
+            void markIgnoreProcessEvent(int processId) {
+                this.ignoreProcessId = processId;
+            }
+
+            void cleanIgnoreProcessEvent() {
+                this.ignoreProcessId = null;
+            }
+
+        }
+
         private final EventListener listener;
-        private final ThreadLocal<GaStack<Integer>> processStackRef = new ThreadLocal<GaStack<Integer>>() {
+        private final ThreadLocal<EventProcess> eventProcessRef = new ThreadLocal<EventProcess>() {
             @Override
-            protected GaStack<Integer/*INVOKE_ID*/> initialValue() {
-                return new ThreadUnsafeGaStack<Integer>();
+            protected EventProcess initialValue() {
+                return new EventProcess();
             }
         };
 

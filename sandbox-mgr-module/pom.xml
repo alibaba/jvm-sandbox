@@ -4,9 +4,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>sandbox</artifactId>
         <groupId>com.alibaba.jvm.sandbox</groupId>
-        <version>1.0.15</version>
+        <artifactId>sandbox-module-starter</artifactId>
+        <version>1.0.16-SNAPSHOT</version>
+        <relativePath>../sandbox-module-starter/pom.xml</relativePath>
     </parent>
     <artifactId>sandbox-mgr-module</artifactId>
     <name>sandbox-mgr-module ${sandbox.version}</name>
@@ -50,14 +51,17 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <version>1.7.24</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+            <version>1.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
         </dependency>
     </dependencies>
 

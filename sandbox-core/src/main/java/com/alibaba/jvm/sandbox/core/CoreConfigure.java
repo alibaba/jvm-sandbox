@@ -28,8 +28,8 @@ public class CoreConfigure {
 
     private static final String KEY_SANDBOX_HOME = "sandbox_home";
     private static final String KEY_LAUNCH_MODE = "mode";
-    private static final String KEY_SERVER_IP = "ip";
-    private static final String KEY_SERVER_PORT = "port";
+    private static final String KEY_SERVER_IP = "server.ip";
+    private static final String KEY_SERVER_PORT = "server.port";
 
     private static final String KEY_SYSTEM_MODULE_LIB_PATH = "system_module";
     private static final String KEY_USER_MODULE_LIB_PATH = "user_module";
@@ -94,8 +94,7 @@ public class CoreConfigure {
         for (String key : properties.stringPropertyNames()) {
 
             // 过滤掉受保护的key
-            if (ArrayUtils.contains(PROTECT_KEY_ARRAY, key)
-                    && map.containsKey(key)) {
+            if (ArrayUtils.contains(PROTECT_KEY_ARRAY, key)) {
                 continue;
             }
 

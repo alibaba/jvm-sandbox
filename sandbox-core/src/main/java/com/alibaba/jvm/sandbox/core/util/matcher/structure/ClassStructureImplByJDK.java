@@ -1,7 +1,6 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
 import com.alibaba.jvm.sandbox.core.util.LazyGet;
-import org.apache.commons.lang3.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;

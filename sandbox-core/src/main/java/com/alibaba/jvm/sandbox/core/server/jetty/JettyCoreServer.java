@@ -217,8 +217,8 @@ public class JettyCoreServer implements CoreServer {
                 @Override
                 public void process() throws Throwable {
                     JettyCoreServer.this.cfg = cfg;
-                    logger.info("cfg={}", cfg);
                     initLogback(cfg);
+                    logger.info("prepare to init jvm-sandbox[{}] server. cfg={}", cfg.getNamespace(), cfg);
                     initManager(inst, cfg);
                     initHttpServer(cfg);
                     initJettyContextHandler(cfg);

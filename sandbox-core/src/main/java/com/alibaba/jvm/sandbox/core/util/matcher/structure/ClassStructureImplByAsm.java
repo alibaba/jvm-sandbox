@@ -1,6 +1,9 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
 import com.alibaba.jvm.sandbox.core.util.BitUtils;
+import com.alibaba.jvm.sandbox.core.util.LazyGet;
+import com.alibaba.jvm.sandbox.core.util.collection.GaLRUCache;
+import com.alibaba.jvm.sandbox.core.util.collection.Pair;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.PrimitiveClassStructure.Primitive;
 import org.apache.commons.io.IOUtils;
 import org.objectweb.asm.*;
@@ -254,6 +257,8 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         return internalClassName + ".class";
     }
 
+    private final static GaLRUCache<Pair, ClassStructure> classStructureCache
+            = new GaLRUCache<Pair, ClassStructure>(1024);
 
     // 构造一个类结构实例
     private ClassStructure newInstance(final String javaClassName) {
@@ -274,19 +279,40 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
             return new PrimitiveClassStructure(primitive);
         }
 
-        // 是个普通Java类型
-        final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
-        if (null != is) {
-            try {
-                return new ClassStructureImplByAsm(is, loader);
-            } catch (Throwable cause) {
-                // ignore
-                logger.warn("new instance class structure by using ASM failed, will return null. class={};loader={};",
-                        javaClassName, loader, cause);
-            } finally {
-                IOUtils.closeQuietly(is);
+        final Pair pair = new Pair(loader, javaClassName);
+        if (classStructureCache.containsKey(pair)) {
+            return classStructureCache.get(pair);
+        } else {
+            final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
+            if (null != is) {
+                try {
+                    final ClassStructure classStructure = new ClassStructureImplByAsm(is, loader);
+                    classStructureCache.put(pair, classStructure);
+                    return classStructure;
+                } catch (Throwable cause) {
+                    // ignore
+                    logger.warn("new instance class structure by using ASM failed, will return null. class={};loader={};",
+                            javaClassName, loader, cause);
+                    classStructureCache.put(pair, null);
+                } finally {
+                    IOUtils.closeQuietly(is);
+                }
             }
         }
+
+//        // 是个普通Java类型
+//        final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
+//        if (null != is) {
+//            try {
+//                return new ClassStructureImplByAsm(is, loader);
+//            } catch (Throwable cause) {
+//                // ignore
+//                logger.warn("new instance class structure by using ASM failed, will return null. class={};loader={};",
+//                        javaClassName, loader, cause);
+//            } finally {
+//                IOUtils.closeQuietly(is);
+//            }
+//        }
         // 出现异常或者找不到
         return null;
     }
@@ -321,106 +347,139 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         return loader;
     }
 
+    private final LazyGet<ClassStructure> superClassStructureLazyGet
+            = new LazyGet<ClassStructure>() {
+        @Override
+        protected ClassStructure initialValue() throws Throwable {
+            return newInstance(toJavaClassName(classReader.getSuperName()));
+        }
+    };
+
     @Override
     public ClassStructure getSuperClassStructure() {
-        return newInstance(toJavaClassName(classReader.getSuperName()));
+        return superClassStructureLazyGet.get();
     }
+
+    private final LazyGet<List<ClassStructure>> interfaceClassStructuresLazyGet
+            = new LazyGet<List<ClassStructure>>() {
+        @Override
+        protected List<ClassStructure> initialValue() throws Throwable {
+            return newInstances(classReader.getInterfaces());
+        }
+    };
 
     @Override
     public List<ClassStructure> getInterfaceClassStructures() {
-        return newInstances(classReader.getInterfaces());
+        return interfaceClassStructuresLazyGet.get();
     }
+
+    private final LazyGet<List<ClassStructure>> annotationTypeClassStructuresLazyGet
+            = new LazyGet<List<ClassStructure>>() {
+        @Override
+        protected List<ClassStructure> initialValue() throws Throwable {
+            final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
+            accept(new ClassVisitor(ASM6) {
+
+                @Override
+                public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+                    if (visible) {
+                        final ClassStructure annotationTypeClassStructure = newInstance(Type.getType(desc).getClassName());
+                        if (null != annotationTypeClassStructure) {
+                            annotationTypeClassStructures.add(annotationTypeClassStructure);
+                        }
+                    }
+                    return super.visitAnnotation(desc, visible);
+                }
+
+            });
+            return annotationTypeClassStructures;
+        }
+    };
 
     @Override
     public List<ClassStructure> getAnnotationTypeClassStructures() {
-        final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
-        accept(new ClassVisitor(ASM6) {
-
-            @Override
-            public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-                if (visible) {
-                    final ClassStructure annotationTypeClassStructure = newInstance(Type.getType(desc).getClassName());
-                    if (null != annotationTypeClassStructure) {
-                        annotationTypeClassStructures.add(annotationTypeClassStructure);
-                    }
-                }
-                return super.visitAnnotation(desc, visible);
-            }
-
-        });
-        return annotationTypeClassStructures;
+        return annotationTypeClassStructuresLazyGet.get();
     }
+
+
+    private final LazyGet<List<BehaviorStructure>> behaviorStructuresLazyGet
+            = new LazyGet<List<BehaviorStructure>>() {
+        @Override
+        protected List<BehaviorStructure> initialValue() throws Throwable {
+            final List<BehaviorStructure> behaviorStructures = new ArrayList<BehaviorStructure>();
+            accept(new ClassVisitor(ASM6) {
+
+                @Override
+                public MethodVisitor visitMethod(final int access,
+                                                 final String name,
+                                                 final String desc,
+                                                 final String signature,
+                                                 final String[] exceptions) {
+                    return new MethodVisitor(ASM6, super.visitMethod(access, name, desc, signature, exceptions)) {
+
+                        private final Type methodType = Type.getMethodType(desc);
+                        private final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
+
+                        private String[] typeArrayToJavaClassNameArray(final Type[] typeArray) {
+                            final List<String> javaClassNames = new ArrayList<String>();
+                            if (null != typeArray) {
+                                for (Type type : typeArray) {
+                                    javaClassNames.add(type.getClassName());
+                                }
+                            }
+                            return javaClassNames.toArray(new String[0]);
+                        }
+
+                        private List<ClassStructure> getParameterTypeClassStructures() {
+                            return newInstances(
+                                    typeArrayToJavaClassNameArray(methodType.getArgumentTypes())
+                            );
+                        }
+
+                        private ClassStructure getReturnTypeClassStructure() {
+                            if ("<init>".equals(name)) {
+                                return ClassStructureImplByAsm.this;
+                            } else {
+                                final Type returnType = methodType.getReturnType();
+                                return newInstance(returnType.getClassName());
+                            }
+                        }
+
+                        @Override
+                        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+                            if (visible) {
+                                final ClassStructure annotationTypeClassStructure = newInstance(Type.getType(desc).getClassName());
+                                if (null != annotationTypeClassStructure) {
+                                    annotationTypeClassStructures.add(annotationTypeClassStructure);
+                                }
+                            }
+                            return super.visitAnnotation(desc, visible);
+                        }
+
+                        @Override
+                        public void visitEnd() {
+                            super.visitEnd();
+                            final BehaviorStructure behaviorStructure = new BehaviorStructure(
+                                    new AccessImplByAsm(access),
+                                    name,
+                                    ClassStructureImplByAsm.this,
+                                    getReturnTypeClassStructure(),
+                                    getParameterTypeClassStructures(),
+                                    newInstances(exceptions),
+                                    annotationTypeClassStructures
+                            );
+                            behaviorStructures.add(behaviorStructure);
+                        }
+                    };
+                }
+            });
+            return behaviorStructures;
+        }
+    };
 
     @Override
     public List<BehaviorStructure> getBehaviorStructures() {
-        final List<BehaviorStructure> behaviorStructures = new ArrayList<BehaviorStructure>();
-        accept(new ClassVisitor(ASM6) {
-
-            @Override
-            public MethodVisitor visitMethod(final int access,
-                                             final String name,
-                                             final String desc,
-                                             final String signature,
-                                             final String[] exceptions) {
-                return new MethodVisitor(ASM6, super.visitMethod(access, name, desc, signature, exceptions)) {
-
-                    private final Type methodType = Type.getMethodType(desc);
-                    private final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
-
-                    private String[] typeArrayToJavaClassNameArray(final Type[] typeArray) {
-                        final List<String> javaClassNames = new ArrayList<String>();
-                        if (null != typeArray) {
-                            for (Type type : typeArray) {
-                                javaClassNames.add(type.getClassName());
-                            }
-                        }
-                        return javaClassNames.toArray(new String[0]);
-                    }
-
-                    private List<ClassStructure> getParameterTypeClassStructures() {
-                        return newInstances(
-                                typeArrayToJavaClassNameArray(methodType.getArgumentTypes())
-                        );
-                    }
-
-                    private ClassStructure getReturnTypeClassStructure() {
-                        if ("<init>".equals(name)) {
-                            return ClassStructureImplByAsm.this;
-                        } else {
-                            final Type returnType = methodType.getReturnType();
-                            return newInstance(returnType.getClassName());
-                        }
-                    }
-
-                    @Override
-                    public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-                        if (visible) {
-                            final ClassStructure annotationTypeClassStructure = newInstance(Type.getType(desc).getClassName());
-                            if (null != annotationTypeClassStructure) {
-                                annotationTypeClassStructures.add(annotationTypeClassStructure);
-                            }
-                        }
-                        return super.visitAnnotation(desc, visible);
-                    }
-
-                    @Override
-                    public void visitEnd() {
-                        super.visitEnd();
-                        final BehaviorStructure behaviorStructure = new BehaviorStructure(
-                                new AccessImplByAsm(access),
-                                name,
-                                ClassStructureImplByAsm.this,
-                                getReturnTypeClassStructure(),
-                                getParameterTypeClassStructures(),
-                                newInstances(exceptions),
-                                annotationTypeClassStructures
-                        );
-                        behaviorStructures.add(behaviorStructure);
-                    }
-                };
-            }
-        });
-        return behaviorStructures;
+        return behaviorStructuresLazyGet.get();
     }
 
 

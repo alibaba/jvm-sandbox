@@ -17,7 +17,17 @@ public final class ProcessControlException extends Exception {
     // 回应结果对象(直接返回或者抛出异常)
     private final Object respond;
 
-    private ProcessControlException(State state, Object respond) {
+    private final boolean isIgnoreProcessEvent;
+
+    ProcessControlException(State state, Object respond) {
+        this(false, state, respond);
+    }
+
+    /**
+     * @since {@code sandbox-api:1.0.16}
+     */
+    ProcessControlException(boolean isIgnoreProcessEvent, State state, Object respond) {
+        this.isIgnoreProcessEvent = isIgnoreProcessEvent;
         this.state = state;
         this.respond = respond;
     }
@@ -40,6 +50,16 @@ public final class ProcessControlException extends Exception {
      */
     public static void throwThrowsImmediately(final Throwable throwable) throws ProcessControlException {
         throw new ProcessControlException(THROWS_IMMEDIATELY, throwable);
+    }
+
+    /**
+     * 判断是否需要主动忽略处理后续所有事件流
+     *
+     * @return 是否需要主动忽略处理后续所有事件流
+     * @since {@code sandbox-api:1.0.16}
+     */
+    public boolean isIgnoreProcessEvent() {
+        return isIgnoreProcessEvent;
     }
 
     public State getState() {
@@ -70,6 +90,13 @@ public final class ProcessControlException extends Exception {
          * 立即抛出异常
          */
         THROWS_IMMEDIATELY,
+
+        /**
+         * 不干预任何流程
+         *
+         * @since {@code sandbox-api:1.0.16}
+         */
+        NONE_IMMEDIATELY
 
     }
 

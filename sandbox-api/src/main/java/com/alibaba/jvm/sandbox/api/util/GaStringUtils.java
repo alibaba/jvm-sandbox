@@ -50,7 +50,7 @@ public class GaStringUtils {
      * null和""均为空
      * </p>
      *
-     * @param string
+     * @param string 目标字符串
      * @return TRUE:空字符串;FALSE:非空字符串
      */
     public static boolean isEmpty(String string) {

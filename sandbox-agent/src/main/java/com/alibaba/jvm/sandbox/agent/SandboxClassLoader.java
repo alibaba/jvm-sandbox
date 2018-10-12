@@ -1,11 +1,13 @@
 package com.alibaba.jvm.sandbox.agent;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.jar.JarFile;
 
 /**
@@ -22,6 +24,26 @@ class SandboxClassLoader extends URLClassLoader {
         super(new URL[]{new URL("file:" + sandboxCoreJarFilePath)});
         this.namespace = namespace;
         this.path = sandboxCoreJarFilePath;
+    }
+
+    @Override
+    public URL getResource(String name) {
+        URL url = findResource(name);
+        if(null != url) {
+            return url;
+        }
+        url = super.getResource(name);
+        return url;
+    }
+
+    @Override
+    public Enumeration<URL> getResources(String name) throws IOException {
+        Enumeration<URL> urls = findResources(name);
+        if( null != urls ) {
+            return urls;
+        }
+        urls = super.getResources(name);
+        return urls;
     }
 
     @Override

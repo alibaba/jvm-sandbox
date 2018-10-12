@@ -95,8 +95,8 @@ public class ModuleMgrModule implements Module {
                 );
 
             } catch (ModuleException me) {
-                logger.warn("module[id={};class={};] was occur error. ERROR_CODE={}, ignore this module.",
-                        me.getUniqueId(), me.getErrorCode(), me);
+                logger.warn("get module info occur error when list modules, module[id={};class={};], error={}, ignore this module.",
+                        me.getUniqueId(), module.getClass(), me.getErrorCode(), me);
             }
 
         }

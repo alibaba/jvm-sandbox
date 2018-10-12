@@ -88,56 +88,65 @@ public class ModuleJarLoader {
                 // 模块ClassLoader
                 moduleClassLoader = new ModuleClassLoader(moduleJarFile, sandboxClassLoader);
 
-                final ServiceLoader<Module> moduleServiceLoader = ServiceLoader.load(Module.class, moduleClassLoader);
-                final Iterator<Module> moduleIt = moduleServiceLoader.iterator();
-                while (moduleIt.hasNext()) {
+                final ClassLoader preTCL = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(moduleClassLoader);
 
-                    final Module module;
-                    try {
-                        module = moduleIt.next();
-                    } catch (Throwable cause) {
-                        logger.warn("module SPI new instance failed, ignore this SPI.", cause);
-                        continue;
-                    }
+                try {
 
-                    final Class<?> classOfModule = module.getClass();
+                    final ServiceLoader<Module> moduleServiceLoader = ServiceLoader.load(Module.class, moduleClassLoader);
+                    final Iterator<Module> moduleIt = moduleServiceLoader.iterator();
+                    while (moduleIt.hasNext()) {
 
-                    if (!classOfModule.isAnnotationPresent(Information.class)) {
-                        logger.info("{} was not implements @Information, ignore this SPI.", classOfModule);
-                        continue;
-                    }
-
-                    final Information info = classOfModule.getAnnotation(Information.class);
-                    if (StringUtils.isBlank(info.id())) {
-                        logger.info("{} was not implements @Information[id], ignore this SPI.", classOfModule);
-                        continue;
-                    }
-
-                    final String uniqueId = info.id();
-                    if (!ArrayUtils.contains(info.mode(), mode)) {
-                        logger.info("module[id={};class={};mode={};] was not matched sandbox launch mode : {}, ignore this SPI.",
-                                uniqueId, classOfModule, Arrays.asList(info.mode()), mode);
-                        continue;
-                    }
-
-                    try {
-                        if (null != mCb) {
-                            mCb.onLoad(
-                                    uniqueId, classOfModule, module, moduleJarFile,
-                                    moduleClassLoader
-                            );
+                        final Module module;
+                        try {
+                            module = moduleIt.next();
+                        } catch (Throwable cause) {
+                            logger.warn("module SPI new instance failed, ignore this SPI.", cause);
+                            continue;
                         }
-                        hasModuleLoadedSuccessFlag = true;
-                    } catch (Throwable cause) {
-                        logger.warn("load module[id={};class={};] from JAR[file={};] failed, ignore this module.",
-                                uniqueId, classOfModule, moduleJarFile, cause);
+
+                        final Class<?> classOfModule = module.getClass();
+
+                        if (!classOfModule.isAnnotationPresent(Information.class)) {
+                            logger.info("{} was not implements @Information, ignore this SPI.", classOfModule);
+                            continue;
+                        }
+
+                        final Information info = classOfModule.getAnnotation(Information.class);
+                        if (StringUtils.isBlank(info.id())) {
+                            logger.info("{} was not implements @Information[id], ignore this SPI.", classOfModule);
+                            continue;
+                        }
+
+                        final String uniqueId = info.id();
+                        if (!ArrayUtils.contains(info.mode(), mode)) {
+                            logger.info("module[id={};class={};mode={};] was not matched sandbox launch mode : {}, ignore this SPI.",
+                                    uniqueId, classOfModule, Arrays.asList(info.mode()), mode);
+                            continue;
+                        }
+
+                        try {
+                            if (null != mCb) {
+                                mCb.onLoad(
+                                        uniqueId, classOfModule, module, moduleJarFile,
+                                        moduleClassLoader
+                                );
+                            }
+                            hasModuleLoadedSuccessFlag = true;
+                        } catch (Throwable cause) {
+                            logger.warn("load module[id={};class={};] from JAR[file={};] failed, ignore this module.",
+                                    uniqueId, classOfModule, moduleJarFile, cause);
+                        }
+
+                    }//while
+
+                    if (!hasModuleLoadedSuccessFlag) {
+                        logger.warn("load sandbox module JAR[file={}], but none module loaded, close this ModuleClassLoader.", moduleJarFile);
+                        moduleClassLoader.closeIfPossible();
                     }
 
-                }//while
-
-                if (!hasModuleLoadedSuccessFlag) {
-                    logger.warn("load sandbox module JAR[file={}], but none module loaded, close this ModuleClassLoader.", moduleJarFile);
-                    moduleClassLoader.closeIfPossible();
+                } finally {
+                    Thread.currentThread().setContextClassLoader(preTCL);
                 }
 
             } catch (Throwable cause) {
