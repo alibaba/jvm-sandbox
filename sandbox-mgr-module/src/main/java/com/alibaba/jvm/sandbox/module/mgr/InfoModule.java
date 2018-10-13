@@ -1,4 +1,4 @@
-package com.albaba.jvm.sandbox.module.mgr;
+package com.alibaba.jvm.sandbox.module.mgr;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;

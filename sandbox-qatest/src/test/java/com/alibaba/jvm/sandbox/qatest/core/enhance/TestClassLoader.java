@@ -1,7 +1,7 @@
-package test.com.alibaba.jvm.sandbox.core.enhance;
+package com.alibaba.jvm.sandbox.qatest.core.enhance;
 
 /**
- * Created by luanjia@taobao.com on 2017/3/9.
+ * 一个破坏了双亲委派的ClassLoader，用于隔离测试类
  */
 public class TestClassLoader extends ClassLoader {
 
