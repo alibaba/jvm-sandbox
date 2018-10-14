@@ -1,4 +1,4 @@
-package com.alibaba.jvm.sandbox.qatest.core.enhance;
+package com.alibaba.jvm.sandbox.qatest.core.enhance.listener;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;

@@ -14,7 +14,7 @@ exit_on_err()
 }
 
 # maven package the sandbox
-mvn clean package -Dmaven.test.skip=true -f ../pom.xml \
+mvn clean package -Dmaven.test.skip=false -f ../pom.xml \
     || exit_on_err 1 "package sandbox failed."
 
 # reset the target dir

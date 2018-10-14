@@ -47,7 +47,25 @@ public class CoreEnhanceBaseTestCase {
      * @return TestClassLoader
      */
     protected ClassLoader newTestClassLoader() {
-        return new TestClassLoader(CoreEnhanceBaseTestCase.class.getClassLoader());
+        return new ClassLoader(CoreEnhanceBaseTestCase.class.getClassLoader()) {
+            @Override
+            protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+                final Class<?> loadedClass = findLoadedClass(name);
+                if (loadedClass == null) {
+                    try {
+                        final Class<?> aClass = findClass(name);
+                        if (resolve) {
+                            resolveClass(aClass);
+                        }
+                        return aClass;
+                    } catch (Exception e) {
+                        return super.loadClass(name, resolve);
+                    }
+                } else {
+                    return loadedClass;
+                }
+            }
+        };
     }
 
     protected Class<?> watching(final Class<?> targetClass,
@@ -56,7 +74,7 @@ public class CoreEnhanceBaseTestCase {
                                 final Event.Type... eventType) throws IOException, InvocationTargetException, IllegalAccessException {
         final int listenerId = LISTENER_ID_SEQ.getAndIncrement();
         final ClassLoader loader = newTestClassLoader();
-        CoreConfigure.toConfigure("","");
+        CoreConfigure.toConfigure("", "");
         EventListenerHandlers.getSingleton().active(listenerId, listener, eventType);
         return defineClass(
                 loader,
@@ -71,11 +89,6 @@ public class CoreEnhanceBaseTestCase {
                         eventType
                 )//new
         );//return
-    }
-
-    @Test
-    public void test() {
-
     }
 
 }
