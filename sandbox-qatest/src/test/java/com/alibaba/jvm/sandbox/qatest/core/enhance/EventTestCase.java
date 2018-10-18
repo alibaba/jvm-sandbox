@@ -4,7 +4,6 @@ import com.alibaba.jvm.sandbox.api.event.*;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.EventStreamCheckerListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.EventStreamCheckerListener.EventChecker;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;

@@ -2,20 +2,14 @@ package com.alibaba.jvm.sandbox.qatest.core.enhance;
 
 import com.alibaba.jvm.sandbox.api.ProcessController;
 import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
-import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.event.ReturnEvent;
 import com.alibaba.jvm.sandbox.api.event.ThrowsEvent;
-import com.alibaba.jvm.sandbox.api.filter.NameRegexFilter;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.EventStreamCheckerListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.EventStreamCheckerListener.EventChecker;
-import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedEventListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
-import junit.framework.Assert;
 import org.junit.Test;
 
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.BEFORE;
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.RETURN;
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.THROWS;
+import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
 import static junit.framework.Assert.assertEquals;
 
 /**

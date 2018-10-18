@@ -4,7 +4,6 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
-import com.alibaba.jvm.sandbox.api.resource.ConfigInfo;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
@@ -13,18 +12,15 @@ import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByJDK;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.defineClass;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 
 public class CoreEnhanceBaseTestCase {

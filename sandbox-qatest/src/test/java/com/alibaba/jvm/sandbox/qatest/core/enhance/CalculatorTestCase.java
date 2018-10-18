@@ -1,16 +1,9 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance;
 
-import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
-import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.filter.NameRegexFilter;
 import com.alibaba.jvm.sandbox.core.util.UnCaughtException;
-import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedEventListener;
-import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
-import junit.framework.Assert;
-import org.junit.Test;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtGetClassDeclaredJavaMethod;
