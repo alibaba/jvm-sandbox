@@ -1,6 +1,8 @@
 package java.com.alibaba.jvm.sandbox.spy;
 
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 间谍类，藏匿在各个ClassLoader中
@@ -8,23 +10,34 @@ import java.lang.reflect.Method;
  * 从{@code 0.0.0.v}版本之后,因为要考虑能在alipay的CloudEngine环境中使用,这个环境只能向上查找java.开头的包路径.
  * 所以这里只好把Spy的包路径前缀中增加了java.开头
  * </p>
+ * <p>
+ * <p>
+ * 从{@code 1.1.0}版本之后，修复了命名空间在Spy中不支持的问题
+ * </p>
  *
  * @author luanjia@taobao.com
  */
 public class Spy {
 
-    private static volatile Method ON_BEFORE_METHOD;
-    private static volatile Method ON_RETURN_METHOD;
-    private static volatile Method ON_THROWS_METHOD;
-    private static volatile Method ON_LINE_METHOD;
-    private static volatile Method ON_CALL_BEFORE_METHOD;
-    private static volatile Method ON_CALL_RETURN_METHOD;
-    private static volatile Method ON_CALL_THROWS_METHOD;
     private static final Class<Spy.Ret> SPY_RET_CLASS = Spy.Ret.class;
+
+    private static final Map<String, MethodHook> namespaceMethodHookMap
+            = new ConcurrentHashMap<String, MethodHook>();
+
+    /**
+     * 判断间谍类是否已经完成初始化
+     *
+     * @param namespace 命名空间
+     * @return TRUE:已完成初始化;FALSE:未完成初始化;
+     */
+    public static boolean isInit(final String namespace) {
+        return namespaceMethodHookMap.containsKey(namespace);
+    }
 
     /**
      * 初始化间谍
      *
+     * @param namespace             命名空间
      * @param ON_BEFORE_METHOD      ON_BEFORE 回调
      * @param ON_RETURN_METHOD      ON_RETURN 回调
      * @param ON_THROWS_METHOD      ON_THROWS 回调
@@ -33,48 +46,58 @@ public class Spy {
      * @param ON_CALL_RETURN_METHOD ON_CALL_RETURN 回调
      * @param ON_CALL_THROWS_METHOD ON_CALL_THROWS 回调
      */
-    public static void init(final Method ON_BEFORE_METHOD,
+    public static void init(final String namespace,
+                            final Method ON_BEFORE_METHOD,
                             final Method ON_RETURN_METHOD,
                             final Method ON_THROWS_METHOD,
                             final Method ON_LINE_METHOD,
                             final Method ON_CALL_BEFORE_METHOD,
                             final Method ON_CALL_RETURN_METHOD,
                             final Method ON_CALL_THROWS_METHOD) {
-        Spy.ON_BEFORE_METHOD = ON_BEFORE_METHOD;
-        Spy.ON_RETURN_METHOD = ON_RETURN_METHOD;
-        Spy.ON_THROWS_METHOD = ON_THROWS_METHOD;
-        Spy.ON_LINE_METHOD = ON_LINE_METHOD;
-        Spy.ON_CALL_BEFORE_METHOD = ON_CALL_BEFORE_METHOD;
-        Spy.ON_CALL_RETURN_METHOD = ON_CALL_RETURN_METHOD;
-        Spy.ON_CALL_THROWS_METHOD = ON_CALL_THROWS_METHOD;
+        namespaceMethodHookMap.put(
+                namespace,
+                new MethodHook(
+                        ON_BEFORE_METHOD,
+                        ON_RETURN_METHOD,
+                        ON_THROWS_METHOD,
+                        ON_LINE_METHOD,
+                        ON_CALL_BEFORE_METHOD,
+                        ON_CALL_RETURN_METHOD,
+                        ON_CALL_THROWS_METHOD
+                )
+        );
     }
 
     private static final SelfCallBarrier selfCallBarrier = new SelfCallBarrier();
-
 
     public static void spyMethodOnCallBefore(final int lineNumber,
                                              final String owner,
                                              final String name,
                                              final String desc,
+                                             final String namespace,
                                              final int listenerId) throws Throwable {
-        ON_CALL_BEFORE_METHOD.invoke(null, listenerId, lineNumber, owner, name, desc);
+        namespaceMethodHookMap.get(namespace).ON_CALL_BEFORE_METHOD.invoke(null, listenerId, lineNumber, owner, name, desc);
     }
 
-    public static void spyMethodOnCallReturn(final int listenerId) throws Throwable {
-        ON_CALL_RETURN_METHOD.invoke(null, listenerId);
+    public static void spyMethodOnCallReturn(final String namespace,
+                                             final int listenerId) throws Throwable {
+        namespaceMethodHookMap.get(namespace).ON_CALL_RETURN_METHOD.invoke(null, listenerId);
     }
 
     public static void spyMethodOnCallThrows(final String throwException,
+                                             final String namespace,
                                              final int listenerId) throws Throwable {
-        ON_CALL_THROWS_METHOD.invoke(null, listenerId, throwException);
+        namespaceMethodHookMap.get(namespace).ON_CALL_THROWS_METHOD.invoke(null, listenerId, throwException);
     }
 
     public static void spyMethodOnLine(final int lineNumber,
+                                       final String namespace,
                                        final int listenerId) throws Throwable {
-        ON_LINE_METHOD.invoke(null, listenerId, lineNumber);
+        namespaceMethodHookMap.get(namespace).ON_LINE_METHOD.invoke(null, listenerId, lineNumber);
     }
 
     public static Ret spyMethodOnBefore(final Object[] argumentArray,
+                                        final String namespace,
                                         final int listenerId,
                                         final int targetClassLoaderObjectID,
                                         final String javaClassName,
@@ -87,7 +110,7 @@ public class Spy {
         }
         final SelfCallBarrier.Node node = selfCallBarrier.enter(thread);
         try {
-            return (Ret) ON_BEFORE_METHOD.invoke(null,
+            return (Ret) namespaceMethodHookMap.get(namespace).ON_BEFORE_METHOD.invoke(null,
                     listenerId, targetClassLoaderObjectID, SPY_RET_CLASS, javaClassName, javaMethodName, javaMethodDesc, target, argumentArray);
         } finally {
             selfCallBarrier.exit(thread, node);
@@ -95,6 +118,7 @@ public class Spy {
     }
 
     public static Ret spyMethodOnReturn(final Object object,
+                                        final String namespace,
                                         final int listenerId) throws Throwable {
         final Thread thread = Thread.currentThread();
         if (selfCallBarrier.isEnter(thread)) {
@@ -102,13 +126,14 @@ public class Spy {
         }
         final SelfCallBarrier.Node node = selfCallBarrier.enter(thread);
         try {
-            return (Ret) ON_RETURN_METHOD.invoke(null, listenerId, SPY_RET_CLASS, object);
+            return (Ret) namespaceMethodHookMap.get(namespace).ON_RETURN_METHOD.invoke(null, listenerId, SPY_RET_CLASS, object);
         } finally {
             selfCallBarrier.exit(thread, node);
         }
     }
 
     public static Ret spyMethodOnThrows(final Throwable throwable,
+                                        final String namespace,
                                         final int listenerId) throws Throwable {
         final Thread thread = Thread.currentThread();
         if (selfCallBarrier.isEnter(thread)) {
@@ -116,7 +141,7 @@ public class Spy {
         }
         final SelfCallBarrier.Node node = selfCallBarrier.enter(thread);
         try {
-            return (Ret) ON_THROWS_METHOD.invoke(null, listenerId, SPY_RET_CLASS, throwable);
+            return (Ret) namespaceMethodHookMap.get(namespace).ON_THROWS_METHOD.invoke(null, listenerId, SPY_RET_CLASS, throwable);
         } finally {
             selfCallBarrier.exit(thread, node);
         }
@@ -246,6 +271,37 @@ public class Spy {
             }
         }
 
+    }
+
+
+    /**
+     * 回调方法钩子
+     */
+    public static class MethodHook {
+
+        private final Method ON_BEFORE_METHOD;
+        private final Method ON_RETURN_METHOD;
+        private final Method ON_THROWS_METHOD;
+        private final Method ON_LINE_METHOD;
+        private final Method ON_CALL_BEFORE_METHOD;
+        private final Method ON_CALL_RETURN_METHOD;
+        private final Method ON_CALL_THROWS_METHOD;
+
+        public MethodHook(final Method on_before_method,
+                          final Method on_return_method,
+                          final Method on_throws_method,
+                          final Method on_line_method,
+                          final Method on_call_before_method,
+                          final Method on_call_return_method,
+                          final Method on_call_throws_method) {
+            this.ON_BEFORE_METHOD = on_before_method;
+            this.ON_RETURN_METHOD = on_return_method;
+            this.ON_THROWS_METHOD = on_throws_method;
+            this.ON_LINE_METHOD = on_line_method;
+            this.ON_CALL_BEFORE_METHOD = on_call_before_method;
+            this.ON_CALL_RETURN_METHOD = on_call_return_method;
+            this.ON_CALL_THROWS_METHOD = on_call_throws_method;
+        }
     }
 
 }

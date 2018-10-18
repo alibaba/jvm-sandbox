@@ -82,6 +82,7 @@ public class EventEnhancer implements Enhancer {
     private byte[] weavingEvent(final ClassLoader targetClassLoader,
                                 final byte[] sourceByteCodeArray,
                                 final Set<String> signCodes,
+                                final String namespace,
                                 final int listenerId,
                                 final Event.Type[] eventTypeArray) {
         final ClassReader cr = new ClassReader(sourceByteCodeArray);
@@ -89,7 +90,7 @@ public class EventEnhancer implements Enhancer {
         final int targetClassLoaderObjectID = ObjectIDs.instance.identity(targetClassLoader);
         cr.accept(
                 new EventWeaver(
-                        Opcodes.ASM6, cw, listenerId,
+                        Opcodes.ASM6, cw, namespace, listenerId,
                         targetClassLoaderObjectID,
                         cr.getClassName(),
                         signCodes,
@@ -132,11 +133,12 @@ public class EventEnhancer implements Enhancer {
     public byte[] toByteCodeArray(final ClassLoader targetClassLoader,
                                   final byte[] byteCodeArray,
                                   final Set<String> signCodes,
+                                  final String namespace,
                                   final int listenerId,
                                   final Event.Type[] eventTypeArray) {
         // 如果定义间谍类失败了,则后续不需要增强
         try {
-            SpyUtils.init();
+            SpyUtils.init(namespace);
             // defineSpyIfNecessary(targetClassLoader);
         } catch (Throwable cause) {
             logger.warn("define Spy to target ClassLoader={} failed.", targetClassLoader, cause);
@@ -144,7 +146,7 @@ public class EventEnhancer implements Enhancer {
         }
 
         // 返回增强后字节码
-        return weavingEvent(targetClassLoader, byteCodeArray, signCodes, listenerId, eventTypeArray);
+        return weavingEvent(targetClassLoader, byteCodeArray, signCodes, namespace, listenerId, eventTypeArray);
     }
 
 }

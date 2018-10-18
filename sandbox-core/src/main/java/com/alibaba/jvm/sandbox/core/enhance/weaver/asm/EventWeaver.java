@@ -63,6 +63,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final int targetClassLoaderObjectID;
+    private final String namespace;
     private final int listenerId;
     private final String targetJavaClassName;
     private final Set<String> signCodes;
@@ -81,6 +82,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
     public EventWeaver(final int api,
                        final ClassVisitor cv,
+                       final String namespace,
                        final int listenerId,
                        final int targetClassLoaderObjectID,
                        final String targetClassInternalName,
@@ -88,6 +90,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                        final Event.Type[] eventTypeArray) {
         super(api, cv);
         this.targetClassLoaderObjectID = targetClassLoaderObjectID;
+        this.namespace = namespace;
         this.listenerId = listenerId;
         this.targetJavaClassName = toJavaClassName(targetClassInternalName);
         this.signCodes = signCodes;
@@ -129,12 +132,13 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         final MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         final String signCode = getBehaviorSignCode(name, desc);
         if (!isMatchedBehavior(signCode)) {
-            logger.debug("rewrite method listener[id:{}] {} was not matched.", listenerId, signCode);
+            logger.debug("rewrite method listener[id:{};ns:{};] {} was not matched.", listenerId, namespace, signCode);
             return mv;
         }
 
-        logger.info("rewrite method listener[id:{};event:{}] {} was matched. ;",
+        logger.info("rewrite method listener[id:{};ns:{};event:{}] {} was matched. ;",
                 listenerId,
+                namespace,
                 join(eventTypeArray, ","),
                 signCode
         );
@@ -196,6 +200,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                     public void code() {
                         loadArgArray();
                         dup();
+                        push(namespace);
                         push(listenerId);
                         loadClassLoader();
                         push(targetJavaClassName);
@@ -261,6 +266,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                         @Override
                         public void code() {
                             loadReturn(opcode);
+                            push(namespace);
                             push(listenerId);
                             invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnReturn);
                             processControl();
@@ -285,6 +291,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                     @Override
                     public void code() {
                         loadThrow();
+                        push(namespace);
                         push(listenerId);
                         invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnThrows);
                         processControl();
@@ -305,6 +312,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                         @Override
                         public void code() {
                             push(lineNumber);
+                            push(namespace);
                             push(listenerId);
                             invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnLine);
                         }
@@ -343,6 +351,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                             push(toJavaClassName(owner));
                             push(name);
                             push(desc);
+                            push(namespace);
                             push(listenerId);
                             invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnCallBefore);
                         }
@@ -356,6 +365,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                     codeLockForTracing.lock(new CodeLock.Block() {
                         @Override
                         public void code() {
+                            push(namespace);
                             push(listenerId);
                             invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnCallReturn);
                         }
@@ -381,6 +391,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                     codeLockForTracing.lock(new CodeLock.Block() {
                         @Override
                         public void code() {
+                            push(namespace);
                             push(listenerId);
                             invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnCallReturn);
                         }
@@ -399,6 +410,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                         dup();
                         invokeVirtual(ASM_TYPE_OBJECT, ASM_METHOD_Object$getClass);
                         invokeVirtual(ASM_TYPE_CLASS, ASM_METHOD_Class$getName);
+                        push(namespace);
                         push(listenerId);
                         invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnCallThrows);
                     }
