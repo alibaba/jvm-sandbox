@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.Set;
 
@@ -33,6 +32,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
     private final boolean isEnableUnsafe;
     private final Event.Type[] eventTypeArray;
 
+    private final String namespace;
     private final int listenerId;
     private final AffectStatistic affectStatistic = new AffectStatistic();
 
@@ -41,13 +41,15 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                                 final Matcher matcher,
                                 final EventListener eventListener,
                                 final boolean isEnableUnsafe,
-                                final Event.Type[] eventTypeArray) {
+                                final Event.Type[] eventTypeArray,
+                                final String namespace) {
         this.watchId = watchId;
         this.uniqueId = uniqueId;
         this.matcher = matcher;
         this.eventListener = eventListener;
         this.isEnableUnsafe = isEnableUnsafe;
         this.eventTypeArray = eventTypeArray;
+        this.namespace = namespace;
         this.listenerId = ObjectIDs.instance.identity(eventListener);
     }
 
@@ -65,7 +67,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                             final String internalClassName,
                             final Class<?> classBeingRedefined,
                             final ProtectionDomain protectionDomain,
-                            final byte[] srcByteCodeArray) throws IllegalClassFormatException {
+                            final byte[] srcByteCodeArray) {
 
         try {
 
@@ -81,7 +83,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
             }
 
             // 过滤掉来自ModuleClassLoader加载的类
-            if(loader instanceof ModuleClassLoader) {
+            if (loader instanceof ModuleClassLoader) {
                 return null;
             }
 
@@ -89,14 +91,13 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                     loader,
                     internalClassName,
                     classBeingRedefined,
-                    protectionDomain,
                     srcByteCodeArray
             );
 
 
         } catch (Throwable cause) {
-            logger.warn("sandbox transform class:{} in loader:{} failed, module[id:{}] at watch[id:{}] will ignore this transform.",
-                    internalClassName, loader,
+            logger.warn("sandbox transform class:{} in loader:{};namespace:{} failed, module[id:{}] at watch[id:{}] will ignore this transform.",
+                    internalClassName, loader, namespace,
                     uniqueId, watchId,
                     cause
             );
@@ -107,8 +108,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
     private byte[] _transform(final ClassLoader loader,
                               final String internalClassName,
                               final Class<?> classBeingRedefined,
-                              final ProtectionDomain protectionDomain,
-                              final byte[] srcByteCodeArray) throws IllegalClassFormatException {
+                              final byte[] srcByteCodeArray) {
         // 如果未开启unsafe开关，是不允许增强来自BootStrapClassLoader的类
         if (!isEnableUnsafe
                 && null == loader) {
@@ -122,7 +122,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
 
         // 如果一个行为都没匹配上也不用继续了
         if (!matchingResult.isMatched()) {
-            logger.debug("transform ignore class:{}, no behaviors matched in loader:{}", internalClassName, loader);
+            logger.debug("transform ignore class:{}, no behaviors matched in loader:{};namespace:{}", internalClassName, loader, namespace);
             return null;
         }
 
@@ -132,21 +132,22 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                     loader,
                     srcByteCodeArray,
                     behaviorSignCodes,
+                    namespace,
                     listenerId,
                     eventTypeArray
             );
             if (srcByteCodeArray == toByteCodeArray) {
-                logger.debug("transform ignore class:{}, nothing changed in loader:{}.", internalClassName, loader);
+                logger.debug("transform ignore class:{}, nothing changed in loader:{}. namespace:{}", internalClassName, loader, namespace);
                 return null;
             }
 
             // statistic affect
             affectStatistic.statisticAffect(loader, internalClassName, behaviorSignCodes);
 
-            logger.info("transform class:{} finished, by module[id:{}] in loader:{};", internalClassName, uniqueId, loader);
+            logger.info("transform class:{} finished, by module[id:{}] in loader:{};namespace:{}", internalClassName, uniqueId, loader, namespace);
             return toByteCodeArray;
         } catch (Throwable cause) {
-            logger.warn("transform class:{} failed, by module[id={}] in loader:{};", internalClassName, uniqueId, loader, cause);
+            logger.warn("transform class:{} failed, by module[id={}] in loader:{}namespace:{};", internalClassName, uniqueId, loader, namespace, cause);
             return null;
         }
     }

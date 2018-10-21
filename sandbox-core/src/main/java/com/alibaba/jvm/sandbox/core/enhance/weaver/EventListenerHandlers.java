@@ -635,8 +635,31 @@ public class EventListenerHandlers {
 
         private EventListenerWrap(final EventListener listener,
                                   final Event.Type[] eventTypeArray) {
-            this.listener = new SeparateImmediatelyEventListener(eventTypeArray, listener, eventPool);
+
+            if(isInterruptEventHandler(listener.getClass())) {
+                this.listener = new InterruptedEventListenerImpl(
+                        new SeparateImmediatelyEventListener(eventTypeArray, listener, eventPool)
+                );
+            } else {
+                this.listener = new SeparateImmediatelyEventListener(eventTypeArray, listener, eventPool);
+            }
         }
+    }
+
+    @Interrupted
+    private class InterruptedEventListenerImpl implements EventListener {
+
+        private final EventListener listener;
+
+        private InterruptedEventListenerImpl(EventListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void onEvent(Event event) throws Throwable {
+            listener.onEvent(event);
+        }
+
     }
 
 

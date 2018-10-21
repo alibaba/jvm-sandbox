@@ -282,7 +282,7 @@ EVENT_POOL_KEY_MAX : 2000
   > JAR_FILE : /Users/luanjia/opt/sandbox/lib/../module/sandbox-mgr-module.jar
    >    STATE : FROZEN
     >     MODE : {AGENT,ATTACH}
-   >    CLASS : class com.albaba.jvm.sandbox.module.mgr.ModuleMgrModule
+   >    CLASS : class com.alibaba.jvm.sandbox.module.mgr.ModuleMgrModule
   >   LOADER : ModuleClassLoader[crc32=1721245995;file=/Users/luanjia/opt/sandbox/lib/../module/sandbox-mgr-module.jar;]
     >     cCnt : 0
     >     mCnt : 0

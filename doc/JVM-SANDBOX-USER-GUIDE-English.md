@@ -282,7 +282,7 @@ Then the success of the start, the sandbox has been successfully implanted in th
   > JAR_FILE : /Users/vlinux/opt/sandbox/lib/../module/sandbox-mgr-module.jar
    >    STATE : FROZEN
     >     MODE : {AGENT,ATTACH}
-   >    CLASS : class com.albaba.jvm.sandbox.module.mgr.ModuleMgrModule
+   >    CLASS : class com.alibaba.jvm.sandbox.module.mgr.ModuleMgrModule
   >   LOADER : ModuleClassLoader[crc32=1721245995;file=/Users/vlinux/opt/sandbox/lib/../module/sandbox-mgr-module.jar;]
     >     cCnt : 0
     >     mCnt : 0

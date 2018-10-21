@@ -20,57 +20,53 @@ public class SpyUtils {
      *
      * @throws Throwable 初始化失败
      */
-    public synchronized static void init() throws Throwable {
+    public synchronized static void init(final String namespace) throws Throwable {
 
-        if (isSpyInit.isInitialized()) {
+        if (Spy.isInit(namespace)) {
             return;
         }
 
-        isSpyInit.initProcess(new Initializer.Processor() {
-            @Override
-            public void process() throws Throwable {
-                Spy.init(
-                        unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onBefore",
-                                int.class,
-                                int.class,
-                                Class.class,
-                                String.class,
-                                String.class,
-                                String.class,
-                                Object.class,
-                                Object[].class
-                        ),
-                        unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onReturn",
-                                int.class,
-                                Class.class,
-                                Object.class
-                        ),
-                        unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onThrows",
-                                int.class,
-                                Class.class,
-                                Throwable.class
-                        ),
-                        unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onLine",
-                                int.class,
-                                int.class
-                        ),
-                        unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallBefore",
-                                int.class,
-                                int.class,
-                                String.class,
-                                String.class,
-                                String.class
-                        ),
-                        unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallReturn",
-                                int.class
-                        ),
-                        unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallThrows",
-                                int.class,
-                                String.class
-                        )
-                );
-            }
-        });
+        Spy.init(
+                namespace,
+                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onBefore",
+                        int.class,
+                        int.class,
+                        Class.class,
+                        String.class,
+                        String.class,
+                        String.class,
+                        Object.class,
+                        Object[].class
+                ),
+                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onReturn",
+                        int.class,
+                        Class.class,
+                        Object.class
+                ),
+                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onThrows",
+                        int.class,
+                        Class.class,
+                        Throwable.class
+                ),
+                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onLine",
+                        int.class,
+                        int.class
+                ),
+                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallBefore",
+                        int.class,
+                        int.class,
+                        String.class,
+                        String.class,
+                        String.class
+                ),
+                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallReturn",
+                        int.class
+                ),
+                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallThrows",
+                        int.class,
+                        String.class
+                )
+        );
 
     }
 

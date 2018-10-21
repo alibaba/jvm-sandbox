@@ -22,10 +22,7 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.alibaba.jvm.sandbox.api.ModuleException.ErrorCode.*;
@@ -91,12 +88,8 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
     private File[] mergeFileArray(File[] aFileArray, File[] bFileArray) {
         final List<File> _r = new ArrayList<File>();
-        for (final File aFile : aFileArray) {
-            _r.add(aFile);
-        }
-        for (final File bFile : bFileArray) {
-            _r.add(bFile);
-        }
+        _r.addAll(Arrays.asList(aFileArray));
+        _r.addAll(Arrays.asList(bFileArray));
         return _r.toArray(new File[]{});
     }
 
@@ -180,13 +173,14 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 FieldUtils.writeField(resourceField, module, classDataSource, true);
             }
 
-            // ModuleContactorManager对象注入
+            // ModuleEventWatcher对象注入
             else if (ModuleEventWatcher.class.isAssignableFrom(fieldType)) {
                 final ModuleEventWatcher moduleEventWatcher = new DefaultModuleEventWatcher(
                         inst,
                         classDataSource,
                         coreModule,
-                        cfg.isEnableUnsafe()
+                        cfg.isEnableUnsafe(),
+                        cfg.getNamespace()
                 );
                 moduleLifeCycleEventBus.append((DefaultModuleEventWatcher) moduleEventWatcher);
                 FieldUtils.writeField(resourceField, module, moduleEventWatcher, true);
@@ -217,8 +211,8 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
             // 其他情况需要输出日志警告
             else {
-                logger.warn("inject required @Resource field[name={};] into module[id={};class={};] failed, type={}; was not support yet.",
-                        resourceField.getName(), coreModule.getUniqueId(), module.getClass(), fieldType);
+                logger.warn("inject required @Resource field[name={};] into module[id={};class={};namespace={};] failed, type={}; was not support yet.",
+                        resourceField.getName(), coreModule.getUniqueId(), module.getClass(), cfg.getNamespace(), fieldType);
             }
 
         }
@@ -554,10 +548,8 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     /**
      * 软刷新
      * 找出有变动的模块文件，有且仅有改变这些文件所对应的模块
-     *
-     * @throws ModuleException 模块操作失败
      */
-    private void softFlush() throws ModuleException {
+    private void softFlush() {
 
         final File systemModuleLibDir = new File(cfg.getSystemModuleLibPath());
         final File[] userModuleLibDirArray = cfg.getUserModuleLibFilesWithCache();
@@ -591,7 +583,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                     final ModuleClassLoader moduleClassLoader = coreModule.getLoader();
 
                     // 如果是系统模块目录则跳过
-                    if(isOptimisticDirectoryContainsFile(systemModuleLibDir, coreModule.getJarFile())) {
+                    if (isOptimisticDirectoryContainsFile(systemModuleLibDir, coreModule.getJarFile())) {
                         continue;
                     }
 //

@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
-    <version>1.0.16</version>
+    <version>1.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>sandbox ${sandbox.version}</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sandbox.version>1.0.16</sandbox.version>
+        <sandbox.version>1.1.0-SNAPSHOT</sandbox.version>
     </properties>
 
     <build>
@@ -109,7 +108,8 @@
         <module>sandbox-mgr-provider</module>
         <module>sandbox-module-starter</module>
         <module>sandbox-debug-module</module>
-    </modules>
+    <module>sandbox-qatest</module>
+  </modules>
 
     <dependencyManagement>
         <dependencies>
@@ -132,6 +132,12 @@
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-spy</artifactId>
                 <version>${sandbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.jvm.sandbox</groupId>
+                <artifactId>sandbox-core</artifactId>
+                <version>${sandbox.version}</version>
+                <scope>test</scope>
             </dependency>
 
             <!-- servlet api -->

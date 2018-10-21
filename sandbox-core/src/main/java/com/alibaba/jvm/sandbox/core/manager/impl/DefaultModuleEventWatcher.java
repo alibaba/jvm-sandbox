@@ -35,6 +35,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
     private final CoreLoadedClassDataSource classDataSource;
     private final CoreModule coreModule;
     private final boolean isEnableUnsafe;
+    private final String namespace;
 
     // 观察ID序列生成器
     private final Sequencer watchIdSequencer = new Sequencer(1000);
@@ -42,11 +43,13 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
     DefaultModuleEventWatcher(final Instrumentation inst,
                               final CoreLoadedClassDataSource classDataSource,
                               final CoreModule coreModule,
-                              final boolean isEnableUnsafe) {
+                              final boolean isEnableUnsafe,
+                              final String namespace) {
         this.inst = inst;
         this.classDataSource = classDataSource;
         this.coreModule = coreModule;
         this.isEnableUnsafe = isEnableUnsafe;
+        this.namespace = namespace;
     }
 
 
@@ -189,7 +192,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
         final int watchId = watchIdSequencer.next();
         // 给对应的模块追加ClassFileTransformer
         final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(
-                watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType);
+                watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
 
         // 注册到CoreModule中
         coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
