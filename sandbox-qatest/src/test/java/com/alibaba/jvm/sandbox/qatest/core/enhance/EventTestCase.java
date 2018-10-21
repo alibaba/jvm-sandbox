@@ -101,7 +101,7 @@ public class EventTestCase extends CalculatorTestCase {
                 assertEquals(Calculator.class.getName(), event.owner);
                 assertEquals("add", event.name);
                 assertEquals("(II)I", event.desc);
-                assertEquals(43, event.lineNumber);
+                assertEquals(8, event.lineNumber);
             }
         };
 
@@ -177,13 +177,13 @@ public class EventTestCase extends CalculatorTestCase {
                 Calculator.class,
                 CALCULATOR_SUM_FILTER,
                 listener = new EventStreamCheckerListener()
-                        .nextEventCheck(new LineEventChecker(41))
-                        .nextEventCheck(new LineEventChecker(42))
-                        .nextEventCheck(new LineEventChecker(43))
-                        .nextEventCheck(new LineEventChecker(42))
-                        .nextEventCheck(new LineEventChecker(43))
-                        .nextEventCheck(new LineEventChecker(42))
-                        .nextEventCheck(new LineEventChecker(45))
+                        .nextEventCheck(new LineEventChecker(6))
+                        .nextEventCheck(new LineEventChecker(7))
+                        .nextEventCheck(new LineEventChecker(8))
+                        .nextEventCheck(new LineEventChecker(7))
+                        .nextEventCheck(new LineEventChecker(8))
+                        .nextEventCheck(new LineEventChecker(7))
+                        .nextEventCheck(new LineEventChecker(10))
                 ,
                 LINE
         );

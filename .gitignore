@@ -3,5 +3,4 @@
 *.iml
 
 ## for maven
-target
 pom.xml.versionsBackup
