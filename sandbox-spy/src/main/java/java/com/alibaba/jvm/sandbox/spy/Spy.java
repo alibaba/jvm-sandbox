@@ -68,6 +68,15 @@ public class Spy {
         );
     }
 
+    /**
+     * 清理间谍钩子方法
+     *
+     * @param namespace 命名空间
+     */
+    public static void clean(final String namespace) {
+        namespaceMethodHookMap.remove(namespace);
+    }
+
     private static final SelfCallBarrier selfCallBarrier = new SelfCallBarrier();
 
     public static void spyMethodOnCallBefore(final int lineNumber,

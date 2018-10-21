@@ -32,12 +32,11 @@ public class ControlModule implements Module {
 
     private ClassLoader getSandboxClassLoader(final Class<?> classOfAgentLauncher)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        final ClassLoader sandboxClassLoader = (ClassLoader) MethodUtils.invokeStaticMethod(
+        return (ClassLoader) MethodUtils.invokeStaticMethod(
                 classOfAgentLauncher,
                 "getClassLoader",
                 configInfo.getNamespace()
         );
-        return sandboxClassLoader;
     }
 
     // 清理命名空间所对应的SandboxClassLoader
@@ -49,32 +48,24 @@ public class ControlModule implements Module {
                 "cleanClassLoader",
                 configInfo.getNamespace()
         );
-        logger.info("clean SandboxClassLoader from jvm-sandbox[{}] success, for shutdown.",
-                configInfo.getNamespace());
+        logger.info("clean SandboxClassLoader from jvm-sandbox[{}] success, for shutdown.", configInfo.getNamespace());
         return sandboxClassLoader;
     }
 
     // 清理Spy中对Method的引用
-    private void cleanSpy() throws ClassNotFoundException, IllegalAccessException {
-        // 清理Spy中的所有方法
-        final Class<?> classOfSpy = getClass().getClassLoader()
-                .loadClass("java.com.alibaba.jvm.sandbox.spy.Spy");
-        for (final Field waitingCleanField : classOfSpy.getDeclaredFields()) {
-            if (Method.class.isAssignableFrom(waitingCleanField.getType())) {
-                FieldUtils.writeDeclaredStaticField(
-                        classOfSpy,
-                        waitingCleanField.getName(),
-                        null,
-                        true
-                );
-            }
-        }
-        logger.info("clean Spy's method from jvm-sandbox[{}] success, for shutdown.", configInfo.getNamespace());
+    private void cleanSpy() throws ClassNotFoundException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        final String namespace = configInfo.getNamespace();
+        MethodUtils.invokeStaticMethod(
+                getClass().getClassLoader().loadClass("java.com.alibaba.jvm.sandbox.spy.Spy"),
+                "clean",
+                namespace
+        );
+        logger.info("clean Spy's method from jvm-sandbox[{}] success, for shutdown.", namespace);
     }
 
     // 卸载所有模块
     // 从这里开始只允许调用JDK自带的反射方法，因为ControlModule已经完成卸载，你找不到apache的包了
-    private void unloadModules() throws ModuleException, IOException {
+    private void unloadModules() throws ModuleException {
 
         for (final Module module : moduleManager.list()) {
             final Information information = module.getClass().getAnnotation(Information.class);
