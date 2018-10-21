@@ -19,8 +19,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <forkMode>pertest</forkMode>
-                    <!--<argLine>-Xbootclasspath/p:./lib/sandbox-spy-1.0.16-for-qatest.jar</argLine>-->
-                    <argLine>-Xbootclasspath/p:./lib/sandbox-spy-1.1.0-SNAPSHOT-jar-with-dependencies.jar</argLine>
+                    <argLine>-Xbootclasspath/p:./lib/sandbox-spy-1.1.0-for-qatest.jar</argLine>
                 </configuration>
             </plugin>
         </plugins>
