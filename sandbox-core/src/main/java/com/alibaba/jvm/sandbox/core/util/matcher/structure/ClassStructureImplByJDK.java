@@ -140,15 +140,25 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
             return javaClassName;
         }
 
-        return javaClassName = clazz.isArray()
-                ? clazz.getCanonicalName()
-                : clazz.getName();
+        return getJavaClassName(clazz);
+
+//        return javaClassName = clazz.isArray()
+//                ? clazz.getCanonicalName()
+//                : clazz.getName();
 
 //        final String canonicalName = clazz.getCanonicalName();
 //        return javaClassName = StringUtils.isEmpty(canonicalName)
 //                ? clazz.getName()
 //                : canonicalName;
     }
+
+    private String getJavaClassName(Class<?> clazz) {
+        if(clazz.isArray()) {
+            return getJavaClassName(clazz.getComponentType())+"[]";
+        }
+        return clazz.getName();
+    }
+
 
     @Override
     public ClassLoader getClassLoader() {

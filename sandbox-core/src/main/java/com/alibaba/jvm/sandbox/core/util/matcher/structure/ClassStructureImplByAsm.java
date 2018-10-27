@@ -6,12 +6,14 @@ import com.alibaba.jvm.sandbox.core.util.collection.GaLRUCache;
 import com.alibaba.jvm.sandbox.core.util.collection.Pair;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.PrimitiveClassStructure.Primitive;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.*;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
@@ -198,12 +200,98 @@ class PrimitiveClassStructure extends EmptyClassStructure {
 
 }
 
-class ArrayClassStructure extends EmptyClassStructure {
+class ArrayClassStructure extends FamilyClassStructure {
 
     private final ClassStructure elementClassStructure;
 
     ArrayClassStructure(ClassStructure elementClassStructure) {
         this.elementClassStructure = elementClassStructure;
+    }
+
+    @Override
+    public Access getAccess() {
+        final Access access = elementClassStructure.getAccess();
+        return new Access() {
+            @Override
+            public boolean isPublic() {
+                return access.isPublic();
+            }
+
+            @Override
+            public boolean isPrivate() {
+                return access.isPrivate();
+            }
+
+            @Override
+            public boolean isProtected() {
+                return access.isProtected();
+            }
+
+            @Override
+            public boolean isStatic() {
+                return false;
+            }
+
+            @Override
+            public boolean isFinal() {
+                return true;
+            }
+
+            @Override
+            public boolean isInterface() {
+                return false;
+            }
+
+            @Override
+            public boolean isNative() {
+                return false;
+            }
+
+            @Override
+            public boolean isAbstract() {
+                return true;
+            }
+
+            @Override
+            public boolean isEnum() {
+                return false;
+            }
+
+            @Override
+            public boolean isAnnotation() {
+                return false;
+            }
+        };
+    }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        return elementClassStructure.getClassLoader();
+    }
+
+    @Override
+    public ClassStructure getSuperClassStructure() {
+        return new ClassStructureImplByJDK(Object.class);
+    }
+
+    @Override
+    public List<ClassStructure> getInterfaceClassStructures() {
+        return new ArrayList<ClassStructure>(
+                Arrays.asList(
+                        new ClassStructureImplByJDK(Cloneable.class),
+                        new ClassStructureImplByJDK(Serializable.class)
+                )
+        );
+    }
+
+    @Override
+    public List<ClassStructure> getAnnotationTypeClassStructures() {
+        return new LinkedList<ClassStructure>();
+    }
+
+    @Override
+    public List<BehaviorStructure> getBehaviorStructures() {
+        return new LinkedList<BehaviorStructure>();
     }
 
     @Override
@@ -236,7 +324,15 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
                                    final ClassLoader loader) {
         this.classReader = new ClassReader(classByteArray);
         this.loader = loader;
-        this.access = new AccessImplByAsm(this.classReader.getAccess());
+        this.access = new AccessImplByAsm(this.classReader.getAccess()){
+            @Override
+            public boolean isStatic() {
+                // 修复ASM的BUG，如果是Enum类型，必定是static的
+                // 但ASM(至少在6.0版本)会判断错误
+                return isEnum()
+                        || super.isStatic();
+            }
+        };
     }
 
     private boolean isBootstrapClassLoader() {
@@ -283,6 +379,17 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         if (classStructureCache.containsKey(pair)) {
             return classStructureCache.get(pair);
         } else {
+
+            // 修复ASM获取Class时，遇到已加载的类会导致ClassLoader被重新定义的BUG
+            try {
+                final Class<?> tryToFoundClass = loader.loadClass(javaClassName);
+                final ClassStructure classStructure = new ClassStructureImplByJDK(tryToFoundClass);
+                classStructureCache.put(pair, classStructure);
+                return classStructure;
+            } catch (ClassNotFoundException e) {
+                // ignore...
+            }
+
             final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
             if (null != is) {
                 try {
@@ -415,6 +522,13 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
                                                  final String desc,
                                                  final String signature,
                                                  final String[] exceptions) {
+
+                    // 修复ASM会把<clinit>列入正常方法中的问题
+                    // 实际上这个方法并不会参与到任何的逻辑判断
+                    if(StringUtils.equals("<clinit>", name)) {
+                        return super.visitMethod(access, name, desc, signature, exceptions);
+                    }
+
                     return new MethodVisitor(ASM6, super.visitMethod(access, name, desc, signature, exceptions)) {
 
                         private final Type methodType = Type.getMethodType(desc);
