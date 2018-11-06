@@ -28,29 +28,6 @@ public class BehaviorStructure extends MemberStructure {
     private final List<ClassStructure> exceptionTypeClassStructures;
     private final List<ClassStructure> annotationTypeClassStructures;
 
-    private final LazyGet<String> signCodeLazyGet = new LazyGet<String>() {
-        @Override
-        protected String initialValue() {
-            return String.format("%s#%s(%s)",
-                    getDeclaringClassStructure().getJavaClassName(),
-                    getName(),
-                    join(takeJavaClassNames(getParameterTypeClassStructures()), ",")
-            );
-        }
-    };
-
-    private final LazyGet<String> toStringLazyGet = new LazyGet<String>() {
-        @Override
-        protected String initialValue() {
-            return String.format("%s:[%s]:%s:%s",
-                    getReturnTypeClassStructure().getJavaClassName(),
-                    join(takeJavaClassNames(getAnnotationTypeClassStructures()), ","),
-                    getSignCode(),
-                    join(takeJavaClassNames(getExceptionTypeClassStructures()), ",")
-            );
-        }
-    };
-
     BehaviorStructure(final Access access,
                       final String name,
                       final ClassStructure declaringClassStructure,
@@ -109,6 +86,18 @@ public class BehaviorStructure extends MemberStructure {
         return javaClassNames;
     }
 
+
+    private final LazyGet<String> signCodeLazyGet = new LazyGet<String>() {
+        @Override
+        protected String initialValue() {
+            return String.format("%s#%s(%s)",
+                    getDeclaringClassStructure().getJavaClassName(),
+                    getName(),
+                    join(takeJavaClassNames(getParameterTypeClassStructures()), ",")
+            );
+        }
+    };
+
     /**
      * 获取行为签名
      * <p>
@@ -120,6 +109,18 @@ public class BehaviorStructure extends MemberStructure {
     public String getSignCode() {
         return signCodeLazyGet.get();
     }
+
+    private final LazyGet<String> toStringLazyGet = new LazyGet<String>() {
+        @Override
+        protected String initialValue() {
+            return String.format("%s:[%s]:%s:%s",
+                    getReturnTypeClassStructure().getJavaClassName(),
+                    join(takeJavaClassNames(getAnnotationTypeClassStructures()), ","),
+                    getSignCode(),
+                    join(takeJavaClassNames(getExceptionTypeClassStructures()), ",")
+            );
+        }
+    };
 
     @Override
     public String toString() {

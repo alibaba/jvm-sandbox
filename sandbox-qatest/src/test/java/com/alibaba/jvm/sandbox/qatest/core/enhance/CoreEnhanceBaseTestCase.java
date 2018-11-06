@@ -10,7 +10,6 @@ import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByJDK;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
@@ -21,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 import static com.alibaba.jvm.sandbox.qatest.util.QaClassUtils.toByteArray;
 import static com.alibaba.jvm.sandbox.qatest.util.QaClassUtils.toResourceName;
 

@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
@@ -29,7 +29,7 @@ class AccessImplByAsm implements Access {
 
     private final int access;
 
-    AccessImplByAsm(int access) {
+    AccessImplByAsm(final int access) {
         this.access = access;
     }
 
@@ -63,7 +63,9 @@ class AccessImplByAsm implements Access {
 
     @Override
     public boolean isStatic() {
-        return BitUtils.isIn(getAccess(), ACC_STATIC);
+        // 隐性的Java语法约束：如果是接口类型，就一定是静态的
+        return isInterface()
+                || BitUtils.isIn(getAccess(), ACC_STATIC);
     }
 
     @Override
@@ -167,21 +169,28 @@ class PrimitiveClassStructure extends EmptyClassStructure {
     }
 
     public enum Primitive {
-        BOOLEAN("boolean"),
-        CHAR("char"),
-        BYTE("byte"),
-        INT("int"),
-        SHORT("short"),
-        LONG("long"),
-        FLOAT("float"),
-        DOUBLE("double"),
-        VOID("void");
+        BOOLEAN("boolean", boolean.class),
+        CHAR("char", char.class),
+        BYTE("byte", byte.class),
+        INT("int", int.class),
+        SHORT("short", short.class),
+        LONG("long", long.class),
+        FLOAT("float", float.class),
+        DOUBLE("double", double.class),
+        VOID("void", void.class);
 
         private final String type;
+        private final Access access;
 
-        Primitive(final String type) {
+        Primitive(final String type, final Class<?> clazz) {
             this.type = type;
+            this.access = new AccessImplByJDKClass(clazz);
         }
+    }
+
+    @Override
+    public Access getAccess() {
+        return primitive.access;
     }
 
     @Override
@@ -200,7 +209,7 @@ class PrimitiveClassStructure extends EmptyClassStructure {
 
 }
 
-class ArrayClassStructure extends FamilyClassStructure {
+class ArrayClassStructure extends EmptyClassStructure {
 
     private final ClassStructure elementClassStructure;
 
@@ -209,97 +218,8 @@ class ArrayClassStructure extends FamilyClassStructure {
     }
 
     @Override
-    public Access getAccess() {
-        final Access access = elementClassStructure.getAccess();
-        return new Access() {
-            @Override
-            public boolean isPublic() {
-                return access.isPublic();
-            }
-
-            @Override
-            public boolean isPrivate() {
-                return access.isPrivate();
-            }
-
-            @Override
-            public boolean isProtected() {
-                return access.isProtected();
-            }
-
-            @Override
-            public boolean isStatic() {
-                return false;
-            }
-
-            @Override
-            public boolean isFinal() {
-                return true;
-            }
-
-            @Override
-            public boolean isInterface() {
-                return false;
-            }
-
-            @Override
-            public boolean isNative() {
-                return false;
-            }
-
-            @Override
-            public boolean isAbstract() {
-                return true;
-            }
-
-            @Override
-            public boolean isEnum() {
-                return false;
-            }
-
-            @Override
-            public boolean isAnnotation() {
-                return false;
-            }
-        };
-    }
-
-    @Override
-    public ClassLoader getClassLoader() {
-        return elementClassStructure.getClassLoader();
-    }
-
-    @Override
-    public ClassStructure getSuperClassStructure() {
-        return new ClassStructureImplByJDK(Object.class);
-    }
-
-    @Override
-    public List<ClassStructure> getInterfaceClassStructures() {
-        return new ArrayList<ClassStructure>(
-                Arrays.asList(
-                        new ClassStructureImplByJDK(Cloneable.class),
-                        new ClassStructureImplByJDK(Serializable.class)
-                )
-        );
-    }
-
-    @Override
-    public List<ClassStructure> getAnnotationTypeClassStructures() {
-        return new LinkedList<ClassStructure>();
-    }
-
-    @Override
-    public List<BehaviorStructure> getBehaviorStructures() {
-        return new LinkedList<BehaviorStructure>();
-    }
-
-    @Override
     public String getJavaClassName() {
-        return new StringBuilder()
-                .append(elementClassStructure.getJavaClassName())
-                .append("[]")
-                .toString();
+        return elementClassStructure.getJavaClassName() + "[]";
     }
 }
 
@@ -315,24 +235,35 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final ClassLoader loader;
     private final Access access;
 
-    public ClassStructureImplByAsm(final InputStream classInputStream,
+    ClassStructureImplByAsm(final InputStream classInputStream,
                                    final ClassLoader loader) throws IOException {
         this(IOUtils.toByteArray(classInputStream), loader);
     }
 
-    public ClassStructureImplByAsm(final byte[] classByteArray,
+    ClassStructureImplByAsm(final byte[] classByteArray,
                                    final ClassLoader loader) {
         this.classReader = new ClassReader(classByteArray);
         this.loader = loader;
-        this.access = new AccessImplByAsm(this.classReader.getAccess()){
+        this.access = fixAccess();
+    }
+
+    /**
+     * 修正内部类时候Access的获取策略差异
+     *
+     * @return 修正后的Access
+     */
+    private Access fixAccess() {
+        final AtomicInteger accessRef = new AtomicInteger(this.classReader.getAccess());
+        final String internalClassName = this.classReader.getClassName();
+        this.classReader.accept(new ClassVisitor(ASM6) {
             @Override
-            public boolean isStatic() {
-                // 修复ASM的BUG，如果是Enum类型，必定是static的
-                // 但ASM(至少在6.0版本)会判断错误
-                return isEnum()
-                        || super.isStatic();
+            public void visitInnerClass(String name, String outerName, String innerName, int access) {
+                if (StringUtils.equals(name, internalClassName)) {
+                    accessRef.set(access);
+                }
             }
-        };
+        }, ASM6);
+        return new AccessImplByAsm(accessRef.get());
     }
 
     private boolean isBootstrapClassLoader() {
@@ -380,16 +311,6 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
             return classStructureCache.get(pair);
         } else {
 
-            // 修复ASM获取Class时，遇到已加载的类会导致ClassLoader被重新定义的BUG
-            try {
-                final Class<?> tryToFoundClass = loader.loadClass(javaClassName);
-                final ClassStructure classStructure = new ClassStructureImplByJDK(tryToFoundClass);
-                classStructureCache.put(pair, classStructure);
-                return classStructure;
-            } catch (ClassNotFoundException e) {
-                // ignore...
-            }
-
             final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
             if (null != is) {
                 try {
@@ -407,19 +328,6 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
             }
         }
 
-//        // 是个普通Java类型
-//        final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
-//        if (null != is) {
-//            try {
-//                return new ClassStructureImplByAsm(is, loader);
-//            } catch (Throwable cause) {
-//                // ignore
-//                logger.warn("new instance class structure by using ASM failed, will return null. class={};loader={};",
-//                        javaClassName, loader, cause);
-//            } finally {
-//                IOUtils.closeQuietly(is);
-//            }
-//        }
         // 出现异常或者找不到
         return null;
     }
@@ -457,8 +365,12 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final LazyGet<ClassStructure> superClassStructureLazyGet
             = new LazyGet<ClassStructure>() {
         @Override
-        protected ClassStructure initialValue() throws Throwable {
-            return newInstance(toJavaClassName(classReader.getSuperName()));
+        protected ClassStructure initialValue() {
+            final String superInternalClassName = classReader.getSuperName();
+            if (StringUtils.equals("java/lang/Object", superInternalClassName)) {
+                return null;
+            }
+            return newInstance(toJavaClassName(superInternalClassName));
         }
     };
 
@@ -470,7 +382,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final LazyGet<List<ClassStructure>> interfaceClassStructuresLazyGet
             = new LazyGet<List<ClassStructure>>() {
         @Override
-        protected List<ClassStructure> initialValue() throws Throwable {
+        protected List<ClassStructure> initialValue() {
             return newInstances(classReader.getInterfaces());
         }
     };
@@ -483,7 +395,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final LazyGet<List<ClassStructure>> annotationTypeClassStructuresLazyGet
             = new LazyGet<List<ClassStructure>>() {
         @Override
-        protected List<ClassStructure> initialValue() throws Throwable {
+        protected List<ClassStructure> initialValue() {
             final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
             accept(new ClassVisitor(ASM6) {
 
@@ -512,7 +424,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final LazyGet<List<BehaviorStructure>> behaviorStructuresLazyGet
             = new LazyGet<List<BehaviorStructure>>() {
         @Override
-        protected List<BehaviorStructure> initialValue() throws Throwable {
+        protected List<BehaviorStructure> initialValue() {
             final List<BehaviorStructure> behaviorStructures = new ArrayList<BehaviorStructure>();
             accept(new ClassVisitor(ASM6) {
 
@@ -525,7 +437,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
 
                     // 修复ASM会把<clinit>列入正常方法中的问题
                     // 实际上这个方法并不会参与到任何的逻辑判断
-                    if(StringUtils.equals("<clinit>", name)) {
+                    if (StringUtils.equals("<clinit>", name)) {
                         return super.visitMethod(access, name, desc, signature, exceptions);
                     }
 
@@ -602,4 +514,10 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         return access;
     }
 
+    @Override
+    public String toString() {
+        return "ClassStructureImplByAsm{" +
+                "javaClassName='" + getJavaClassName() + '\'' +
+                '}';
+    }
 }
