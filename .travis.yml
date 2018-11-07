@@ -1,0 +1,25 @@
+language: generic
+
+jdk:
+  - openjdk7
+  - openjdk8
+  - openjdk9
+  - openjdk10
+  - openjdk11
+  - oraclejdk7
+  - oraclejdk8
+  - oraclejdk9
+  - oraclejdk10
+  - oraclejdk11
+
+cache:
+  directories:
+    - "$HOME/.m2/repository"
+
+script:
+  - cd bin
+  - ./sandbox-packages.sh
+  - cd ..
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
