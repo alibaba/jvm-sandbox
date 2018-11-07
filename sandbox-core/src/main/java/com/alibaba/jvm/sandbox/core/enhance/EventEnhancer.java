@@ -17,6 +17,7 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassNa
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
+import static org.objectweb.asm.Opcodes.ASM7;
 
 /**
  * 事件代码增强器
@@ -90,7 +91,7 @@ public class EventEnhancer implements Enhancer {
         final int targetClassLoaderObjectID = ObjectIDs.instance.identity(targetClassLoader);
         cr.accept(
                 new EventWeaver(
-                        Opcodes.ASM6, cw, namespace, listenerId,
+                        ASM7, cw, namespace, listenerId,
                         targetClassLoaderObjectID,
                         cr.getClassName(),
                         signCodes,

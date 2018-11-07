@@ -28,6 +28,18 @@ public class EventPool {
         this.isEnable = this.pool != null;
     }
 
+    /**
+     * 关闭并清理对象池
+     * <p>
+     * 修复问题：#108
+     * </p>
+     */
+    public void close() {
+        if (null != pool) {
+            pool.close();
+        }
+    }
+
     private KeyedObjectPool<Event.Type, Event> createEventPool() {
         final CoreConfigure cfg = CoreConfigure.getInstance();
         if (cfg.isEventPoolEnable()) {

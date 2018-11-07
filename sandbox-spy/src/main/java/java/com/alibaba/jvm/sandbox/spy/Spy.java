@@ -75,6 +75,14 @@ public class Spy {
      */
     public static void clean(final String namespace) {
         namespaceMethodHookMap.remove(namespace);
+
+        // 如果是最后的一个命名空间，则需要重新清理Node中所持有的Thread
+        if (namespaceMethodHookMap.isEmpty()) {
+            for (int index = 0; index < selfCallBarrier.nodeArray.length; index++) {
+                selfCallBarrier.nodeArray[index] = new SelfCallBarrier.Node();
+            }
+        }
+
     }
 
     private static final SelfCallBarrier selfCallBarrier = new SelfCallBarrier();
@@ -226,7 +234,7 @@ public class Spy {
                 node.next.pre = node.pre;
             }
             // help gc
-            node.pre = node.next = null;
+            node.pre = (node.next = null);
         }
 
         // 插入节点

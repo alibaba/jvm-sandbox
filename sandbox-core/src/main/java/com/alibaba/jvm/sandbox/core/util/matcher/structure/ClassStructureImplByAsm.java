@@ -255,14 +255,14 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private Access fixAccess() {
         final AtomicInteger accessRef = new AtomicInteger(this.classReader.getAccess());
         final String internalClassName = this.classReader.getClassName();
-        this.classReader.accept(new ClassVisitor(ASM6) {
+        this.classReader.accept(new ClassVisitor(ASM7) {
             @Override
             public void visitInnerClass(String name, String outerName, String innerName, int access) {
                 if (StringUtils.equals(name, internalClassName)) {
                     accessRef.set(access);
                 }
             }
-        }, ASM6);
+        }, ASM7);
         return new AccessImplByAsm(accessRef.get());
     }
 
@@ -397,7 +397,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         @Override
         protected List<ClassStructure> initialValue() {
             final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
-            accept(new ClassVisitor(ASM6) {
+            accept(new ClassVisitor(ASM7) {
 
                 @Override
                 public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
@@ -426,7 +426,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         @Override
         protected List<BehaviorStructure> initialValue() {
             final List<BehaviorStructure> behaviorStructures = new ArrayList<BehaviorStructure>();
-            accept(new ClassVisitor(ASM6) {
+            accept(new ClassVisitor(ASM7) {
 
                 @Override
                 public MethodVisitor visitMethod(final int access,
@@ -441,7 +441,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
                         return super.visitMethod(access, name, desc, signature, exceptions);
                     }
 
-                    return new MethodVisitor(ASM6, super.visitMethod(access, name, desc, signature, exceptions)) {
+                    return new MethodVisitor(ASM7, super.visitMethod(access, name, desc, signature, exceptions)) {
 
                         private final Type methodType = Type.getMethodType(desc);
                         private final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();

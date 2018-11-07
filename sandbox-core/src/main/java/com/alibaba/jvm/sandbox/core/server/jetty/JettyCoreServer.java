@@ -69,6 +69,7 @@ public class JettyCoreServer implements CoreServer {
     @Override
     public void unbind() throws IOException {
         try {
+
             initializer.destroyProcess(new Initializer.Processor() {
                 @Override
                 public void process() throws Throwable {
@@ -85,6 +86,10 @@ public class JettyCoreServer implements CoreServer {
             // destroy http server
             httpServer.destroy();
             logger.info("{} was destroyed.", this);
+
+            // 关闭对象池
+            EventListenerHandlers.getSingleton().getEventPool().close();
+            logger.info("{} was closed the Event-Pool!", this);
 
         } catch (Throwable cause) {
             logger.warn("{} unBind failed.", this, cause);
