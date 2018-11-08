@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 abstract class ModifierAccess implements Access {
@@ -136,19 +137,18 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
 
     @Override
     public String getJavaClassName() {
-        if (null != javaClassName) {
-            return javaClassName;
-        }
-
-        return javaClassName = clazz.isArray()
-                ? clazz.getCanonicalName()
-                : clazz.getName();
-
-//        final String canonicalName = clazz.getCanonicalName();
-//        return javaClassName = StringUtils.isEmpty(canonicalName)
-//                ? clazz.getName()
-//                : canonicalName;
+        return null != javaClassName
+                ? javaClassName
+                : (javaClassName = getJavaClassName(clazz));
     }
+
+    private String getJavaClassName(Class<?> clazz) {
+        if (clazz.isArray()) {
+            return getJavaClassName(clazz.getComponentType()) + "[]";
+        }
+        return clazz.getName();
+    }
+
 
     @Override
     public ClassLoader getClassLoader() {
@@ -157,7 +157,10 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
 
     @Override
     public ClassStructure getSuperClassStructure() {
-        return newInstance(clazz.getSuperclass());
+        // 过滤掉Object.class
+        return Object.class.equals(clazz.getSuperclass())
+                ? null
+                : newInstance(clazz.getSuperclass());
     }
 
     @Override
@@ -183,8 +186,8 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
     private final LazyGet<List<ClassStructure>> annotationTypeClassStructuresLazyGet
             = new LazyGet<List<ClassStructure>>() {
         @Override
-        protected List<ClassStructure> initialValue() throws Throwable {
-            return newInstances(getAnnotationTypeArray(clazz.getDeclaredAnnotations()));
+        protected List<ClassStructure> initialValue() {
+            return Collections.unmodifiableList(newInstances(getAnnotationTypeArray(clazz.getDeclaredAnnotations())));
         }
     };
 
@@ -228,7 +231,7 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
             for (final Method method : clazz.getDeclaredMethods()) {
                 behaviorStructures.add(newBehaviorStructure(method));
             }
-            return behaviorStructures;
+            return Collections.unmodifiableList(behaviorStructures);
         }
     };
 
@@ -242,5 +245,8 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
         return new AccessImplByJDKClass(clazz);
     }
 
-
+    @Override
+    public String toString() {
+        return "ClassStructureImplByJDK{" + "javaClassName='" + javaClassName + '\'' + '}';
+    }
 }

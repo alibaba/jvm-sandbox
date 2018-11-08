@@ -10,7 +10,6 @@ import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByJDK;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
@@ -21,54 +20,35 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
+import static com.alibaba.jvm.sandbox.qatest.util.QaClassUtils.toByteArray;
+import static com.alibaba.jvm.sandbox.qatest.util.QaClassUtils.toResourceName;
 
 public class CoreEnhanceBaseTestCase {
 
     private static final AtomicInteger LISTENER_ID_SEQ = new AtomicInteger(1000);
-
-    /**
-     * 目标Class文件转换为字节码数组
-     *
-     * @param targetClass 目标Class文件
-     * @return 目标Class文件字节码数组
-     * @throws IOException 转换出错
-     */
-    protected byte[] toByteArray(final Class<?> targetClass) throws IOException {
-        final InputStream is = targetClass.getClassLoader().getResourceAsStream(toResourceName(targetClass.getName()));
-        try {
-            return IOUtils.toByteArray(is);
-        } finally {
-            IOUtils.closeQuietly(is);
-        }
-    }
-
-    private String toResourceName(String javaClassName) {
-        return toInternalClassName(javaClassName).concat(".class");
-    }
 
     private class TestClassLoader extends ClassLoader {
 
         private final Map<String,byte[]> javaClassByteArrayMap
                 = new HashMap<String, byte[]>();
 
-//        @Override
-//        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-//            final Class<?> loadedClass = findLoadedClass(name);
-//            if (loadedClass == null) {
-//                try {
-//                    final Class<?> aClass = findClass(name);
-//                    if (resolve) {
-//                        resolveClass(aClass);
-//                    }
-//                    return aClass;
-//                } catch (Exception e) {
-//                    return super.loadClass(name, resolve);
-//                }
-//            } else {
-//                return loadedClass;
-//            }
-//        }
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            final Class<?> loadedClass = findLoadedClass(name);
+            if (loadedClass == null) {
+                try {
+                    final Class<?> aClass = findClass(name);
+                    if (resolve) {
+                        resolveClass(aClass);
+                    }
+                    return aClass;
+                } catch (Exception e) {
+                    return super.loadClass(name, resolve);
+                }
+            } else {
+                return loadedClass;
+            }
+        }
 
         public Class<?> defineClass(final String javaClassName,
                                 final byte[] classByteArray) throws InvocationTargetException, IllegalAccessException {

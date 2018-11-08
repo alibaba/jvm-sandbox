@@ -6,6 +6,7 @@ import com.alibaba.jvm.sandbox.core.util.collection.GaLRUCache;
 import com.alibaba.jvm.sandbox.core.util.collection.Pair;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.PrimitiveClassStructure.Primitive;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
@@ -27,7 +29,7 @@ class AccessImplByAsm implements Access {
 
     private final int access;
 
-    AccessImplByAsm(int access) {
+    AccessImplByAsm(final int access) {
         this.access = access;
     }
 
@@ -61,7 +63,9 @@ class AccessImplByAsm implements Access {
 
     @Override
     public boolean isStatic() {
-        return BitUtils.isIn(getAccess(), ACC_STATIC);
+        // 隐性的Java语法约束：如果是接口类型，就一定是静态的
+        return isInterface()
+                || BitUtils.isIn(getAccess(), ACC_STATIC);
     }
 
     @Override
@@ -165,21 +169,28 @@ class PrimitiveClassStructure extends EmptyClassStructure {
     }
 
     public enum Primitive {
-        BOOLEAN("boolean"),
-        CHAR("char"),
-        BYTE("byte"),
-        INT("int"),
-        SHORT("short"),
-        LONG("long"),
-        FLOAT("float"),
-        DOUBLE("double"),
-        VOID("void");
+        BOOLEAN("boolean", boolean.class),
+        CHAR("char", char.class),
+        BYTE("byte", byte.class),
+        INT("int", int.class),
+        SHORT("short", short.class),
+        LONG("long", long.class),
+        FLOAT("float", float.class),
+        DOUBLE("double", double.class),
+        VOID("void", void.class);
 
         private final String type;
+        private final Access access;
 
-        Primitive(final String type) {
+        Primitive(final String type, final Class<?> clazz) {
             this.type = type;
+            this.access = new AccessImplByJDKClass(clazz);
         }
+    }
+
+    @Override
+    public Access getAccess() {
+        return primitive.access;
     }
 
     @Override
@@ -208,10 +219,7 @@ class ArrayClassStructure extends EmptyClassStructure {
 
     @Override
     public String getJavaClassName() {
-        return new StringBuilder()
-                .append(elementClassStructure.getJavaClassName())
-                .append("[]")
-                .toString();
+        return elementClassStructure.getJavaClassName() + "[]";
     }
 }
 
@@ -227,16 +235,35 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final ClassLoader loader;
     private final Access access;
 
-    public ClassStructureImplByAsm(final InputStream classInputStream,
+    ClassStructureImplByAsm(final InputStream classInputStream,
                                    final ClassLoader loader) throws IOException {
         this(IOUtils.toByteArray(classInputStream), loader);
     }
 
-    public ClassStructureImplByAsm(final byte[] classByteArray,
+    ClassStructureImplByAsm(final byte[] classByteArray,
                                    final ClassLoader loader) {
         this.classReader = new ClassReader(classByteArray);
         this.loader = loader;
-        this.access = new AccessImplByAsm(this.classReader.getAccess());
+        this.access = fixAccess();
+    }
+
+    /**
+     * 修正内部类时候Access的获取策略差异
+     *
+     * @return 修正后的Access
+     */
+    private Access fixAccess() {
+        final AtomicInteger accessRef = new AtomicInteger(this.classReader.getAccess());
+        final String internalClassName = this.classReader.getClassName();
+        this.classReader.accept(new ClassVisitor(ASM7) {
+            @Override
+            public void visitInnerClass(String name, String outerName, String innerName, int access) {
+                if (StringUtils.equals(name, internalClassName)) {
+                    accessRef.set(access);
+                }
+            }
+        }, ASM7);
+        return new AccessImplByAsm(accessRef.get());
     }
 
     private boolean isBootstrapClassLoader() {
@@ -283,6 +310,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         if (classStructureCache.containsKey(pair)) {
             return classStructureCache.get(pair);
         } else {
+
             final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
             if (null != is) {
                 try {
@@ -300,19 +328,6 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
             }
         }
 
-//        // 是个普通Java类型
-//        final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
-//        if (null != is) {
-//            try {
-//                return new ClassStructureImplByAsm(is, loader);
-//            } catch (Throwable cause) {
-//                // ignore
-//                logger.warn("new instance class structure by using ASM failed, will return null. class={};loader={};",
-//                        javaClassName, loader, cause);
-//            } finally {
-//                IOUtils.closeQuietly(is);
-//            }
-//        }
         // 出现异常或者找不到
         return null;
     }
@@ -350,8 +365,12 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final LazyGet<ClassStructure> superClassStructureLazyGet
             = new LazyGet<ClassStructure>() {
         @Override
-        protected ClassStructure initialValue() throws Throwable {
-            return newInstance(toJavaClassName(classReader.getSuperName()));
+        protected ClassStructure initialValue() {
+            final String superInternalClassName = classReader.getSuperName();
+            if (StringUtils.equals("java/lang/Object", superInternalClassName)) {
+                return null;
+            }
+            return newInstance(toJavaClassName(superInternalClassName));
         }
     };
 
@@ -363,7 +382,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final LazyGet<List<ClassStructure>> interfaceClassStructuresLazyGet
             = new LazyGet<List<ClassStructure>>() {
         @Override
-        protected List<ClassStructure> initialValue() throws Throwable {
+        protected List<ClassStructure> initialValue() {
             return newInstances(classReader.getInterfaces());
         }
     };
@@ -376,9 +395,9 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final LazyGet<List<ClassStructure>> annotationTypeClassStructuresLazyGet
             = new LazyGet<List<ClassStructure>>() {
         @Override
-        protected List<ClassStructure> initialValue() throws Throwable {
+        protected List<ClassStructure> initialValue() {
             final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
-            accept(new ClassVisitor(ASM6) {
+            accept(new ClassVisitor(ASM7) {
 
                 @Override
                 public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
@@ -405,9 +424,9 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final LazyGet<List<BehaviorStructure>> behaviorStructuresLazyGet
             = new LazyGet<List<BehaviorStructure>>() {
         @Override
-        protected List<BehaviorStructure> initialValue() throws Throwable {
+        protected List<BehaviorStructure> initialValue() {
             final List<BehaviorStructure> behaviorStructures = new ArrayList<BehaviorStructure>();
-            accept(new ClassVisitor(ASM6) {
+            accept(new ClassVisitor(ASM7) {
 
                 @Override
                 public MethodVisitor visitMethod(final int access,
@@ -415,7 +434,14 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
                                                  final String desc,
                                                  final String signature,
                                                  final String[] exceptions) {
-                    return new MethodVisitor(ASM6, super.visitMethod(access, name, desc, signature, exceptions)) {
+
+                    // 修复ASM会把<clinit>列入正常方法中的问题
+                    // 实际上这个方法并不会参与到任何的逻辑判断
+                    if (StringUtils.equals("<clinit>", name)) {
+                        return super.visitMethod(access, name, desc, signature, exceptions);
+                    }
+
+                    return new MethodVisitor(ASM7, super.visitMethod(access, name, desc, signature, exceptions)) {
 
                         private final Type methodType = Type.getMethodType(desc);
                         private final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
@@ -488,4 +514,10 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         return access;
     }
 
+    @Override
+    public String toString() {
+        return "ClassStructureImplByAsm{" +
+                "javaClassName='" + getJavaClassName() + '\'' +
+                '}';
+    }
 }

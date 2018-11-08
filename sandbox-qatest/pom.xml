@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.alibaba.jvm.sandbox</groupId>
         <artifactId>sandbox</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1-SNAPSHOT</version>
     </parent>
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox-qatest</artifactId>
@@ -20,6 +20,18 @@
                 <configuration>
                     <forkMode>pertest</forkMode>
                     <argLine>-Xbootclasspath/p:./lib/sandbox-spy-1.1.0-for-qatest.jar</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <formats>
+                        <format>html</format>
+                        <format>xml</format>
+                    </formats>
+                    <check />
                 </configuration>
             </plugin>
         </plugins>
