@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
@@ -67,6 +68,12 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.7</version>
+            </plugin>
+
             <!-- 为了发布到MAVEN中央仓库而用的插件 -->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
@@ -96,17 +103,17 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.7</version>
                 <configuration>
                     <outputDirectory>./target/tmpCobertura</outputDirectory>
+                    <aggregate>true</aggregate>
+                    <check/>
                     <formats>
                         <format>html</format>
                         <format>xml</format>
                     </formats>
-                    <aggregate>true</aggregate>
-                    <check />
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
 
@@ -121,8 +128,8 @@
         <module>sandbox-mgr-provider</module>
         <module>sandbox-module-starter</module>
         <module>sandbox-debug-module</module>
-    <module>sandbox-qatest</module>
-  </modules>
+        <module>sandbox-qatest</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
@@ -164,7 +171,7 @@
                 <artifactId>javax.annotation-api</artifactId>
                 <version>1.2</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.kohsuke.metainf-services</groupId>
                 <artifactId>metainf-services</artifactId>
@@ -188,8 +195,8 @@
         </repository>
     </distributionManagement>
 
-    <description>Alibaba jvm-sandbox OpenSource Project</description>
-    <url>https://github.com/alibaba/jvm-Sandbox</url>
+    <description>Alibaba JVM-SANDBOX OpenSource Project</description>
+    <url>https://github.com/alibaba/jvm-sandbox</url>
 
     <licenses>
         <license>
@@ -221,6 +228,5 @@
         <developerConnection>scm:git:https://github.com/alibaba/jvm-sandbox.git</developerConnection>
         <url>https://github.com/alibaba/jvm-sandbox</url>
     </scm>
-
 
 </project>
