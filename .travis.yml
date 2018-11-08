@@ -9,9 +9,7 @@ cache:
     - "$HOME/.m2/repository"
 
 script:
-  - cd bin
-  - ./sandbox-packages.sh
-  - cd ..
+  - mvn clean cobertura:cobertura -Dmaven.test.skip=false
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
