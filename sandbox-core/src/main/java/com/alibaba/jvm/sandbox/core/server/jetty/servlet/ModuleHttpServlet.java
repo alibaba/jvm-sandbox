@@ -82,7 +82,7 @@ public class ModuleHttpServlet extends HttpServlet {
         if (null == method) {
             logger.warn("module[id={};class={};] request method not found, value={};",
                     uniqueId,
-                    coreModule.getModule().getClass(),
+                    coreModule.getModule().getClass().getName(),
                     path
             );
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -92,7 +92,7 @@ public class ModuleHttpServlet extends HttpServlet {
                     method.getDeclaringClass().getName(),
                     method.getName(),
                     uniqueId,
-                    coreModule.getModule().getClass()
+                    coreModule.getModule().getClass().getName()
             );
         }
 
@@ -118,14 +118,14 @@ public class ModuleHttpServlet extends HttpServlet {
             Thread.currentThread().setContextClassLoader(coreModule.getLoader());
             method.invoke(coreModule.getModule(), parameterObjectArray);
             logger.debug("http request value={} invoke module[id={};] {}#{} success.",
-                    path, uniqueId, coreModule.getModule().getClass(), method.getName());
+                    path, uniqueId, coreModule.getModule().getClass().getName(), method.getName());
         } catch (IllegalAccessException iae) {
-            logger.warn("impossible, http request value={} invoke module[id={};] {}#{} occur access denied.",
-                    path, uniqueId, coreModule.getModule().getClass(), method.getName(), iae);
+            logger.warn("http request value={} invoke module[id={};] {}#{} occur access denied.",
+                    path, uniqueId, coreModule.getModule().getClass().getName(), method.getName(), iae);
             throw new ServletException(iae);
         } catch (InvocationTargetException ite) {
             logger.warn("http request value={} invoke module[id={};] {}#{} failed.",
-                    path, uniqueId, coreModule.getModule().getClass(), method.getName(), ite.getTargetException());
+                    path, uniqueId, coreModule.getModule().getClass().getName(), method.getName(), ite.getTargetException());
             final Throwable targetCause = ite.getTargetException();
             if (targetCause instanceof ServletException) {
                 throw (ServletException) targetCause;

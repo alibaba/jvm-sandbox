@@ -50,11 +50,13 @@ exit_on_err()
 # display usage
 function usage() {
 echo "
-usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:]]
+usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
 
     -h : help
          Prints the ${0} help
 
+    -X : debug
+         Prints debug message
 
     -p : PID
          Select target JVM process ID
@@ -253,7 +255,7 @@ function main() {
 
     check_permission
 
-    while getopts "hp:vFfRu:a:A:d:m:I:P:ClSn:" ARG
+    while getopts "hp:vFfRu:a:A:d:m:I:P:ClSn:X" ARG
     do
         case ${ARG} in
             h) usage;exit;;
@@ -273,6 +275,7 @@ function main() {
             C) OP_CONNECT_ONLY=1;;
             S) OP_SHUTDOWN=1;;
             n) OP_NAMESPACE=1;ARG_NAMESPACE=${OPTARG};;
+            X) set -x;;
             ?) usage;exit_on_err 1;;
         esac
     done

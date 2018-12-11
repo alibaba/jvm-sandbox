@@ -22,6 +22,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtGetClassDeclaredJavaMethod;
+import static org.apache.commons.lang3.StringUtils.join;
 
 /**
  * 事件处理
@@ -61,9 +62,13 @@ public class EventListenerHandlers {
     public void active(final int listenerId,
                        final EventListener listener,
                        final Event.Type[] eventTypeArray) {
-        final EventListenerWrap wrap = new EventListenerWrap(listener, eventTypeArray);
+        final EventListenerWrap wrap = new EventListenerWrap(listenerId, listener, eventTypeArray);
         globalEventListenerMap.put(listenerId, wrap);
-        logger.info("active listener success. listener-id={};listener={};", listenerId, listener);
+        logger.info("activated listener[id={};target={};] event={}",
+                listenerId,
+                listener,
+                join(eventTypeArray, ",")
+        );
     }
 
     /**
@@ -74,10 +79,14 @@ public class EventListenerHandlers {
     public void frozen(int listenerId) {
         final EventListenerWrap wrap = globalEventListenerMap.remove(listenerId);
         if (null == wrap) {
+            logger.debug("ignore frozen listener[id={};], because not found.");
             return;
         }
 
-        logger.info("frozen listener success. listener-id={};listener={};", listenerId, wrap.listener);
+        logger.info("frozen listener[id={};target={};]",
+                listenerId,
+                wrap.listener
+        );
     }
 
     /**
@@ -103,8 +112,11 @@ public class EventListenerHandlers {
             // 调用事件处理
             listener.onEvent(event);
             if (logger.isDebugEnabled()) {
-                logger.debug("listener onEvent success, listener-id={};process-id={};invoke-id={};type={}",
-                        listenerId, processId, invokeId, event.type
+                logger.debug("on-event: event|{}|{}|{}@listener|{}",
+                        event.type,
+                        processId,
+                        invokeId,
+                        listenerId
                 );
             }
 
@@ -114,8 +126,13 @@ public class EventListenerHandlers {
         catch (ProcessControlException pce) {
 
             final ProcessControlException.State state = pce.getState();
-            logger.debug("listener onEvent change process, listener-id={};process-id={};invoke-id={};type={};state={};isIgnoreProcessEvent={};",
-                    listenerId, processId, invokeId, event.type, state, pce.isIgnoreProcessEvent()
+            logger.debug("on-event: event|{}|{}|{};listener|{}, process-changed: {}. isIgnoreProcessEvent={};",
+                    event.type,
+                    processId,
+                    invokeId,
+                    listenerId,
+                    state,
+                    pce.isIgnoreProcessEvent()
             );
 
             final EventListenerWrap.EventProcess eventProcess = wrap.eventProcessRef.get();
@@ -130,15 +147,21 @@ public class EventListenerHandlers {
 
                 // 立即返回对象
                 case RETURN_IMMEDIATELY: {
-                    logger.debug("enter process control flow, return immediately "
-                                    + "listener-id={};"
-                                    + "process-id={};"
-                                    + "invoke-id={};"
-                                    + "type={};"
-                                    + "return={};"
-                                    + "isIgnoreProcessEvent={};",
-                            listenerId, processId, invokeId, event.type, pce.getRespond(), pce.isIgnoreProcessEvent()
-                    );
+
+                    // 将BEFORE压入的堆栈弹出
+                    if (event instanceof BeforeEvent) {
+                        final GaStack<Integer> stack = wrap.eventProcessRef.get().processStack;
+                        stack.pop();
+                        wrap.cleanIfLast();
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("invoke-stack mock pop, IMMEDIATELY-RETURN deep={};listener={};pid={};iid={}",
+                                    stack.deep(),
+                                    listenerId,
+                                    processId,
+                                    invokeId
+                            );
+                        }
+                    }
 
                     // 如果已经禁止后续返回任何事件了，则不进行后续的操作
                     if (pce.isIgnoreProcessEvent()) {
@@ -171,16 +194,22 @@ public class EventListenerHandlers {
                 // 立即抛出异常
                 case THROWS_IMMEDIATELY: {
 
+                    // 将BEFORE压入的堆栈弹出
+                    if (event instanceof BeforeEvent) {
+                        final GaStack<Integer> stack = wrap.eventProcessRef.get().processStack;
+                        stack.pop();
+                        wrap.cleanIfLast();
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("invoke-stack mock pop, IMMEDIATELY-THROWS deep={};listener={};pid={};iid={}",
+                                    stack.deep(),
+                                    listenerId,
+                                    processId,
+                                    invokeId
+                            );
+                        }
+                    }
+
                     final Throwable throwable = (Throwable) pce.getRespond();
-                    logger.debug("enter process control flow, throws immediately "
-                                    + "listener-id={};"
-                                    + "process-id={};"
-                                    + "invoke-id={};"
-                                    + "type={};"
-                                    + "throws={};"
-                                    + "isIgnoreProcessEvent={}",
-                            listenerId, processId, invokeId, event.type, throwable, pce.isIgnoreProcessEvent()
-                    );
 
                     // 如果已经禁止后续返回任何事件了，则不进行后续的操作
                     if (pce.isIgnoreProcessEvent()) {
@@ -216,23 +245,8 @@ public class EventListenerHandlers {
                 }
 
                 // 什么都不操作，立即返回
-                case NONE_IMMEDIATELY: {
-                    logger.debug("enter process control flow, none immediately "
-                                    + "listener-id={};"
-                                    + "process-id={};"
-                                    + "invoke-id={};"
-                                    + "type={};"
-                                    + "isIgnoreProcessEvent={}",
-                            listenerId, processId, invokeId, event.type, pce.isIgnoreProcessEvent()
-                    );
-                    return Spy.Ret.newInstanceForNone();
-                }
-
-                // 未知的流程变更状态,基本上而言,不可能到达这里
+                case NONE_IMMEDIATELY:
                 default: {
-                    logger.warn("unknow process control, listener-id={};process-id={};invoke-id={};state={};type={};",
-                            listenerId, processId, invokeId, state, event.type
-                    );
                     return Spy.Ret.newInstanceForNone();
                 }
             }
@@ -245,16 +259,17 @@ public class EventListenerHandlers {
             // 如果当前事件处理器是可中断的事件处理器,则对外抛出UnCaughtException
             // 中断当前方法
             if (isInterruptEventHandler(listener.getClass())) {
-                logger.warn("occur error on event-listener, invoke will be interrupted. listener-id={};process-id={};invoke-id={};type={};",
-                        listenerId, processId, invokeId, event.type, throwable
-                );
                 throw throwable;
             }
 
             // 普通事件处理器则可以打个日志后,直接放行
             else {
-                logger.warn("occur error on event-listener, listener-id={};process-id={};invoke-id={};type={};",
-                        listenerId, processId, invokeId, event.type, throwable
+                logger.debug("on-event: event|{}|{}|{};listener|{} occur an error.",
+                        event.type,
+                        processId,
+                        invokeId,
+                        listenerId,
+                        throwable
                 );
             }
         }
@@ -338,7 +353,7 @@ public class EventListenerHandlers {
 
         // 如果尚未注册,则直接返回,不做任何处理
         if (null == wrap) {
-            logger.debug("listener was not active yet, ignore this process. id={};", listenerId);
+            logger.debug("listener={} is not activated, ignore processing before-event.", listenerId);
             return Spy.Ret.newInstanceForNone();
         }
 
@@ -357,16 +372,21 @@ public class EventListenerHandlers {
         // 将当前调用压栈
         stack.push(invokeId);
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("invoke-stack push, deep={};listener={};pid={};iid={}",
+                    stack.deep(),
+                    listenerId,
+                    processId,
+                    invokeId
+            );
+        }
+
         // 如果当前处理ID被忽略，则立即返回
         // 放在stack.push后边是为了对齐执行栈
         if (eventProcess.isIgnoreProcessEvent(processId)) {
             return Spy.Ret.newInstanceForNone();
         } else {
             eventProcess.cleanIgnoreProcessEvent();
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("push invoke stack, process-id={};invoke-id={};", processId, invokeId);
         }
 
         final BeforeEvent event = eventPool.borrowBeforeEvent(
@@ -386,6 +406,16 @@ public class EventListenerHandlers {
         }
     }
 
+    /*
+     * 判断堆栈是否错位
+     */
+    private boolean isStackErrorPosition(final int processId,
+                                         final int invokeId,
+                                         final GaStack<Integer> stack) {
+        return (processId == invokeId && !stack.isEmpty())
+                || (processId != invokeId && stack.isEmpty());
+    }
+
     private Spy.Ret handleOnEnd(final int listenerId,
                                 final Object object,
                                 final boolean isReturn) throws Throwable {
@@ -394,7 +424,7 @@ public class EventListenerHandlers {
 
         // 如果尚未注册,则直接返回,不做任何处理
         if (null == wrap) {
-            logger.debug("listener-id={} was not active yet, ignore this process.", listenerId);
+            logger.debug("listener={} is not activated, ignore processing return-event|throws-event.", listenerId);
             return Spy.Ret.newInstanceForNone();
         }
 
@@ -411,6 +441,22 @@ public class EventListenerHandlers {
 
         final int processId = stack.peekLast();
         final int invokeId = stack.pop();
+        wrap.cleanIfLast();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("invoke-stack pop, deep={};listener={};pid={};iid={}",
+                    stack.deep(),
+                    listenerId,
+                    processId,
+                    invokeId
+            );
+        }
+
+        // 如果PID==IID说明已经到栈顶，此时需要核对堆栈是否为空
+        // 如果不为空需要输出日志进行告警
+        if (isStackErrorPosition(processId, invokeId, stack)) {
+            logger.warn("stack error position. deep={};listener={};", stack.deep(), listenerId);
+        }
 
         // 忽略事件处理
         // 放在stack.pop()后边是为了对齐执行栈
@@ -469,7 +515,7 @@ public class EventListenerHandlers {
                               final int lineNumber) throws Throwable {
         final EventListenerWrap wrap = globalEventListenerMap.get(listenerId);
         if (null == wrap) {
-            logger.debug("listener-id={} was not active yet, ignore this process.", listenerId);
+            logger.debug("listener={} is not activated, ignore processing line-event.", listenerId);
             return;
         }
 
@@ -505,7 +551,7 @@ public class EventListenerHandlers {
                                     final String desc) throws Throwable {
         final EventListenerWrap wrap = globalEventListenerMap.get(listenerId);
         if (null == wrap) {
-            logger.debug("listener-id={} was not active yet, ignore this process.", listenerId);
+            logger.debug("listener={} is not activated, ignore processing call-before-event.", listenerId);
             return;
         }
 
@@ -543,7 +589,7 @@ public class EventListenerHandlers {
 
         final EventListenerWrap wrap = globalEventListenerMap.get(listenerId);
         if (null == wrap) {
-            logger.debug("listener-id={} was not active yet, ignore this process.", listenerId);
+            logger.debug("listener={} is not activated, ignore processing call-return-event.", listenerId);
             return;
         }
 
@@ -574,7 +620,7 @@ public class EventListenerHandlers {
                                     final String throwException) throws Throwable {
         final EventListenerWrap wrap = globalEventListenerMap.get(listenerId);
         if (null == wrap) {
-            logger.debug("listener-id={} was not active yet, ignore this process.", listenerId);
+            logger.debug("listener={} is not activated, ignore processing call-throws-event.", listenerId);
             return;
         }
 
@@ -625,6 +671,7 @@ public class EventListenerHandlers {
 
         }
 
+        private final int listenerId;
         private final EventListener listener;
         private final ThreadLocal<EventProcess> eventProcessRef = new ThreadLocal<EventProcess>() {
             @Override
@@ -633,17 +680,29 @@ public class EventListenerHandlers {
             }
         };
 
-        private EventListenerWrap(final EventListener listener,
+        private EventListenerWrap(final int listenerId,
+                                  final EventListener listener,
                                   final Event.Type[] eventTypeArray) {
 
-            if(isInterruptEventHandler(listener.getClass())) {
+            this.listenerId = listenerId;
+
+            if (isInterruptEventHandler(listener.getClass())) {
                 this.listener = new InterruptedEventListenerImpl(
-                        new SeparateImmediatelyEventListener(eventTypeArray, listener, eventPool)
+                        new SeparateImmediatelyEventListener(listener, eventTypeArray, eventPool)
                 );
             } else {
-                this.listener = new SeparateImmediatelyEventListener(eventTypeArray, listener, eventPool);
+                this.listener = new SeparateImmediatelyEventListener(listener, eventTypeArray, eventPool);
             }
         }
+
+        void cleanIfLast() {
+            final EventProcess eventProcess = eventProcessRef.get();
+            if (eventProcess.processStack.isEmpty()) {
+                eventProcessRef.remove();
+                logger.debug("clean TLS: listener-wrap, listener={};", listenerId);
+            }
+        }
+
     }
 
     @Interrupted

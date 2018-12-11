@@ -20,4 +20,6 @@ public interface GaStack<E> {
 
     E peekLast();
 
+    int deep();
+
 }

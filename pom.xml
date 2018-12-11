@@ -5,14 +5,14 @@
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>sandbox ${sandbox.version}</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sandbox.version>1.1.1</sandbox.version>
+        <sandbox.version>1.1.2-SNAPSHOT</sandbox.version>
     </properties>
 
     <build>
@@ -128,11 +128,16 @@
         <module>sandbox-mgr-provider</module>
         <module>sandbox-module-starter</module>
         <module>sandbox-debug-module</module>
-        <module>sandbox-qatest</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.9</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-api</artifactId>

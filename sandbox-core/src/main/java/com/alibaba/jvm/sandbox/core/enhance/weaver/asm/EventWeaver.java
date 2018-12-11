@@ -125,23 +125,25 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         return signCode;
     }
 
-
     @Override
     public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
 
         final MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         final String signCode = getBehaviorSignCode(name, desc);
         if (!isMatchedBehavior(signCode)) {
-            logger.debug("rewrite method listener[id:{};ns:{};] {} was not matched.", listenerId, namespace, signCode);
+            logger.debug("non-rewrite method {} for listener[id={}];",
+                    signCode,
+                    listenerId
+            );
             return mv;
         }
 
-        logger.info("rewrite method listener[id:{};ns:{};event:{}] {} was matched. ;",
+        logger.info("rewrite method {} for listener[id={}];event={};",
+                signCode,
                 listenerId,
-                namespace,
-                join(eventTypeArray, ","),
-                signCode
+                join(eventTypeArray, ",")
         );
+
         return new ReWriteMethod(api, new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions), access, name, desc) {
 
             private final Label beginLabel = new Label();

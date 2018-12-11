@@ -21,12 +21,12 @@ public class DefaultModuleLifeCycleEventBus implements ModuleLifeCycleEventBus {
     @Override
     public void append(ModuleLifeCycleEventListener lifeCycleEventListener) {
         moduleLifeCycleEventListeners.add(lifeCycleEventListener);
-        logger.info("append ModuleLifeCycleEventListener[listener={};].", lifeCycleEventListener);
     }
 
     @Override
     public void fire(CoreModule coreModule, Event event) {
 
+        logger.info("firing module-event: event={};module={};", event, coreModule.getUniqueId());
         final Iterator<ModuleLifeCycleEventListener> listenerIt = moduleLifeCycleEventListeners.iterator();
         while (listenerIt.hasNext()) {
 
@@ -35,23 +35,23 @@ public class DefaultModuleLifeCycleEventBus implements ModuleLifeCycleEventBus {
                 if (!moduleLifeCycleEventListener.onFire(coreModule, event)) {
                     // 监听器返回FALSE，说明监听器主动放弃后续的消息监听
                     listenerIt.remove();
-                    logger.debug("{} give up continue listening", moduleLifeCycleEventListener);
+                    logger.debug("fired module-event by once. event={};module={};listener={};",
+                            event,
+                            coreModule.getUniqueId(),
+                            moduleLifeCycleEventListener
+                    );
                 }
             } catch (Throwable cause) {
-                logger.warn("fire ModuleLifeCycleEventListener[listener={};] failed, event={};",
-                        moduleLifeCycleEventListener, event, cause);
+                logger.warn("fire module-event failed, event={};module={};listener={};",
+                        event,
+                        coreModule.getUniqueId(),
+                        moduleLifeCycleEventListener,
+                        cause
+                );
             }
 
         }
 
-        for (final ModuleLifeCycleEventListener moduleLifeCycleEventListener : moduleLifeCycleEventListeners) {
-            try {
-                moduleLifeCycleEventListener.onFire(coreModule, event);
-            } catch (Throwable cause) {
-                logger.warn("fire ModuleLifeCycleEventListener[listener={};] failed, event={};",
-                        moduleLifeCycleEventListener, event, cause);
-            }
-        }
     }
 
 }

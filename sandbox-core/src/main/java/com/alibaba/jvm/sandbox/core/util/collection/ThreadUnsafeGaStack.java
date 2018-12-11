@@ -86,4 +86,9 @@ public class ThreadUnsafeGaStack<E> implements GaStack<E> {
         return (E) elementArray[0];
     }
 
+    @Override
+    public int deep() {
+        return current + 1;
+    }
+
 }

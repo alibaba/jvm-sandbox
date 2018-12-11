@@ -18,6 +18,7 @@ public interface ModuleLifecycle extends LoadCompleted {
      */
     void onLoad() throws Throwable;
 
+
     /**
      * 模块卸载，模块开始卸载之前调用！
      * <p>

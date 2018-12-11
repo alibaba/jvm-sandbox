@@ -9,9 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.ServiceLoader;
+import java.util.*;
 
 import static org.apache.commons.io.FileUtils.convertFileCollectionToFileArray;
 import static org.apache.commons.io.FileUtils.listFiles;
@@ -21,7 +19,7 @@ import static org.apache.commons.io.FileUtils.listFiles;
  * 用于从${module.lib}中加载所有的沙箱模块
  * Created by luanjia@taobao.com on 2016/11/17.
  */
-public class ModuleJarLoader {
+class ModuleJarLoader {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -34,9 +32,9 @@ public class ModuleJarLoader {
     // 沙箱加载ClassLoader
     private final ClassLoader sandboxClassLoader;
 
-    public ModuleJarLoader(final File moduleLibDir,
-                           final Information.Mode mode,
-                           final ClassLoader sandboxClassLoader) {
+    ModuleJarLoader(final File moduleLibDir,
+                    final Information.Mode mode,
+                    final ClassLoader sandboxClassLoader) {
         this.moduleLibDir = moduleLibDir;
         this.mode = mode;
         this.sandboxClassLoader = sandboxClassLoader;
@@ -63,26 +61,49 @@ public class ModuleJarLoader {
      * @param mjCb 模块文件加载回调
      * @param mCb  模块加载回掉
      */
-    public void load(final ModuleJarLoadCallback mjCb,
-                     final ModuleLoadCallback mCb) {
+    void load(final ModuleJarLoadCallback mjCb,
+              final ModuleLoadCallback mCb) {
 
         // 查找所有可加载的Jar文件
         final File[] moduleJarFileArray = toModuleJarFileArray();
         Arrays.sort(moduleJarFileArray);
-        logger.info("module loaded found {} jar in {}", moduleJarFileArray.length, moduleLibDir);
+
+        // 记录下都有那些模块文件被找到即将被加载
+        if (logger.isInfoEnabled()) {
+            final Set<String> moduleJarFileNameSet = new LinkedHashSet<String>();
+            for (final File moduleJarFile : moduleJarFileArray) {
+                moduleJarFileNameSet.add(moduleJarFile.getName());
+            }
+            logger.info("loading module-lib={}, found {} module-jar files : {}",
+                    moduleLibDir,
+                    moduleJarFileArray.length,
+                    moduleJarFileNameSet
+            );
+        }
 
         // 开始逐条加载
         for (final File moduleJarFile : moduleJarFileArray) {
 
+            logger.info("loading module-jar={} from module-lib={};", moduleJarFile, moduleLibDir);
+
+            // 是否有模块加载成功
+            boolean hasModuleLoadedSuccessFlag = false;
+
+            // 已加载的模块ID集合
+            final Set<String> loadedModuleUniqueIds = new LinkedHashSet<String>();
+
+            // MODULE-JAR-CLASSLOADER
             ModuleClassLoader moduleClassLoader = null;
 
             try {
 
-                // 是否有模块加载成功
-                boolean hasModuleLoadedSuccessFlag = false;
-
                 if (null != mjCb) {
-                    mjCb.onLoad(moduleJarFile);
+                    try {
+                        mjCb.onLoad(moduleJarFile);
+                    } catch (Throwable cause) {
+                        logger.warn("loading module-jar failed: JAR-LOADER-PROVIDER denied, will be ignore. module-jar={};", moduleJarFile, cause);
+                        continue;
+                    }
                 }
 
                 // 模块ClassLoader
@@ -101,64 +122,92 @@ public class ModuleJarLoader {
                         try {
                             module = moduleIt.next();
                         } catch (Throwable cause) {
-                            logger.warn("module SPI new instance failed, ignore this SPI.", cause);
+                            logger.warn("loading module instance failed: instance occur error, will be ignored. module-jar={}", moduleJarFile, cause);
                             continue;
                         }
 
                         final Class<?> classOfModule = module.getClass();
 
+                        // 判断模块是否实现了@Information标记
                         if (!classOfModule.isAnnotationPresent(Information.class)) {
-                            logger.info("{} was not implements @Information, ignore this SPI.", classOfModule);
+                            logger.warn("loading module instance failed: not implements @Information, will be ignored. class={};module-jar={};",
+                                    classOfModule,
+                                    moduleJarFile
+                            );
                             continue;
                         }
 
                         final Information info = classOfModule.getAnnotation(Information.class);
-                        if (StringUtils.isBlank(info.id())) {
-                            logger.info("{} was not implements @Information[id], ignore this SPI.", classOfModule);
+                        final String uniqueId = info.id();
+
+                        // 判断模块ID是否合法
+                        if (StringUtils.isBlank(uniqueId)) {
+                            logger.warn("loading module instance failed: @Information.id is missing, will be ignored. class={};module-jar={};",
+                                    classOfModule,
+                                    moduleJarFile
+                            );
                             continue;
                         }
 
-                        final String uniqueId = info.id();
+                        // 判断模块要求的启动模式和容器的启动模式是否匹配
                         if (!ArrayUtils.contains(info.mode(), mode)) {
-                            logger.info("module[id={};class={};mode={};] was not matched sandbox launch mode : {}, ignore this SPI.",
-                                    uniqueId, classOfModule, Arrays.asList(info.mode()), mode);
+                            logger.warn("loading module instance failed: launch-mode is not match module required, will be ignored. module={};launch-mode={};required-mode={};class={};module-jar={};",
+                                    uniqueId,
+                                    mode,
+                                    StringUtils.join(info.mode(), ","),
+                                    classOfModule,
+                                    moduleJarFile
+                            );
                             continue;
                         }
 
                         try {
                             if (null != mCb) {
-                                mCb.onLoad(
-                                        uniqueId, classOfModule, module, moduleJarFile,
-                                        moduleClassLoader
-                                );
+                                mCb.onLoad(uniqueId, classOfModule, module, moduleJarFile, moduleClassLoader);
                             }
-                            hasModuleLoadedSuccessFlag = true;
                         } catch (Throwable cause) {
-                            logger.warn("load module[id={};class={};] from JAR[file={};] failed, ignore this module.",
-                                    uniqueId, classOfModule, moduleJarFile, cause);
+                            logger.warn("loading module instance failed: MODULE-LOADER-PROVIDER denied, will be ignored. module={};class={};module-jar={};",
+                                    uniqueId,
+                                    classOfModule,
+                                    moduleJarFile,
+                                    cause
+                            );
+                            continue;
                         }
+
+                        loadedModuleUniqueIds.add(uniqueId);
+                        hasModuleLoadedSuccessFlag = true;
 
                     }//while
 
-                    if (!hasModuleLoadedSuccessFlag) {
-                        logger.warn("load sandbox module JAR[file={}], but none module loaded, close this ModuleClassLoader.", moduleJarFile);
-                        moduleClassLoader.closeIfPossible();
-                    }
-
                 } finally {
                     Thread.currentThread().setContextClassLoader(preTCL);
-                }
+                }// try-catch for load module from Jar
 
             } catch (Throwable cause) {
-                logger.warn("load sandbox module JAR[file={}] failed.", moduleJarFile, cause);
-                if (null != moduleClassLoader) {
-                    moduleClassLoader.closeIfPossible();
+                logger.info("load module-jar occur error, will be ignored. module-jar={};",
+                        moduleJarFile,
+                        cause
+                );
+            } finally {
+                if (hasModuleLoadedSuccessFlag) {
+                    logger.info("loaded module-jar completed, loaded {} module in module-jar={}, modules={}",
+                            loadedModuleUniqueIds.size(),
+                            moduleJarFile,
+                            loadedModuleUniqueIds
+                    );
+                } else {
+                    logger.warn("loaded module-jar completed, NONE module loaded, will be close ModuleClassLoader. module-jar={};", moduleJarFile, moduleClassLoader);
+                    if (null != moduleClassLoader) {
+                        moduleClassLoader.closeIfPossible();
+                    }
                 }
-            }
+            }// try-catch for load jar from lib
 
         }
 
     }
+
 
     /**
      * 模块文件加载回调
@@ -190,8 +239,11 @@ public class ModuleJarLoader {
          * @param moduleClassLoader 负责加载模块的ClassLoader
          * @throws Throwable 加载回调异常
          */
-        void onLoad(final String uniqueId, final Class moduleClass, final Module module, final File moduleJarFile,
-                    final ModuleClassLoader moduleClassLoader) throws Throwable;
+        void onLoad(String uniqueId,
+                    Class moduleClass,
+                    Module module,
+                    File moduleJarFile,
+                    ModuleClassLoader moduleClassLoader) throws Throwable;
 
     }
 

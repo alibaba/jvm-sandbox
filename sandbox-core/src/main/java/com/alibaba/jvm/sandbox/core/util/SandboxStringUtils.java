@@ -1,6 +1,10 @@
 package com.alibaba.jvm.sandbox.core.util;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * 字符串工具类
@@ -51,6 +55,23 @@ public class SandboxStringUtils {
             return getCauseMessage(t.getCause());
         }
         return t.getMessage();
+    }
+
+    /**
+     * 获取LOGO
+     *
+     * @return LOGO
+     */
+    public static String getLogo() {
+        try {
+            final InputStream logoIs = SandboxStringUtils.class.getResourceAsStream("/com/alibaba/jvm/sandbox/logo");
+            final String logo = IOUtils.toString(logoIs);
+            IOUtils.closeQuietly(logoIs);
+            return logo;
+        } catch (IOException ioe) {
+            // ignore...
+            return StringUtils.EMPTY;
+        }
     }
 
 }
