@@ -16,11 +16,11 @@ import java.util.Stack;
  * @author luanjia@taobao.com
  * @since {@code sandbox-api:1.0.10}
  */
-class AdviceAdapterListener implements EventListener {
+public class AdviceAdapterListener implements EventListener {
 
     private final AdviceListener adviceListener;
 
-    AdviceAdapterListener(final AdviceListener adviceListener) {
+    public AdviceAdapterListener(final AdviceListener adviceListener) {
         this.adviceListener = adviceListener;
     }
 
@@ -71,6 +71,16 @@ class AdviceAdapterListener implements EventListener {
                 adviceListener.before(advice);
                 break;
             }
+
+            /**
+             * 这里需要感知到IMMEDIATELY，修复#117
+             */
+            case IMMEDIATELY_THROWS:
+            case IMMEDIATELY_RETURN: {
+                final InvokeEvent invokeEvent = (InvokeEvent) event;
+                opStackRef.get().popByExpectInvokeId(invokeEvent.invokeId);
+            }
+
             case RETURN: {
                 final OpStack opStack = opStackRef.get();
                 final ReturnEvent rEvent = (ReturnEvent) event;

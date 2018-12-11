@@ -21,10 +21,6 @@ public class GaStringUtils {
         return clazz.isArray()
                 ? clazz.getCanonicalName()
                 : clazz.getName();
-//        final String canonicalName = clazz.getCanonicalName();
-//        return isEmpty(canonicalName)
-//                ? clazz.getName()
-//                : canonicalName;
     }
 
     /**
@@ -57,19 +53,6 @@ public class GaStringUtils {
         return null == string
                 || string.isEmpty();
     }
-
-//    /**
-//     * 比较两个字符串是否相等
-//     *
-//     * @param target 目标字符串
-//     * @param except 期待字符串
-//     * @return TRUE:相等;FALSE:不相等
-//     */
-//    public static boolean isEquals(final String target,
-//                                   final String except) {
-//        return target == except
-//                || (null != target && target.equals(except));
-//    }
 
     /**
      * 通配符表达式匹配

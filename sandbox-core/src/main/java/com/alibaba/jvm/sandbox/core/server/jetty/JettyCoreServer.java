@@ -4,13 +4,16 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
-import com.alibaba.jvm.sandbox.core.manager.*;
+import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
+import com.alibaba.jvm.sandbox.core.manager.ModuleLifeCycleEventBus;
+import com.alibaba.jvm.sandbox.core.manager.ModuleResourceManager;
+import com.alibaba.jvm.sandbox.core.manager.ProviderManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.*;
 import com.alibaba.jvm.sandbox.core.server.CoreServer;
 import com.alibaba.jvm.sandbox.core.server.jetty.servlet.ModuleHttpServlet;
 import com.alibaba.jvm.sandbox.core.server.jetty.servlet.WebSocketAcceptorServlet;
 import com.alibaba.jvm.sandbox.core.util.Initializer;
-import com.alibaba.jvm.sandbox.core.util.NetworkUtils;
+import com.alibaba.jvm.sandbox.core.util.SandboxStringUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -28,6 +31,9 @@ import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
 import java.net.InetSocketAddress;
 
+import static com.alibaba.jvm.sandbox.core.util.NamespaceConvert.initNamespaceConvert;
+import static com.alibaba.jvm.sandbox.core.util.NetworkUtils.isPortInUsing;
+import static java.lang.String.format;
 import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 
 /**
@@ -76,20 +82,20 @@ public class JettyCoreServer implements CoreServer {
                     if (null != httpServer) {
 
                         // stop http server
+                        logger.info("{} is stopping", JettyCoreServer.this);
                         httpServer.stop();
-                        logger.info("{} was stop.", JettyCoreServer.this);
 
                     }
                 }
             });
 
             // destroy http server
+            logger.info("{} is destroying", this);
             httpServer.destroy();
-            logger.info("{} was destroyed.", this);
 
             // 关闭对象池
+            logger.info("{} is closing event-pool", this);
             EventListenerHandlers.getSingleton().getEventPool().close();
-            logger.info("{} was closed the Event-Pool!", this);
 
         } catch (Throwable cause) {
             logger.warn("{} unBind failed.", this, cause);
@@ -137,13 +143,13 @@ public class JettyCoreServer implements CoreServer {
 
         // web-socket-servlet
         final String wsPathSpec = "/module/websocket/*";
+        logger.info("initializing ws-http-handler. path={}", contextPath + wsPathSpec);
         context.addServlet(new ServletHolder(new WebSocketAcceptorServlet(coreModuleManager, moduleResourceManager)), wsPathSpec);
-        logger.info("init ws-http-handler success. path={}", contextPath + wsPathSpec);
 
         // module-http-servlet
         final String pathSpec = "/module/http/*";
+        logger.info("initializing http-handler. path={}", contextPath + pathSpec);
         context.addServlet(new ServletHolder(new ModuleHttpServlet(coreModuleManager, moduleResourceManager)), pathSpec);
-        logger.info("init http-handler success. path={}", contextPath + pathSpec);
 
         httpServer.setHandler(context);
     }
@@ -158,12 +164,23 @@ public class JettyCoreServer implements CoreServer {
         InputStream is = null;
         try {
             is = new FileInputStream(configureFile);
+            initNamespaceConvert(cfg.getNamespace());
             configurator.doConfigure(is);
-            logger.info("init logback success. configureFile={};", configureFile);
+            logger.info(SandboxStringUtils.getLogo());
+            logger.info("initializing logback success. file={};", configureFile);
         } catch (Throwable cause) {
-            logger.warn("init logback failed. configureFile={};", configureFile);
+            logger.warn("initialize logback failed. file={};", configureFile, cause);
         } finally {
             IOUtils.closeQuietly(is);
+        }
+    }
+
+    // 关闭Logback日志框架
+    private void closeLogback() {
+        try {
+            ((LoggerContext) LoggerFactory.getILoggerFactory()).stop();
+        } catch (Throwable cause) {
+            //
         }
     }
 
@@ -173,15 +190,24 @@ public class JettyCoreServer implements CoreServer {
         // 这里说明下为什么要这么无聊加个这个判断，让Jetty的Server.bind()抛出异常不是更好么？
         // 比较郁闷的是，如果这个端口的绑定是"SO_REUSEADDR"端口可重用的模式，那么这个server是能正常启动，但无法正常工作的
         // 所以这里必须先主动检查一次端口占用情况，当然了，这里也会存在一定的并发问题，BUT，我认为这种概率事件我可以选择暂时忽略
-        if (NetworkUtils.isPortInUsing(cfg.getServerIp(), cfg.getServerPort())) {
-            throw new IllegalStateException(String.format("address[%s:%s] already in using, server bind failed.",
-                    cfg.getServerIp(), cfg.getServerPort()));
+        if (isPortInUsing(cfg.getServerIp(), cfg.getServerPort())) {
+            throw new IllegalStateException(format("address[%s:%s] already in using, server bind failed.",
+                    cfg.getServerIp(),
+                    cfg.getServerPort())
+            );
         }
 
         httpServer = new Server(new InetSocketAddress(cfg.getServerIp(), cfg.getServerPort()));
         if (httpServer.getThreadPool() instanceof QueuedThreadPool) {
             final QueuedThreadPool qtp = (QueuedThreadPool) httpServer.getThreadPool();
-            qtp.setName("sandbox-jetty-qtp" + qtp.hashCode());
+            qtp.setName("sandbox-jetty-qtp-" + qtp.hashCode());
+        }
+    }
+
+    // 关闭HTTP服务器
+    private void closeHttpServer() {
+        if (null != httpServer) {
+            httpServer.destroy();
         }
     }
 
@@ -191,27 +217,30 @@ public class JettyCoreServer implements CoreServer {
 
         final ClassLoader sandboxClassLoader = getClass().getClassLoader();
 
-        logger.info("init manager success. manager={}", EventListenerHandlers.getSingleton());
+        // 初始化事件处理总线
+        logger.info("initializing manager : EventListenerHandlers");
+        EventListenerHandlers.getSingleton();
 
+        // 初始化模块生命周期事件总线
+        logger.info("initializing manager : ModuleLifeCycleEventBus");
         final ModuleLifeCycleEventBus moduleLifeCycleEventBus = new DefaultModuleLifeCycleEventBus();
-        logger.info("init manager success. manager={}", moduleLifeCycleEventBus);
-
-        final CoreLoadedClassDataSource classDataSource = new DefaultLoadedClassDataSource(inst, cfg);
-        logger.info("init manager success. manager={}", classDataSource);
 
         // 初始化模块资源管理器
+        logger.info("initializing manager : ModuleResourceManager");
         moduleLifeCycleEventBus.append(moduleResourceManager = new DefaultModuleResourceManager());
-        logger.info("init manager success. manager={}", moduleResourceManager);
 
         // 初始化服务管理器
+        logger.info("initializing manager : ProviderManager");
         final ProviderManager providerManager = new DefaultProviderManager(cfg, sandboxClassLoader);
-        logger.info("init manager success. manager={}", providerManager);
 
         // 初始化模块管理器
+        logger.info("initializing manager : CoreModuleManager");
         coreModuleManager = new DefaultCoreModuleManager(
-                inst, classDataSource, cfg, sandboxClassLoader, moduleLifeCycleEventBus, providerManager
+                cfg, inst,
+                sandboxClassLoader, new DefaultLoadedClassDataSource(inst, cfg),
+                moduleLifeCycleEventBus,
+                providerManager
         );
-        logger.info("init manager success. manager={}", coreModuleManager);
 
     }
 
@@ -223,7 +252,7 @@ public class JettyCoreServer implements CoreServer {
                 public void process() throws Throwable {
                     JettyCoreServer.this.cfg = cfg;
                     initLogback(cfg);
-                    logger.info("prepare to init jvm-sandbox[{}] server. cfg={}", cfg.getNamespace(), cfg);
+                    logger.info("initializing server. cfg={}", cfg);
                     initManager(inst, cfg);
                     initHttpServer(cfg);
                     initJettyContextHandler(cfg);
@@ -231,13 +260,10 @@ public class JettyCoreServer implements CoreServer {
                 }
             });
             final InetSocketAddress local = getLocal();
-            logger.info("init httpSrv success. bind to {}:{}", local.getHostName(), local.getPort());
+            logger.info("initialized server. actual bind to {}:{}", local.getHostName(), local.getPort());
         } catch (Throwable cause) {
-            logger.warn("{} bind failed.", this);
-            throw new IOException(
-                    String.format("server bind to %s:%s failed.", cfg.getServerIp(), cfg.getServerPort()),
-                    cause
-            );
+            logger.warn("initialize server failed.", cause);
+            throw new IOException("server bind failed.", cause);
         }
 
         logger.info("{} bind success.", this);
@@ -252,13 +278,16 @@ public class JettyCoreServer implements CoreServer {
                 logger.warn("{} unBind failed when destroy.", this, e);
             }
         }
-        if (null != httpServer) {
-            httpServer.destroy();
-        }
+
+        // STOP HTTP-SERVER
+        closeHttpServer();
+
+        // STOP LOGBACK
+        closeLogback();
     }
 
     @Override
     public String toString() {
-        return String.format("server[%s:%s]", cfg.getServerIp(), cfg.getServerPort());
+        return format("server[%s:%s]", cfg.getServerIp(), cfg.getServerPort());
     }
 }

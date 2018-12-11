@@ -8,7 +8,7 @@
             <MaxHistory>30</MaxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %SANDBOX_NAMESPACE %-5level %msg%n</pattern>
             <charset>UTF-8</charset>
         </encoder>
     </appender>

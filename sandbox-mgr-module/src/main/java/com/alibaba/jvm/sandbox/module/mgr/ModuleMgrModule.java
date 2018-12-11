@@ -209,7 +209,7 @@ public class ModuleMgrModule implements Module {
                 "JAR_FILE : " + jarFile.getPath() + "\n" +
                 "   STATE : " + (isActivated ? "ACTIVE" : "FROZEN") + "\n" +
                 "    MODE : " + ArrayUtils.toString(info.mode()) + "\n" +
-                "   CLASS : " + module.getClass() + "\n" +
+                "   CLASS : " + module.getClass().getName() + "\n" +
                 "  LOADER : " + module.getClass().getClassLoader() + "\n" +
                 "    cCnt : " + cCnt + "\n" +
                 "    mCnt : " + mCnt;

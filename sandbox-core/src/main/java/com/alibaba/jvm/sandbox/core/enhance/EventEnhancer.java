@@ -6,7 +6,6 @@ import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -16,6 +16,11 @@ public class CoreLauncher {
                         final String agentJarPath,
                         final String token) throws Exception {
 
+        System.out.println(String.format("attaching to JVM(%s), agent-jar=%s;",
+                targetJvmPid,
+                agentJarPath
+        ));
+
         // 加载agent
         attachAgent(targetJvmPid, agentJarPath, token);
 
@@ -40,7 +45,7 @@ public class CoreLauncher {
                 throw new IllegalArgumentException("illegal args");
             }
 
-            new CoreLauncher(args[0],args[1],args[2]);
+            new CoreLauncher(args[0], args[1], args[2]);
         } catch (Throwable t) {
             t.printStackTrace(System.err);
             System.err.println("sandbox load jvm failed : " + getCauseMessage(t));
@@ -57,8 +62,8 @@ public class CoreLauncher {
         try {
 
             vmObj = VirtualMachine.attach(targetJvmPid);
-            if(vmObj!=null){
-                vmObj.loadAgent(agentJarPath,cfg);
+            if (vmObj != null) {
+                vmObj.loadAgent(agentJarPath, cfg);
             }
 
         } finally {

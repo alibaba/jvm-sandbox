@@ -64,14 +64,14 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
 
         if (!(coreModule.getModule() instanceof WebSocketAcceptor)) {
             logger.warn("module[id={};class={};] is not implements WebSocketAcceptor.",
-                    uniqueId, coreModule.getModule().getClass());
+                    uniqueId, coreModule.getModule().getClass().getName());
             return null;
         }
 
         final WebSocketConnectionListener listener =
                 ((WebSocketAcceptor) coreModule.getModule()).onAccept(req, protocol);
         logger.info("accept websocket connection, module[id={};class={};], value={};",
-                uniqueId, coreModule.getModule().getClass(), req.getPathInfo());
+                uniqueId, coreModule.getModule().getClass().getName(), req.getPathInfo());
 
         if (listener instanceof TextMessageListener) {
             return new InnerOnTextMessage(uniqueId, (TextMessageListener) listener);

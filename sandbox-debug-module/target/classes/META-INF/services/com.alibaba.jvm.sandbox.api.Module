@@ -1,0 +1,7 @@
+com.alibaba.jvm.sandbox.module.debug.DebugRalphModule
+com.alibaba.jvm.sandbox.module.debug.DebugTraceModule
+com.alibaba.jvm.sandbox.module.debug.DebugWatchModule
+com.alibaba.jvm.sandbox.module.debug.ExceptionLoggerModule
+com.alibaba.jvm.sandbox.module.debug.HttpHttpAccessLoggerModule
+com.alibaba.jvm.sandbox.module.debug.JdbcLoggerModule
+com.alibaba.jvm.sandbox.module.debug.SpringLoggerModule

@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.alibaba.jvm.sandbox</groupId>
         <artifactId>sandbox</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.2-SNAPSHOT</version>
     </parent>
     <artifactId>sandbox-core</artifactId>
     <name>sandbox-core ${sandbox.version}</name>
@@ -18,6 +18,7 @@
                 <directory>src/main/resources</directory>
                 <includes>
                     <include>**/version</include>
+                    <include>**/logo</include>
                 </includes>
                 <filtering>true</filtering>
             </resource>
@@ -52,10 +53,25 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkMode>once</forkMode>
+                    <argLine>-Xbootclasspath/p:./src/test/resources/lib/sandbox-spy-1.1.0-for-qatest.jar</argLine>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <dependencies>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.sun</groupId>
             <artifactId>tools</artifactId>
@@ -152,12 +168,13 @@
             <version>2.4.2</version>
         </dependency>
 
-        <!-- ant -->
+        <!-- ant
         <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant</artifactId>
             <version>1.7.0</version>
         </dependency>
+        -->
 
     </dependencies>
 </project>

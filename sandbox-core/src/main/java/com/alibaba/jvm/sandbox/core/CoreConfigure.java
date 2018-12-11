@@ -9,13 +9,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.tools.ant.DirectoryScanner;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * 内核启动配置
@@ -23,8 +20,8 @@ import java.util.Properties;
  */
 public class CoreConfigure {
 
-    private static final String KEY_NAMESPACE="namespace";
-    private static final String DEFAULT_VAL_NAMESPACE="default";
+    private static final String KEY_NAMESPACE = "namespace";
+    private static final String DEFAULT_VAL_NAMESPACE = "default";
 
     private static final String KEY_SANDBOX_HOME = "sandbox_home";
     private static final String KEY_LAUNCH_MODE = "mode";
@@ -109,6 +106,7 @@ public class CoreConfigure {
 
     /**
      * 获取容器的命名空间
+     *
      * @return 容器的命名空间
      */
     public String getNamespace() {
@@ -165,16 +163,30 @@ public class CoreConfigure {
      * @return 用户模块加载文件/目录(集合)
      */
     public synchronized File[] getUserModuleLibFiles() {
-        final DirectoryScanner scanner = new DirectoryScanner();
-        scanner.setIncludes(getUserModuleLibPaths());
-        scanner.setCaseSensitive(false);
-        scanner.scan();
-        final String[] filePaths = scanner.getIncludedDirectories();
-        final File[] files = new File[filePaths.length];
-        for (int index = 0; index < filePaths.length; index++) {
-            files[index] = new File(filePaths[index]);
+
+        final Collection<File> foundModuleJarFiles = new LinkedHashSet<File>();
+        for (final String path : getUserModuleLibPaths()) {
+            final File fileOfPath = new File(path);
+            if(fileOfPath.isDirectory()) {
+                foundModuleJarFiles.addAll(FileUtils.listFiles(new File(path), new String[]{"jar"}, false));
+            } else {
+                if(StringUtils.endsWithIgnoreCase(fileOfPath.getPath(), ".jar")) {
+                    foundModuleJarFiles.add(fileOfPath);
+                }
+            }
         }
-        return GET_USER_MODULE_LIB_FILES_CACHE = files;
+
+//        final DirectoryScanner scanner = new DirectoryScanner();
+//        scanner.setIncludes(getUserModuleLibPaths());
+//        scanner.setCaseSensitive(false);
+//        scanner.scan();
+//        final String[] filePaths = scanner.getIncludedDirectories();
+//        final File[] files = new File[filePaths.length];
+//        for (int index = 0; index < filePaths.length; index++) {
+//            files[index] = new File(filePaths[index]);
+//        }
+
+        return GET_USER_MODULE_LIB_FILES_CACHE = foundModuleJarFiles.toArray(new File[]{});
     }
 
     // 用户模块加载文件/目录缓存集合

@@ -16,8 +16,11 @@ import java.util.List;
 import java.util.Set;
 
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
+import static com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder.PatternType.WILDCARD;
 import static com.alibaba.jvm.sandbox.api.util.GaCollectionUtils.add;
-import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.*;
+import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
+import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassNameArray;
+import static java.util.regex.Pattern.quote;
 
 /**
  * 事件观察者类构建器
@@ -272,18 +275,88 @@ public class EventWatchBuilder {
 
     // -------------------------- 这里开始实现 --------------------------
 
+    /**
+     * 模版匹配模式
+     *
+     * @since {@code sandbox-api:1.1.2}
+     */
+    public enum PatternType {
+
+        /**
+         * 通配符表达式
+         */
+        WILDCARD,
+
+        /**
+         * 正则表达式
+         */
+        REGEX
+    }
 
     private final ModuleEventWatcher moduleEventWatcher;
+    private final PatternType patternType;
     private List<BuildingForClass> bfClasses = new ArrayList<BuildingForClass>();
+
+    /**
+     * 构造事件观察者构造器(通配符匹配模式)
+     *
+     * @param moduleEventWatcher 模块事件观察者
+     */
+    public EventWatchBuilder(final ModuleEventWatcher moduleEventWatcher) {
+        this(moduleEventWatcher, WILDCARD);
+    }
 
     /**
      * 构造事件观察者构造器
      *
      * @param moduleEventWatcher 模块事件观察者
+     * @param patternType        模版匹配模式
+     * @since {@code sandbox-api:1.1.2}
      */
-    public EventWatchBuilder(final ModuleEventWatcher moduleEventWatcher) {
+    public EventWatchBuilder(final ModuleEventWatcher moduleEventWatcher,
+                             final PatternType patternType) {
         this.moduleEventWatcher = moduleEventWatcher;
+        this.patternType = patternType;
     }
+
+    /**
+     * 模式匹配
+     *
+     * @param string      目标字符串
+     * @param pattern     模式字符串
+     * @param patternType 匹配模式
+     * @return TRUE:匹配成功 / FALSE:匹配失败
+     */
+    private static boolean patternMatching(final String string,
+                                           final String pattern,
+                                           final PatternType patternType) {
+        switch (patternType) {
+            case WILDCARD:
+                return GaStringUtils.matching(string, pattern);
+            case REGEX:
+                return string.matches(pattern);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * 将字符串数组转换为正则表达式字符串数组
+     *
+     * @param stringArray 目标字符串数组
+     * @return 正则表达式字符串数组
+     */
+    private static String[] toRegexQuoteArray(final String[] stringArray) {
+        if (null == stringArray) {
+            return null;
+        }
+        final String[] regexQuoteArray = new String[stringArray.length];
+        for (int index = 0; index < stringArray.length; index++) {
+            regexQuoteArray[index] = quote(stringArray[index]);
+        }
+        return regexQuoteArray;
+    }
+
 
     /**
      * 匹配任意类
@@ -294,7 +367,13 @@ public class EventWatchBuilder {
      * @return IBuildingForClass
      */
     public IBuildingForClass onAnyClass() {
-        return onClass("*");
+        switch (patternType) {
+            case REGEX:
+                return onClass(".*");
+            case WILDCARD:
+            default:
+                return onClass("*");
+        }
     }
 
     /**
@@ -308,7 +387,15 @@ public class EventWatchBuilder {
      * @return IBuildingForClass
      */
     public IBuildingForClass onClass(final Class<?> clazz) {
-        return onClass(getJavaClassName(clazz));
+        switch (patternType) {
+            case REGEX: {
+                return onClass(quote(getJavaClassName(clazz)));
+            }
+            case WILDCARD:
+            default:
+                return onClass(getJavaClassName(clazz));
+        }
+
     }
 
     /**
@@ -397,12 +484,24 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForClass hasInterfaceTypes(final Class<?>... classes) {
-            return hasInterfaceTypes(getJavaClassNameArray(classes));
+            switch (patternType) {
+                case REGEX:
+                    return hasInterfaceTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case WILDCARD:
+                default:
+                    return hasInterfaceTypes(getJavaClassNameArray(classes));
+            }
         }
 
         @Override
         public IBuildingForClass hasAnnotationTypes(final Class<?>... classes) {
-            return hasAnnotationTypes(getJavaClassNameArray(classes));
+            switch (patternType) {
+                case REGEX:
+                    return hasAnnotationTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case WILDCARD:
+                default:
+                    return hasAnnotationTypes(getJavaClassNameArray(classes));
+            }
         }
 
         @Override
@@ -412,7 +511,13 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForBehavior onAnyBehavior() {
-            return onBehavior("*");
+            switch (patternType) {
+                case REGEX:
+                    return onBehavior(".*");
+                case WILDCARD:
+                default:
+                    return onBehavior("*");
+            }
         }
 
     }
@@ -455,7 +560,13 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForBehavior withParameterTypes(final Class<?>... classes) {
-            return withParameterTypes(getJavaClassNameArray(classes));
+            switch (patternType) {
+                case REGEX:
+                    return withParameterTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case WILDCARD:
+                default:
+                    return withParameterTypes(getJavaClassNameArray(classes));
+            }
         }
 
         @Override
@@ -466,7 +577,13 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForBehavior hasExceptionTypes(final Class<?>... classes) {
-            return hasExceptionTypes(getJavaClassNameArray(classes));
+            switch (patternType) {
+                case REGEX:
+                    return hasExceptionTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case WILDCARD:
+                default:
+                    return hasExceptionTypes(getJavaClassNameArray(classes));
+            }
         }
 
         @Override
@@ -477,7 +594,13 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForBehavior hasAnnotationTypes(final Class<?>... classes) {
-            return hasAnnotationTypes(getJavaClassNameArray(classes));
+            switch (patternType) {
+                case REGEX:
+                    return hasAnnotationTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case WILDCARD:
+                default:
+                    return hasAnnotationTypes(getJavaClassNameArray(classes));
+            }
         }
 
         @Override
@@ -507,7 +630,7 @@ public class EventWatchBuilder {
 
         @Override
         public EventWatcher onWatch(final AdviceListener adviceListener) {
-            return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS);
+            return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
         }
 
         @Override
@@ -574,7 +697,7 @@ public class EventWatchBuilder {
                                              final String[] interfaceTypeJavaClassNameArray,
                                              final String[] annotationTypeJavaClassNameArray) {
                     return (access & bfClass.withAccess) == bfClass.withAccess
-                            && matching(javaClassName, bfClass.pattern)
+                            && patternMatching(javaClassName, bfClass.pattern, patternType)
                             && bfClass.hasInterfaceTypes.patternHas(interfaceTypeJavaClassNameArray)
                             && bfClass.hasAnnotationTypes.patternHas(annotationTypeJavaClassNameArray);
                 }
@@ -593,7 +716,7 @@ public class EventWatchBuilder {
                     // matching any behavior
                     for (final BuildingForBehavior bfBehavior : bfClass.bfBehaviors) {
                         if ((access & bfBehavior.withAccess) == bfBehavior.withAccess
-                                && matching(javaMethodName, bfBehavior.pattern)
+                                && patternMatching(javaMethodName, bfBehavior.pattern, patternType)
                                 && bfBehavior.withParameterTypes.patternWith(parameterTypeJavaClassNameArray)
                                 && bfBehavior.hasExceptionTypes.patternHas(throwsTypeJavaClassNameArray)
                                 && bfBehavior.hasAnnotationTypes.patternHas(annotationTypeJavaClassNameArray)) {
@@ -783,7 +906,7 @@ public class EventWatchBuilder {
                 return false;
             }
             for (final String string : stringArray) {
-                if (GaStringUtils.matching(string, pattern)) {
+                if (patternMatching(string, pattern, patternType)) {
                     return true;
                 }
             }
@@ -823,7 +946,7 @@ public class EventWatchBuilder {
             }
             // 长度相同则逐个位置比较，只要有一个位置不符，则判定不通过
             for (int index = 0; index < length; index++) {
-                if (!GaStringUtils.matching(stringArray[index], patternArray[index])) {
+                if (!patternMatching(stringArray[index], patternArray[index], patternType)) {
                     return false;
                 }
             }
