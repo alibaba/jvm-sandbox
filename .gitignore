@@ -1,0 +1,6 @@
+## for IDEA
+.idea
+*.iml
+
+## for maven
+pom.xml.versionsBackup
