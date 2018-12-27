@@ -5,6 +5,7 @@ package com.alibaba.jvm.sandbox.api.http.websocket;
  *
  * @author luanjia@taobao.com
  */
+@Deprecated
 public interface WebSocketConnectionListener {
 
     /**

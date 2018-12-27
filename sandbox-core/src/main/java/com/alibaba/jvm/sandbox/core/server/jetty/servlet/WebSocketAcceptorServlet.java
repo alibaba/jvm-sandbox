@@ -19,8 +19,11 @@ import java.io.IOException;
 
 /**
  * 构建WebSocket通讯
- * Created by luanjia@taobao.com on 2017/2/2.
+ *
+ * @author luanjia@taobao.com
+ * @deprecated 考虑废弃掉WebSocket的支持，不再维护
  */
+@Deprecated
 public class WebSocketAcceptorServlet extends WebSocketServlet {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

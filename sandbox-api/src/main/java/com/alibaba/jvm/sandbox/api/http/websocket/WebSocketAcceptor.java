@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @author luanjia@taobao.com
  */
+@Deprecated
 public interface WebSocketAcceptor {
 
     /**

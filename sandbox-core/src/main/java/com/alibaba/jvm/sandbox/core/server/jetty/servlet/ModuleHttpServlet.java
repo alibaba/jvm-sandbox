@@ -1,5 +1,6 @@
 package com.alibaba.jvm.sandbox.core.server.jetty.servlet;
 
+import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.http.Http;
 import com.alibaba.jvm.sandbox.core.domain.CoreModule;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
@@ -19,6 +20,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.matching;
 
@@ -51,7 +56,7 @@ public class ModuleHttpServlet extends HttpServlet {
 
     private void doMethod(final HttpServletRequest req,
                           final HttpServletResponse resp,
-                          final Http.Method httpMethod) throws ServletException, IOException {
+                          final Http.Method expectHttpMethod) throws ServletException, IOException {
 
         // 获取请求路径
         final String path = req.getPathInfo();
@@ -75,7 +80,7 @@ public class ModuleHttpServlet extends HttpServlet {
         // 匹配对应的方法
         final Method method = matchingModuleMethod(
                 path,
-                httpMethod,
+                expectHttpMethod,
                 uniqueId,
                 coreModule.getModule().getClass()
         );
@@ -173,12 +178,25 @@ public class ModuleHttpServlet extends HttpServlet {
                                         final String uniqueId,
                                         final Class<?> classOfModule) {
 
-        for (final Method method : MethodUtils.getMethodsListWithAnnotation(classOfModule, Http.class)) {
-            final Http httpAnnotation = method.getAnnotation(Http.class);
-            if(null == httpAnnotation) {
+        // 查找@Command注解的方法
+        for (final Method method : MethodUtils.getMethodsListWithAnnotation(classOfModule, Command.class)) {
+            final Command commandAnnotation = method.getAnnotation(Command.class);
+            if (null == commandAnnotation) {
                 continue;
             }
-            final String pathPattern = "/"+uniqueId+httpAnnotation.value();
+            final String pathOfCmd = "/" + uniqueId + "/" + commandAnnotation.value();
+            if (StringUtils.equals(path, pathOfCmd)) {
+                return method;
+            }
+        }
+
+        // 查找@Http注解的方法
+        for (final Method method : MethodUtils.getMethodsListWithAnnotation(classOfModule, Http.class)) {
+            final Http httpAnnotation = method.getAnnotation(Http.class);
+            if (null == httpAnnotation) {
+                continue;
+            }
+            final String pathPattern = "/" + uniqueId + httpAnnotation.value();
             if (ArrayUtils.contains(httpAnnotation.method(), httpMethod)
                     && matching(path, pathPattern)) {
                 return method;
@@ -189,6 +207,20 @@ public class ModuleHttpServlet extends HttpServlet {
         return null;
     }
 
+    private boolean isMapWithGenericParameterTypes(final Method method,
+                                                   final int parameterIndex,
+                                                   final Class<?> keyClass,
+                                                   final Class<?> valueClass) {
+        final Type[] genericParameterTypes = method.getGenericParameterTypes();
+        if (genericParameterTypes.length < parameterIndex
+                || !(genericParameterTypes[parameterIndex] instanceof ParameterizedType)) {
+            return false;
+        }
+        final Type[] actualTypeArguments = ((ParameterizedType) genericParameterTypes[parameterIndex]).getActualTypeArguments();
+        return actualTypeArguments.length == 2
+                && keyClass.equals(actualTypeArguments[0])
+                && valueClass.equals(actualTypeArguments[1]);
+    }
 
     /**
      * 生成方法请求参数数组
@@ -201,7 +233,7 @@ public class ModuleHttpServlet extends HttpServlet {
      */
     private Object[] generateParameterObjectArray(final Method method,
                                                   final HttpServletRequest req,
-                                                  final HttpServletResponse resp) {
+                                                  final HttpServletResponse resp) throws IOException {
 
         final Class<?>[] parameterTypeArray = method.getParameterTypes();
         if (ArrayUtils.isEmpty(parameterTypeArray)) {
@@ -222,6 +254,34 @@ public class ModuleHttpServlet extends HttpServlet {
                 parameterObjectArray[index] = resp;
                 continue;
             }
+
+            // ParameterMap<String,String[]>
+            if (Map.class.isAssignableFrom(parameterType)
+                    && isMapWithGenericParameterTypes(method, index, String.class, String[].class)) {
+                parameterObjectArray[index] = req.getParameterMap();
+            }
+
+            // ParameterMap<String,String>
+            else if (Map.class.isAssignableFrom(parameterType)
+                    && isMapWithGenericParameterTypes(method, index, String.class, String.class)) {
+                final Map<String, String> param = new HashMap<String, String>();
+                for (final Map.Entry<String, String[]> entry : req.getParameterMap().entrySet()) {
+                    param.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
+                }
+                parameterObjectArray[index] = param;
+            }
+
+            // QueryString
+            else if (String.class.isAssignableFrom(parameterType)) {
+                parameterObjectArray[index] = req.getQueryString();
+            }
+
+
+            // PrintWriter
+            else if (PrintWriter.class.isAssignableFrom(parameterType)) {
+                parameterObjectArray[index] = resp.getWriter();
+            }
+
 
         }
 

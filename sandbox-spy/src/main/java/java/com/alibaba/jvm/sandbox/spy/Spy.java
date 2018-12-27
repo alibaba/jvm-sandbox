@@ -258,8 +258,14 @@ public class Spy {
             }
         }
 
+        int abs(int val) {
+            return val < 0
+                    ? val * -1
+                    : val;
+        }
+
         boolean isEnter(Thread thread) {
-            final Node top = nodeArray[thread.hashCode() % THREAD_LOCAL_ARRAY_LENGTH];
+            final Node top = nodeArray[abs(thread.hashCode()) % THREAD_LOCAL_ARRAY_LENGTH];
             Node node = top;
             synchronized (top) {
                 while (null != node.next) {
@@ -273,7 +279,7 @@ public class Spy {
         }
 
         Node enter(Thread thread) {
-            final Node top = nodeArray[thread.hashCode() % THREAD_LOCAL_ARRAY_LENGTH];
+            final Node top = nodeArray[abs(thread.hashCode()) % THREAD_LOCAL_ARRAY_LENGTH];
             final Node node = new Node(thread);
             synchronized (top) {
                 insert(top, node);
@@ -282,7 +288,7 @@ public class Spy {
         }
 
         void exit(Thread thread, Node node) {
-            final Node top = nodeArray[thread.hashCode() % THREAD_LOCAL_ARRAY_LENGTH];
+            final Node top = nodeArray[abs(thread.hashCode()) % THREAD_LOCAL_ARRAY_LENGTH];
             synchronized (top) {
                 delete(node);
             }

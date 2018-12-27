@@ -7,6 +7,7 @@ import java.io.IOException;
  *
  * @author luanjia@taobao.com
  */
+@Deprecated
 public interface WebSocketConnection {
 
     /**

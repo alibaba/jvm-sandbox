@@ -9,9 +9,11 @@ import java.lang.annotation.Target;
  * HTTP服务请求
  *
  * @author luanjia@taobao.com
+ * @deprecated 请使用 {@link com.alibaba.jvm.sandbox.api.annotation.Command}
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
+@Deprecated
 public @interface Http {
 
     /**

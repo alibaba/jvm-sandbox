@@ -33,6 +33,23 @@ public class AdviceAdapterListener implements EventListener {
 
     @Override
     final public void onEvent(final Event event) throws Throwable {
+        final OpStack opStack = opStackRef.get();
+        try {
+            switchEvent(opStack, event);
+        } finally {
+            // 如果执行到TOP的最后一个事件，则需要主动清理占用的资源
+            if (opStack.isEmpty()) {
+                opStackRef.remove();
+            }
+        }
+
+    }
+
+
+    // 执行事件
+    private void switchEvent(final OpStack opStack,
+                             final Event event) throws Throwable {
+
         switch (event.type) {
             case BEFORE: {
                 final BeforeEvent bEvent = (BeforeEvent) event;
@@ -50,7 +67,6 @@ public class AdviceAdapterListener implements EventListener {
                         bEvent.target
                 );
 
-                final OpStack opStack = opStackRef.get();
                 final Advice top;
                 final Advice parent;
 
@@ -78,11 +94,12 @@ public class AdviceAdapterListener implements EventListener {
             case IMMEDIATELY_THROWS:
             case IMMEDIATELY_RETURN: {
                 final InvokeEvent invokeEvent = (InvokeEvent) event;
-                opStackRef.get().popByExpectInvokeId(invokeEvent.invokeId);
+                opStack.popByExpectInvokeId(invokeEvent.invokeId);
+                // 修复#123
+                break;
             }
 
             case RETURN: {
-                final OpStack opStack = opStackRef.get();
                 final ReturnEvent rEvent = (ReturnEvent) event;
                 final WrapAdvice wrapAdvice = opStack.popByExpectInvokeId(rEvent.invokeId);
                 if (null != wrapAdvice) {
@@ -91,7 +108,6 @@ public class AdviceAdapterListener implements EventListener {
                 break;
             }
             case THROWS: {
-                final OpStack opStack = opStackRef.get();
                 final ThrowsEvent tEvent = (ThrowsEvent) event;
                 final WrapAdvice wrapAdvice = opStack.popByExpectInvokeId(tEvent.invokeId);
                 if (null != wrapAdvice) {
@@ -101,7 +117,6 @@ public class AdviceAdapterListener implements EventListener {
             }
 
             case CALL_BEFORE: {
-                final OpStack opStack = opStackRef.get();
                 final CallBeforeEvent cbEvent = (CallBeforeEvent) event;
                 final WrapAdvice wrapAdvice = opStack.peekByExpectInvokeId(cbEvent.invokeId);
                 if (null == wrapAdvice) {
@@ -125,7 +140,6 @@ public class AdviceAdapterListener implements EventListener {
             }
 
             case CALL_RETURN: {
-                final OpStack opStack = opStackRef.get();
                 final CallReturnEvent crEvent = (CallReturnEvent) event;
                 final WrapAdvice wrapAdvice = opStack.peekByExpectInvokeId(crEvent.invokeId);
                 if (null == wrapAdvice) {
@@ -147,7 +161,6 @@ public class AdviceAdapterListener implements EventListener {
             }
 
             case CALL_THROWS: {
-                final OpStack opStack = opStackRef.get();
                 final CallThrowsEvent ctEvent = (CallThrowsEvent) event;
                 final WrapAdvice wrapAdvice = opStack.peekByExpectInvokeId(ctEvent.invokeId);
                 if (null == wrapAdvice) {
@@ -170,7 +183,6 @@ public class AdviceAdapterListener implements EventListener {
             }
 
             case LINE: {
-                final OpStack opStack = opStackRef.get();
                 final LineEvent lEvent = (LineEvent) event;
                 final WrapAdvice wrapAdvice = opStack.peekByExpectInvokeId(lEvent.invokeId);
                 if (null == wrapAdvice) {
@@ -206,6 +218,12 @@ public class AdviceAdapterListener implements EventListener {
 
         void pushForBegin(final Advice advice) {
             adviceStack.push(new WrapAdvice(advice));
+        }
+
+        WrapAdvice pop() {
+            return !adviceStack.isEmpty()
+                    ? adviceStack.pop()
+                    : null;
         }
 
         /**

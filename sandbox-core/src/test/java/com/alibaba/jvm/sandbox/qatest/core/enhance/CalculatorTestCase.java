@@ -29,12 +29,21 @@ public class CalculatorTestCase extends CoreEnhanceBaseTestCase {
             "^errorSum$"
     );
 
-    protected int calculatorSum(final Object calculatorObject, int... numArray) {
-        return unCaughtInvokeMethod(
-                unCaughtGetClassDeclaredJavaMethod(calculatorObject.getClass(), "sum", int[].class),
-                calculatorObject,
-                numArray
-        );
+    protected int calculatorSum(final Object calculatorObject, int... numArray) throws Throwable {
+        try {
+            return unCaughtInvokeMethod(
+                    unCaughtGetClassDeclaredJavaMethod(calculatorObject.getClass(), "sum", int[].class),
+                    calculatorObject,
+                    numArray
+            );
+        } catch (Throwable cause) {
+            if (cause instanceof UnCaughtException
+                    && (cause.getCause() instanceof InvocationTargetException)) {
+                throw ((InvocationTargetException) cause.getCause()).getTargetException();
+            }
+            throw cause;
+        }
+
     }
 
     protected int calculatorErrorSum(final Object calculatorObject, int... numArray) throws Throwable {

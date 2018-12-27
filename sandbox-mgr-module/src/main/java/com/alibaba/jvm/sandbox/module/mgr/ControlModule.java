@@ -3,20 +3,22 @@ package com.alibaba.jvm.sandbox.module.mgr;
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.ModuleException;
-import com.alibaba.jvm.sandbox.api.http.Http;
+import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.resource.ConfigInfo;
 import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
+import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-@Information(id = "control", version = "0.0.1", author = "luanjia@taobao.com")
+@MetaInfServices(Module.class)
+@Information(id = "control", version = "0.0.2", author = "luanjia@taobao.com")
 public class ControlModule implements Module {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -106,8 +108,9 @@ public class ControlModule implements Module {
         logger.info("shutdown jvm-sandbox[{}] server success for shutdown.", configInfo.getNamespace());
     }
 
-    @Http("/shutdown")
-    public void shutdown(final HttpServletResponse resp) throws Exception {
+    // @Http("/shutdown")
+    @Command("shutdown")
+    public void shutdown(final PrintWriter writer) throws Exception {
 
         logger.info("prepare to shutdown jvm-sandbox[{}].", configInfo.getNamespace());
 
@@ -138,9 +141,9 @@ public class ControlModule implements Module {
         shutdownJvmSandboxHook.setDaemon(true);
 
         // 在卸载自己之前，先向这个世界发出最后的呐喊吧！
-        resp.getWriter().println(String.format("jvm-sandbox[%s] shutdown finished.", configInfo.getNamespace()));
-        resp.getWriter().flush();
-        resp.getWriter().close();
+        writer.println(String.format("jvm-sandbox[%s] shutdown finished.", configInfo.getNamespace()));
+        writer.flush();
+        writer.close();
 
         shutdownJvmSandboxHook.start();
 

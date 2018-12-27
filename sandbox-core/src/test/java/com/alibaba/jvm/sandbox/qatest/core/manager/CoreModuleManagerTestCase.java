@@ -281,6 +281,7 @@ public class CoreModuleManagerTestCase {
                 moduleLifeCycleEventBus,
                 new EmptyProviderManager()
         );
+        coreModuleManager.reset();
 
 
         // 刚完成初始化，注册好的事件应该消化完成
@@ -328,7 +329,7 @@ public class CoreModuleManagerTestCase {
     }
 
     @Test
-    public void test$$CoreModuleManager$$loading() throws IOException {
+    public void test$$CoreModuleManager$$loading() throws IOException, ModuleException {
 
         final File moduleJarFile = buildingModuleJarFileWithModuleClass(
                 createTempFile("test-", ".jar"),
@@ -350,6 +351,7 @@ public class CoreModuleManagerTestCase {
                 new DefaultModuleLifeCycleEventBus(),
                 new EmptyProviderManager()
         );
+        coreModuleManager.reset();
 
         final Set<String> uniqueIds = new LinkedHashSet<String>();
         for (final CoreModule coreModule : coreModuleManager.list()) {
@@ -400,6 +402,7 @@ public class CoreModuleManagerTestCase {
                 new DefaultModuleLifeCycleEventBus(),
                 new EmptyProviderManager()
         );
+        coreModuleManager.reset();
 
         final Set<String> uniqueIds = new LinkedHashSet<String>();
         for (final CoreModule coreModule : coreModuleManager.list()) {
@@ -441,6 +444,7 @@ public class CoreModuleManagerTestCase {
                 new DefaultModuleLifeCycleEventBus(),
                 new EmptyProviderManager()
         );
+        coreModuleManager.reset();
 
         final Set<String> uniqueIds = new LinkedHashSet<String>();
         for (final CoreModule coreModule : coreModuleManager.list()) {
@@ -483,6 +487,7 @@ public class CoreModuleManagerTestCase {
                 new DefaultModuleLifeCycleEventBus(),
                 new EmptyProviderManager()
         );
+        coreModuleManager.reset();
 
         {
             final Set<String> uniqueIds = new LinkedHashSet<String>();
@@ -542,6 +547,7 @@ public class CoreModuleManagerTestCase {
                 new DefaultModuleLifeCycleEventBus(),
                 new EmptyProviderManager()
         );
+        coreModuleManager.reset();
 
         coreModuleManager.getThrowsExceptionIfNull("not-existed-module");
     }
@@ -583,6 +589,7 @@ public class CoreModuleManagerTestCase {
                 moduleLifeCycleEventBus,
                 new EmptyProviderManager()
         );
+        coreModuleManager.reset();
 
         final CoreModule normalNoLazyActiveCoreModule = coreModuleManager
                 .getThrowsExceptionIfNull("normal-no-lazy-active-module");
@@ -638,6 +645,7 @@ public class CoreModuleManagerTestCase {
                 moduleLifeCycleEventBus,
                 new EmptyProviderManager()
         );
+        coreModuleManager.reset();
 
         final CoreModule brokenOnLazyActiveCoreModule = coreModuleManager
                 .getThrowsExceptionIfNull("broken-on-lazy-active");

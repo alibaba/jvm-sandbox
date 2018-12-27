@@ -93,10 +93,6 @@ public class JettyCoreServer implements CoreServer {
             logger.info("{} is destroying", this);
             httpServer.destroy();
 
-            // 关闭对象池
-            logger.info("{} is closing event-pool", this);
-            EventListenerHandlers.getSingleton().getEventPool().close();
-
         } catch (Throwable cause) {
             logger.warn("{} unBind failed.", this, cause);
             throw new IOException("unBind failed.", cause);
@@ -259,6 +255,14 @@ public class JettyCoreServer implements CoreServer {
                     httpServer.start();
                 }
             });
+
+            // 初始化加载所有的模块
+            try {
+                coreModuleManager.reset();
+            } catch (Throwable cause) {
+                logger.warn("reset occur error when initializing.", cause);
+            }
+
             final InetSocketAddress local = getLocal();
             logger.info("initialized server. actual bind to {}:{}", local.getHostName(), local.getPort());
         } catch (Throwable cause) {

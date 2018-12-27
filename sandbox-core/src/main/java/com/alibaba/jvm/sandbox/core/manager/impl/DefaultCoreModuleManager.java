@@ -77,12 +77,12 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 cfg.getUserModuleLibFilesWithCache()
         );
 
-        // 初始化加载所有的模块
-        try {
-            reset();
-        } catch (Throwable cause) {
-            logger.warn("reset occur error when initializing.", cause);
-        }
+//        // 初始化加载所有的模块
+//        try {
+//            reset();
+//        } catch (Throwable cause) {
+//            logger.warn("reset occur error when initializing.", cause);
+//        }
     }
 
     private File[] mergeFileArray(File[] aFileArray, File[] bFileArray) {

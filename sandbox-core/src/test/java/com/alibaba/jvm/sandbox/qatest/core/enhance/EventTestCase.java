@@ -1,12 +1,15 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance;
 
 import com.alibaba.jvm.sandbox.api.event.*;
+import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.EventStreamCheckerListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.EventStreamCheckerListener.EventChecker;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
+import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
 import org.junit.Test;
 
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
+import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
 import static com.alibaba.jvm.sandbox.qatest.core.enhance.listener.EventStreamCheckerListener.EventTypeChecker.CALL_RETURN_CHECKER;
 import static org.junit.Assert.*;
 
@@ -18,7 +21,7 @@ public class EventTestCase extends CalculatorTestCase {
     @Test
     public void test$$event$$before() throws Throwable {
         EventStreamCheckerListener listener;
-        final Class<?> computerClass = watching(
+        final Class<?> calculatorClass = watching(
                 Calculator.class,
                 CALCULATOR_SUM_FILTER,
                 listener = new EventStreamCheckerListener().nextEventCheck(new EventChecker<BeforeEvent>() {
@@ -37,14 +40,14 @@ public class EventTestCase extends CalculatorTestCase {
                 }),
                 BEFORE
         );
-        assertEquals(30, calculatorSum(computerClass.newInstance(), 10, 20));
+        assertEquals(30, calculatorSum(calculatorClass.newInstance(), 10, 20));
         listener.assertIsEmpty();
     }
 
     @Test
     public void test$$event$$return() throws Throwable {
         EventStreamCheckerListener listener;
-        final Class<?> computerClass = watching(
+        final Class<?> calculatorClass = watching(
                 Calculator.class,
                 CALCULATOR_SUM_FILTER,
                 listener = new EventStreamCheckerListener().nextEventCheck(new EventChecker<ReturnEvent>() {
@@ -56,7 +59,7 @@ public class EventTestCase extends CalculatorTestCase {
                 }),
                 RETURN
         );
-        assertEquals(30, calculatorSum(computerClass.newInstance(), 10, 20));
+        assertEquals(30, calculatorSum(calculatorClass.newInstance(), 10, 20));
         listener.assertIsEmpty();
     }
 
@@ -64,7 +67,7 @@ public class EventTestCase extends CalculatorTestCase {
     @Test(expected = RuntimeException.class)
     public void test$$event$$throws() throws Throwable {
         EventStreamCheckerListener listener;
-        final Class<?> computerClass = watching(
+        final Class<?> calculatorClass = watching(
                 Calculator.class,
                 CALCULATOR_ERROR_SUM_FILTER,
                 listener = new EventStreamCheckerListener().nextEventCheck(new EventChecker<ThrowsEvent>() {
@@ -77,12 +80,12 @@ public class EventTestCase extends CalculatorTestCase {
                 }),
                 THROWS
         );
-        assertCalculatorErrorSum(listener, computerClass);
+        assertCalculatorErrorSum(listener, calculatorClass);
     }
 
-    private void assertCalculatorErrorSum(EventStreamCheckerListener listener, Class<?> computerClass) throws Throwable {
+    private void assertCalculatorErrorSum(EventStreamCheckerListener listener, Class<?> calculatorClass) throws Throwable {
         try {
-            calculatorErrorSum(computerClass.newInstance(), 10, 20);
+            calculatorErrorSum(calculatorClass.newInstance(), 10, 20);
             assertFalse("must throw exception", true);
         } catch (RuntimeException cause) {
             assertEquals("THIS IS A TEST!", cause.getMessage());
@@ -106,7 +109,7 @@ public class EventTestCase extends CalculatorTestCase {
         };
 
         EventStreamCheckerListener listener;
-        final Class<?> computerClass = watching(
+        final Class<?> calculatorClass = watching(
                 Calculator.class,
                 CALCULATOR_SUM_FILTER,
                 listener = new EventStreamCheckerListener()
@@ -114,14 +117,14 @@ public class EventTestCase extends CalculatorTestCase {
                         .nextEventCheck(callBeforeEventEventChecker),
                 CALL_BEFORE
         );
-        assertEquals(30, calculatorSum(computerClass.newInstance(), 10, 20));
+        assertEquals(30, calculatorSum(calculatorClass.newInstance(), 10, 20));
         listener.assertIsEmpty();
     }
 
     @Test
     public void test$$event$$call_return() throws Throwable {
         EventStreamCheckerListener listener;
-        final Class<?> computerClass = watching(
+        final Class<?> calculatorClass = watching(
                 Calculator.class,
                 CALCULATOR_SUM_FILTER,
                 listener = new EventStreamCheckerListener()
@@ -129,7 +132,7 @@ public class EventTestCase extends CalculatorTestCase {
                         .nextEventCheck(CALL_RETURN_CHECKER),
                 CALL_RETURN
         );
-        assertEquals(30, calculatorSum(computerClass.newInstance(), 10, 20));
+        assertEquals(30, calculatorSum(calculatorClass.newInstance(), 10, 20));
         listener.assertIsEmpty();
     }
 
@@ -144,14 +147,14 @@ public class EventTestCase extends CalculatorTestCase {
         };
 
         EventStreamCheckerListener listener;
-        final Class<?> computerClass = watching(
+        final Class<?> calculatorClass = watching(
                 Calculator.class,
                 CALCULATOR_ERROR_SUM_FILTER,
                 listener = new EventStreamCheckerListener()
                         .nextEventCheck(callThrowsEventEventChecker),
                 CALL_THROWS
         );
-        assertCalculatorErrorSum(listener, computerClass);
+        assertCalculatorErrorSum(listener, calculatorClass);
     }
 
 
@@ -173,7 +176,7 @@ public class EventTestCase extends CalculatorTestCase {
     @Test
     public void test$$event$$line() throws Throwable {
         EventStreamCheckerListener listener;
-        final Class<?> computerClass = watching(
+        final Class<?> calculatorClass = watching(
                 Calculator.class,
                 CALCULATOR_SUM_FILTER,
                 listener = new EventStreamCheckerListener()
@@ -187,7 +190,7 @@ public class EventTestCase extends CalculatorTestCase {
                 ,
                 LINE
         );
-        assertEquals(30, calculatorSum(computerClass.newInstance(), 10, 20));
+        assertEquals(30, calculatorSum(calculatorClass.newInstance(), 10, 20));
         listener.assertIsEmpty();
     }
 
