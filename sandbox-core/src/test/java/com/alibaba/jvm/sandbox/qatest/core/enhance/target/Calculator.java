@@ -1,8 +1,96 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance.target;
 
+import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.TestCase.*;
+
+/**
+ * 计算器类（靶机类：所有方法拦截都基于这个类进行）
+ */
 public class Calculator {
 
-    public static int sum(int... numArray) {
+    public static final String ERROR_EXCEPTION_MESSAGE = "THIS IS A TEST CAME FROM CALCULATOR!";
+
+    /**
+     * 计算器异常
+     */
+    public static class CalculatorException extends RuntimeException {
+        public CalculatorException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * 用例场景
+     */
+    public enum TestCase {
+
+        /**
+         * 构造函数中抛出异常
+         */
+        INIT_WITH_TEST_CASE$EXCEPTION,
+
+        /**
+         * sum()中抛出异常
+         */
+        SUM$EXCEPTION,
+
+        /**
+         * add()中抛出异常
+         */
+        ADD$EXCEPTION,
+
+        /**
+         * pow()递归中最后一层递归抛出异常
+         */
+        POW$EXCEPTION$AT_LAST,
+
+        /**
+         * 正常返回
+         */
+        NONE
+
+    }
+
+    private final TestCase tCase;
+
+    public Calculator() {
+        this(NONE);
+    }
+
+    public Calculator(String tCaseName) {
+        this(TestCase.valueOf(tCaseName));
+    }
+
+    public Calculator(TestCase tCase) {
+        this.tCase = tCase;
+        if (tCase == INIT_WITH_TEST_CASE$EXCEPTION) {
+            throwCalculatorException();
+        }
+    }
+
+    /**
+     * 求两数之和
+     *
+     * @param a a
+     * @param b b
+     * @return a+b
+     */
+    public int add(int a, int b) {
+        if (tCase == ADD$EXCEPTION) {
+            throwCalculatorException();
+        }
+        return a + b;
+    }
+
+    /**
+     * 求一个数组之和（嵌套方法）
+     *
+     * @param numArray 数组
+     * @return 数组之和
+     */
+    public int sum(int... numArray) {
+        if (tCase == SUM$EXCEPTION) {
+            throwCalculatorException();
+        }
         int r = 0;
         for (int n : numArray) {
             r = add(r, n);
@@ -10,17 +98,28 @@ public class Calculator {
         return r;
     }
 
-    public static int add(int a, int b) {
-        return a + b;
+    /**
+     * 求num的n次方（递归方法）
+     *
+     * @param num num
+     * @param n   n次方
+     * @return num的n次方
+     */
+    public int pow(int num, int n) {
+        if (n == 0) {
+            if (tCase == POW$EXCEPTION$AT_LAST) {
+                throwCalculatorException();
+            }
+            return num;
+        }
+        return n * pow(num, n - 1);
     }
 
-    public static int errorSum(int... numArray) {
-        throwsRuntimeException("THIS IS A TEST!");
-        return 0;
-    }
-
-    private static void throwsRuntimeException(String message) {
-        throw new RuntimeException(message);
+    /**
+     * 模拟抛出异常的方法
+     */
+    private static void throwCalculatorException() {
+        throw new RuntimeException(ERROR_EXCEPTION_MESSAGE);
     }
 
 }

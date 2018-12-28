@@ -3,6 +3,7 @@ package com.alibaba.jvm.sandbox.qatest.core.util;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
+import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
@@ -10,22 +11,25 @@ import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
+import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedAdviceAdapterListener;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
 import static com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory.make;
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
 import static com.alibaba.jvm.sandbox.core.CoreConfigure.toConfigure;
 import static com.alibaba.jvm.sandbox.qatest.core.util.QaClassUtils.toByteArray;
 import static com.alibaba.jvm.sandbox.qatest.core.util.QaClassUtils.toResourceName;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.ArrayUtils.toArray;
 
 /**
  * JVM帮助类，能模拟一个JVM对类的管理行为
@@ -66,6 +70,17 @@ public class JvmHelper {
             this.filter = filter;
             this.listener = listener;
             this.eventTypes = eventTypes;
+        }
+
+        public Transformer(final Filter filter,
+                           final AdviceListener listener,
+                           final Event.Type... eventTypes) {
+            this.filter = filter;
+            this.listener = new InterruptedAdviceAdapterListener(listener);
+            final List<Event.Type> eventTypeList = new ArrayList<Event.Type>();
+            CollectionUtils.addAll(eventTypeList, toArray(BEFORE, RETURN, THROWS, IMMEDIATELY_THROWS, IMMEDIATELY_RETURN));
+            CollectionUtils.addAll(eventTypeList, eventTypes);
+            this.eventTypes = eventTypeList.toArray(new Event.Type[]{});
         }
 
         public byte[] transform(final String namespace,
