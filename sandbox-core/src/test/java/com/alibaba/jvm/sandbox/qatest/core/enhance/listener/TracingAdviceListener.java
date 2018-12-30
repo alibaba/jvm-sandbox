@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance.listener;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
+import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
@@ -59,7 +60,7 @@ public class TracingAdviceListener extends AdviceListener {
                 callLineNum,
                 callJavaClassName,
                 callJavaMethodName,
-                callParameterTypes
+                join(callParameterTypes, ",")
         );
     }
 
@@ -83,7 +84,7 @@ public class TracingAdviceListener extends AdviceListener {
                 callLineNum,
                 callJavaClassName,
                 callJavaMethodName,
-                callParameterTypes,
+                join(callParameterTypes, ","),
                 callThrowJavaClassName
         );
     }
@@ -207,6 +208,13 @@ public class TracingAdviceListener extends AdviceListener {
         return tracing;
     }
 
+    private EventListener eventListener;
+
+    TracingAdviceListener setEventListener(EventListener eventListener) {
+        this.eventListener = eventListener;
+        return this;
+    }
+
     /**
      * 断言跟踪信息
      *
@@ -216,7 +224,7 @@ public class TracingAdviceListener extends AdviceListener {
         assertEventProcessor();
         assertArrayEquals(
                 exceptTracings,
-                getTracing().toArray(new Event.Type[]{})
+                getTracing().toArray(new String[]{})
         );
     }
 
@@ -224,7 +232,7 @@ public class TracingAdviceListener extends AdviceListener {
     private void assertEventProcessor() {
         EventListenerHandlers
                 .getSingleton()
-                .checkEventProcessor(ObjectIDs.instance.identity(this));
+                .checkEventProcessor(ObjectIDs.instance.identity(eventListener));
     }
 
     private <E> void assertArrayEquals(E[] exceptArray, E[] actualArray) {

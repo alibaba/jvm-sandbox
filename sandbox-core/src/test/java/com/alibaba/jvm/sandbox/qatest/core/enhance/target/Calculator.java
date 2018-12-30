@@ -110,9 +110,9 @@ public class Calculator {
             if (tCase == POW$EXCEPTION$AT_LAST) {
                 throwCalculatorException();
             }
-            return num;
+            return 1;
         }
-        return n * pow(num, n - 1);
+        return num * pow(num, n - 1);
     }
 
     /**
