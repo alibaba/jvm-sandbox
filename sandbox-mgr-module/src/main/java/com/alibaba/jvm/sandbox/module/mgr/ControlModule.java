@@ -18,7 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @MetaInfServices(Module.class)
-@Information(id = "control", version = "0.0.2", author = "luanjia@taobao.com")
+@Information(id = "sandbox-control", version = "0.0.2", author = "luanjia@taobao.com")
 public class ControlModule implements Module {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

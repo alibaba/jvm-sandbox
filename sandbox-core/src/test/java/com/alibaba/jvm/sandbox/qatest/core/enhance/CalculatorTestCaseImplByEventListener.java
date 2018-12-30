@@ -6,8 +6,11 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.LineNumTracingEventL
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingEventListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
 import static com.alibaba.jvm.sandbox.api.ProcessController.throwsImmediately;
@@ -18,6 +21,11 @@ import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
 import static org.junit.Assert.assertEquals;
 
 public class CalculatorTestCaseImplByEventListener implements ICalculatorTestCase {
+
+    @BeforeClass
+    public static void initSpy() {
+        Spy.isSpyThrowException = true;
+    }
 
     @Test
     @Override

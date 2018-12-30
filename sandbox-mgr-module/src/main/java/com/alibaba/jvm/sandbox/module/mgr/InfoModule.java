@@ -17,7 +17,7 @@ import java.io.PrintWriter;
  * @author luanjia@taobao.com
  */
 @MetaInfServices(Module.class)
-@Information(id = "info", version = "0.0.4", author = "luanjia@taobao.com")
+@Information(id = "sandbox-info", version = "0.0.4", author = "luanjia@taobao.com")
 public class InfoModule implements Module {
 
     @Resource

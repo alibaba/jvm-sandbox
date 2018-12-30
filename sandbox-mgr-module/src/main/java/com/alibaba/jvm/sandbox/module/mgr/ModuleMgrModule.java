@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  * @author luanjia@taobao.com
  */
 @MetaInfServices(Module.class)
-@Information(id = "module-mgr", author = "luanjia@taobao.com", version = "0.0.2")
+@Information(id = "sandbox-module-mgr", author = "luanjia@taobao.com", version = "0.0.2")
 public class ModuleMgrModule implements Module {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());

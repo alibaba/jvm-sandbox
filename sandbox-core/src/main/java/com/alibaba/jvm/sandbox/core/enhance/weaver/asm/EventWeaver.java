@@ -193,7 +193,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
             @Override
             protected void onMethodEnter() {
-
                 codeLockForTracing.lock(new CodeLock.Block() {
                     @Override
                     public void code() {

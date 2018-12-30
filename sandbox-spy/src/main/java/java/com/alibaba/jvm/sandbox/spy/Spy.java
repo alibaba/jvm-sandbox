@@ -19,6 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Spy {
 
+    /**
+     * 控制Spy是否在发生异常时主动对外抛出
+     * T:主动对外抛出，会中断方法
+     * F:不对外抛出，只将异常信息打印出来
+     */
+    public static volatile boolean isSpyThrowException = false;
+
     private static final Class<Spy.Ret> SPY_RET_CLASS = Spy.Ret.class;
 
     private static final Map<String, MethodHook> namespaceMethodHookMap
@@ -85,6 +92,15 @@ public class Spy {
 
     }
 
+
+    private static void handleException(Throwable cause) throws Throwable {
+        if (isSpyThrowException) {
+            throw cause;
+        } else {
+            cause.printStackTrace();
+        }
+    }
+
     private static final SelfCallBarrier selfCallBarrier = new SelfCallBarrier();
 
     public static void spyMethodOnCallBefore(final int lineNumber,
@@ -93,24 +109,52 @@ public class Spy {
                                              final String desc,
                                              final String namespace,
                                              final int listenerId) throws Throwable {
-        namespaceMethodHookMap.get(namespace).ON_CALL_BEFORE_METHOD.invoke(null, listenerId, lineNumber, owner, name, desc);
+        try {
+            final MethodHook hook = namespaceMethodHookMap.get(namespace);
+            if (null != hook) {
+                hook.ON_CALL_BEFORE_METHOD.invoke(null, listenerId, lineNumber, owner, name, desc);
+            }
+        } catch (Throwable cause) {
+            handleException(cause);
+        }
     }
 
     public static void spyMethodOnCallReturn(final String namespace,
                                              final int listenerId) throws Throwable {
-        namespaceMethodHookMap.get(namespace).ON_CALL_RETURN_METHOD.invoke(null, listenerId);
+        try {
+            final MethodHook hook = namespaceMethodHookMap.get(namespace);
+            if (null != hook) {
+                hook.ON_CALL_RETURN_METHOD.invoke(null, listenerId);
+            }
+        } catch (Throwable cause) {
+            handleException(cause);
+        }
     }
 
     public static void spyMethodOnCallThrows(final String throwException,
                                              final String namespace,
                                              final int listenerId) throws Throwable {
-        namespaceMethodHookMap.get(namespace).ON_CALL_THROWS_METHOD.invoke(null, listenerId, throwException);
+        try {
+            final MethodHook hook = namespaceMethodHookMap.get(namespace);
+            if (null != hook) {
+                hook.ON_CALL_THROWS_METHOD.invoke(null, listenerId, throwException);
+            }
+        } catch (Throwable cause) {
+            handleException(cause);
+        }
     }
 
     public static void spyMethodOnLine(final int lineNumber,
                                        final String namespace,
                                        final int listenerId) throws Throwable {
-        namespaceMethodHookMap.get(namespace).ON_LINE_METHOD.invoke(null, listenerId, lineNumber);
+        try {
+            final MethodHook hook = namespaceMethodHookMap.get(namespace);
+            if (null != hook) {
+                hook.ON_LINE_METHOD.invoke(null, listenerId, lineNumber);
+            }
+        } catch (Throwable cause) {
+            handleException(cause);
+        }
     }
 
     public static Ret spyMethodOnBefore(final Object[] argumentArray,
@@ -127,8 +171,15 @@ public class Spy {
         }
         final SelfCallBarrier.Node node = selfCallBarrier.enter(thread);
         try {
-            return (Ret) namespaceMethodHookMap.get(namespace).ON_BEFORE_METHOD.invoke(null,
+            final MethodHook hook = namespaceMethodHookMap.get(namespace);
+            if (null == hook) {
+                return Ret.RET_NONE;
+            }
+            return (Ret) hook.ON_BEFORE_METHOD.invoke(null,
                     listenerId, targetClassLoaderObjectID, SPY_RET_CLASS, javaClassName, javaMethodName, javaMethodDesc, target, argumentArray);
+        } catch (Throwable cause) {
+            handleException(cause);
+            return Ret.RET_NONE;
         } finally {
             selfCallBarrier.exit(thread, node);
         }
@@ -143,7 +194,14 @@ public class Spy {
         }
         final SelfCallBarrier.Node node = selfCallBarrier.enter(thread);
         try {
-            return (Ret) namespaceMethodHookMap.get(namespace).ON_RETURN_METHOD.invoke(null, listenerId, SPY_RET_CLASS, object);
+            final MethodHook hook = namespaceMethodHookMap.get(namespace);
+            if (null == hook) {
+                return Ret.RET_NONE;
+            }
+            return (Ret) hook.ON_RETURN_METHOD.invoke(null, listenerId, SPY_RET_CLASS, object);
+        } catch (Throwable cause) {
+            handleException(cause);
+            return Ret.RET_NONE;
         } finally {
             selfCallBarrier.exit(thread, node);
         }
@@ -158,7 +216,14 @@ public class Spy {
         }
         final SelfCallBarrier.Node node = selfCallBarrier.enter(thread);
         try {
-            return (Ret) namespaceMethodHookMap.get(namespace).ON_THROWS_METHOD.invoke(null, listenerId, SPY_RET_CLASS, throwable);
+            final MethodHook hook = namespaceMethodHookMap.get(namespace);
+            if (null == hook) {
+                return Ret.RET_NONE;
+            }
+            return (Ret) hook.ON_THROWS_METHOD.invoke(null, listenerId, SPY_RET_CLASS, throwable);
+        } catch (Throwable cause) {
+            handleException(cause);
+            return Ret.RET_NONE;
         } finally {
             selfCallBarrier.exit(thread, node);
         }
@@ -317,6 +382,13 @@ public class Spy {
                           final Method on_call_before_method,
                           final Method on_call_return_method,
                           final Method on_call_throws_method) {
+            assert null != on_before_method;
+            assert null != on_return_method;
+            assert null != on_throws_method;
+            assert null != on_line_method;
+            assert null != on_call_before_method;
+            assert null != on_call_return_method;
+            assert null != on_call_throws_method;
             this.ON_BEFORE_METHOD = on_before_method;
             this.ON_RETURN_METHOD = on_return_method;
             this.ON_THROWS_METHOD = on_throws_method;

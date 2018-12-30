@@ -4,3 +4,8 @@
 
 ## for maven
 pom.xml.versionsBackup
+sandbox-api/target/
+sandbox-common-api/target/
+sandbox-core/target/
+sandbox-provider-api/target/
+sandbox-spy/target/

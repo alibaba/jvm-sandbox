@@ -56,32 +56,15 @@ class SingleEventFactory {
         }
     }
 
-    private final BeforeEvent beforeEvent
-            = new BeforeEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null, null, null, null, null, null);
-
-    private final ReturnEvent returnEvent
-            = new ReturnEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
-
-    private final ThrowsEvent throwsEvent
-            = new ThrowsEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
-
-    private final LineEvent lineEvent
-            = new LineEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, -1);
-
-    private final ImmediatelyThrowsEvent immediatelyThrowsEvent
-            = new ImmediatelyThrowsEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
-
-    private final ImmediatelyReturnEvent immediatelyReturnEvent
-            = new ImmediatelyReturnEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
-
-    private final CallBeforeEvent callBeforeEvent
-            = new CallBeforeEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, -1, null, null, null);
-
-    private final CallReturnEvent callReturnEvent
-            = new CallReturnEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID);
-
-    private final CallThrowsEvent callThrowsEvent
-            = new CallThrowsEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
+    private LineEvent lineEvent = null;
+    private BeforeEvent beforeEvent = null;
+    private ReturnEvent returnEvent = null;
+    private ThrowsEvent throwsEvent = null;
+    private CallBeforeEvent callBeforeEvent = null;
+    private CallReturnEvent callReturnEvent = null;
+    private CallThrowsEvent callThrowsEvent = null;
+    private ImmediatelyThrowsEvent immediatelyThrowsEvent = null;
+    private ImmediatelyReturnEvent immediatelyReturnEvent = null;
 
 
     public BeforeEvent makeBeforeEvent(final int processId,
@@ -92,6 +75,9 @@ class SingleEventFactory {
                                        final String javaMethodDesc,
                                        final Object target,
                                        final Object[] argumentArray) {
+        if (null == beforeEvent) {
+            beforeEvent = new BeforeEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null, null, null, null, null, null);
+        }
         unsafe.putInt(beforeEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(beforeEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         unsafe.putObject(beforeEvent, javaClassLoaderFieldInBeforeEventOffset, javaClassLoader);
@@ -106,6 +92,9 @@ class SingleEventFactory {
     public ReturnEvent makeReturnEvent(final int processId,
                                        final int invokeId,
                                        final Object returnObj) {
+        if (null == returnEvent) {
+            returnEvent = new ReturnEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
+        }
         unsafe.putInt(returnEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(returnEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         unsafe.putObject(returnEvent, objectFieldInReturnEventOffset, returnObj);
@@ -113,8 +102,11 @@ class SingleEventFactory {
     }
 
     public ImmediatelyReturnEvent makeImmediatelyReturnEvent(final int processId,
-                                       final int invokeId,
-                                       final Object returnObj) {
+                                                             final int invokeId,
+                                                             final Object returnObj) {
+        if (null == immediatelyReturnEvent) {
+            immediatelyReturnEvent = new ImmediatelyReturnEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
+        }
         unsafe.putInt(immediatelyReturnEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(immediatelyReturnEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         unsafe.putObject(immediatelyReturnEvent, objectFieldInReturnEventOffset, returnObj);
@@ -124,6 +116,9 @@ class SingleEventFactory {
     public ThrowsEvent makeThrowsEvent(final int processId,
                                        final int invokeId,
                                        final Throwable throwable) {
+        if (null == throwsEvent) {
+            throwsEvent = new ThrowsEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
+        }
         unsafe.putInt(throwsEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(throwsEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         unsafe.putObject(throwsEvent, throwableFieldInThrowsEventOffset, throwable);
@@ -131,8 +126,11 @@ class SingleEventFactory {
     }
 
     public ImmediatelyThrowsEvent makeImmediatelyThrowsEvent(final int processId,
-                                       final int invokeId,
-                                       final Throwable throwable) {
+                                                             final int invokeId,
+                                                             final Throwable throwable) {
+        if (null == immediatelyThrowsEvent) {
+            immediatelyThrowsEvent = new ImmediatelyThrowsEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
+        }
         unsafe.putInt(immediatelyThrowsEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(immediatelyThrowsEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         unsafe.putObject(immediatelyThrowsEvent, throwableFieldInThrowsEventOffset, throwable);
@@ -140,10 +138,12 @@ class SingleEventFactory {
     }
 
 
-
     public LineEvent makeLineEvent(final int processId,
                                    final int invokeId,
                                    final int lineNumber) {
+        if (null == lineEvent) {
+            lineEvent = new LineEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, -1);
+        }
         unsafe.putInt(lineEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(lineEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         unsafe.putInt(lineEvent, lineNumberFieldInLineEventOffset, lineNumber);
@@ -156,6 +156,9 @@ class SingleEventFactory {
                                                final String owner,
                                                final String name,
                                                final String desc) {
+        if (null == callBeforeEvent) {
+            callBeforeEvent = new CallBeforeEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, -1, null, null, null);
+        }
         unsafe.putInt(callBeforeEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(callBeforeEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         unsafe.putInt(callBeforeEvent, lineNumberFieldInCallBeforeEventOffset, lineNumber);
@@ -167,6 +170,9 @@ class SingleEventFactory {
 
     public CallReturnEvent makeCallReturnEvent(final int processId,
                                                final int invokeId) {
+        if (null == callReturnEvent) {
+            callReturnEvent = new CallReturnEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID);
+        }
         unsafe.putInt(callReturnEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(callReturnEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         return callReturnEvent;
@@ -175,6 +181,9 @@ class SingleEventFactory {
     public CallThrowsEvent makeCallThrowsEvent(final int processId,
                                                final int invokeId,
                                                final String throwException) {
+        if (null == callThrowsEvent) {
+            callThrowsEvent = new CallThrowsEvent(ILLEGAL_PROCESS_ID, ILLEGAL_INVOKE_ID, null);
+        }
         unsafe.putInt(callThrowsEvent, processIdFieldInInvokeEventOffset, processId);
         unsafe.putInt(callThrowsEvent, invokeIdFieldInInvokeEventOffset, invokeId);
         unsafe.putObject(callThrowsEvent, throwExceptionFieldInCallThrowsEventOffset, throwException);

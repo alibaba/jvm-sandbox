@@ -21,12 +21,11 @@
             <groupId>com.alibaba.jvm.sandbox</groupId>
             <artifactId>sandbox-common-api</artifactId>
         </dependency>
-
-        <!-- 废弃对Servlet的依赖 -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
+
 
     </dependencies>
 
