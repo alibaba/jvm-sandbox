@@ -58,7 +58,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <forkMode>once</forkMode>
-                    <argLine>-Xbootclasspath/p:./src/test/resources/lib/sandbox-spy-1.1.0-for-qatest.jar</argLine>
+                    <argLine>-Xbootclasspath/p:./src/test/resources/lib/sandbox-spy-1.2.0-for-qatest.jar</argLine>
                 </configuration>
             </plugin>
         </plugins>

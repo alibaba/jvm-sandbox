@@ -1,13 +1,13 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance;
 
-import com.alibaba.jvm.sandbox.api.ProcessController;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingEventListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
-import com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
-import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
@@ -15,6 +15,11 @@ import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
 import static org.junit.Assert.assertEquals;
 
 public class CalculatorTestCaseImplByEventListener implements ICalculatorTestCase {
+
+    @BeforeClass
+    public static void initSpy() {
+        Spy.isSpyThrowException = true;
+    }
 
     @Test
     @Override
@@ -31,7 +36,7 @@ public class CalculatorTestCaseImplByEventListener implements ICalculatorTestCas
                 )
                 .loadClass(CALCULATOR_CLASS_NAME);
 
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertEventTracing(
                 BEFORE,
                 RETURN
@@ -78,7 +83,7 @@ public class CalculatorTestCaseImplByEventListener implements ICalculatorTestCas
                 .defineClass(
                         Calculator.class,
                         CALCULATOR_SUM_FILTER,
-                        listener = new TracingEventListener(){
+                        listener = new TracingEventListener() {
                             @Override
                             public void onEvent(Event event) throws Throwable {
                                 super.onEvent(event);
@@ -89,7 +94,7 @@ public class CalculatorTestCaseImplByEventListener implements ICalculatorTestCas
                 )
                 .loadClass(CALCULATOR_CLASS_NAME);
 
-        assertEquals(100, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(100, sum(newInstance(calculatorClass), 10, 20));
         listener.assertEventTracing(
                 RETURN
         );
@@ -209,4 +214,5 @@ public class CalculatorTestCaseImplByEventListener implements ICalculatorTestCas
     public void cal$init_with_TestCase$before$changeParameters() throws Throwable {
 
     }
+
 }

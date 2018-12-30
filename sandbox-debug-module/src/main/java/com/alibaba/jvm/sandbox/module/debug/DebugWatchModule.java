@@ -2,7 +2,7 @@ package com.alibaba.jvm.sandbox.module.debug;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
-import com.alibaba.jvm.sandbox.api.http.Http;
+import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.http.printer.ConcurrentLinkedQueuePrinter;
 import com.alibaba.jvm.sandbox.api.http.printer.Printer;
 import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
@@ -15,11 +15,10 @@ import org.apache.commons.lang3.EnumUtils;
 import org.kohsuke.MetaInfServices;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.alibaba.jvm.sandbox.module.debug.DebugWatchModule.Trigger.*;
 
@@ -30,47 +29,39 @@ import static com.alibaba.jvm.sandbox.module.debug.DebugWatchModule.Trigger.*;
  * @author luanjia@taobao.com
  */
 @MetaInfServices(Module.class)
-@Information(id = "debug-watch", version = "0.0.1", author = "luanjia@taobao.com")
-public class DebugWatchModule extends HttpSupported implements Module {
+@Information(id = "debug-watch", version = "0.0.2", author = "luanjia@taobao.com")
+public class DebugWatchModule extends ParamSupported implements Module {
 
     @Resource
     private ModuleEventWatcher moduleEventWatcher;
 
-    @Http("/watch")
-    public void watch(final HttpServletRequest req,
-                      final HttpServletResponse resp) throws IOException {
-        try {
-            final String cnPattern = getParameter(req, "class");
-            final String mnPattern = getParameter(req, "method");
-            final String watchExpress = getParameter(req, "watch");
-            final List<Trigger> triggers = getParameters(
-                    req,
-                    "at",
-                    new Converter<Trigger>() {
-                        @Override
-                        public Trigger convert(String string) {
-                            return EnumUtils.getEnum(Trigger.class, string);
-                        }
-                    },
-                    new Trigger[]{Trigger.BEFORE});
-            final Printer printer = new ConcurrentLinkedQueuePrinter(resp.getWriter());
-            debugWatch(cnPattern, mnPattern, watchExpress, triggers, printer);
-        } catch (HttpSupported.HttpErrorCodeException hece) {
-            resp.sendError(hece.getCode(), hece.getMessage());
-            return;
-        }
-    }
+    @Command("watch")
+    public void watch(final Map<String, String> param,
+                      final Map<String, String[]> params,
+                      final PrintWriter writer) {
+
+        final String cnPattern = getParameter(param, "class");
+        final String mnPattern = getParameter(param, "method");
+        final String watchExpress = getParameter(param, "watch");
+        final List<Trigger> triggers = getParameters(
+                params,
+                "at",
+                new Converter<Trigger>() {
+                    @Override
+                    public Trigger convert(String string) {
+                        return EnumUtils.getEnum(Trigger.class, string);
+                    }
+                },
+                Trigger.BEFORE);
+        final Printer printer = new ConcurrentLinkedQueuePrinter(writer);
 
 
-    private void debugWatch(final String cnPattern,
-                            final String mnPattern,
-                            final String watchExpress,
-                            final List<Trigger> triggers,
-                            final Printer printer) {
         final EventWatcher watcher = new EventWatchBuilder(moduleEventWatcher)
-                .onClass(cnPattern).includeSubClasses()
+                .onClass(cnPattern)
+                .includeSubClasses()
                 .onBehavior(mnPattern)
-                .onWatching().withProgress(new ProgressPrinter(printer))
+                .onWatching()
+                .withProgress(new ProgressPrinter(printer))
                 .onWatch(new AdviceListener() {
 
                     @Override
@@ -136,6 +127,7 @@ public class DebugWatchModule extends HttpSupported implements Module {
         }
 
     }
+
 
     private static String toString(final Object object) {
         return null == object

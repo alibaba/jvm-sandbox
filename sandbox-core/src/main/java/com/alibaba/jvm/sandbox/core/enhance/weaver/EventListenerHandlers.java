@@ -279,7 +279,7 @@ public class EventListenerHandlers {
 
             // 普通事件处理器则可以打个日志后,直接放行
             else {
-                logger.debug("on-event: event|{}|{}|{};listener|{} occur an error.",
+                logger.warn("on-event: event|{}|{}|{};listener|{} occur an error.",
                         event.type,
                         processId,
                         invokeId,
