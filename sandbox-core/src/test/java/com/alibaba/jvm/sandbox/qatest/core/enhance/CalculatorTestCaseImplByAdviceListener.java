@@ -8,7 +8,10 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingAdviceListene
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingEventListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
 import static com.alibaba.jvm.sandbox.api.ProcessController.throwsImmediately;
@@ -24,6 +27,11 @@ import static org.junit.Assert.assertTrue;
  * AdviceListener相关测试用例
  */
 public class CalculatorTestCaseImplByAdviceListener implements ICalculatorTestCase {
+
+    @BeforeClass
+    public static void initSpy() {
+        Spy.isSpyThrowException = true;
+    }
 
     @Test
     @Override

@@ -176,7 +176,7 @@ public class JettyCoreServer implements CoreServer {
         try {
             ((LoggerContext) LoggerFactory.getILoggerFactory()).stop();
         } catch (Throwable cause) {
-            //
+            cause.printStackTrace();
         }
     }
 
