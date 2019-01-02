@@ -307,43 +307,43 @@ function main() {
 
     # -v show version
     [[ ! -z ${OP_VERSION} ]] \
-        && sandbox_curl_with_exit "info/version"
+        && sandbox_curl_with_exit "sandbox-info/version"
 
     # -l list loaded modules
     [[ ! -z ${OP_MODULE_LIST} ]] \
-        && sandbox_curl_with_exit "module-mgr/list"
+        && sandbox_curl_with_exit "sandbox-module-mgr/list"
 
     # -F force flush module
     [[ ! -z ${OP_MODULE_FORCE_FLUSH} ]] \
-        && sandbox_curl_with_exit "module-mgr/flush" "&force=true"
+        && sandbox_curl_with_exit "sandbox-module-mgr/flush" "&force=true"
 
     # -f flush module
     [[ ! -z ${OP_MODULE_FLUSH} ]] \
-        && sandbox_curl_with_exit "module-mgr/flush" "&force=false"
+        && sandbox_curl_with_exit "sandbox-module-mgr/flush" "&force=false"
 
     # -R reset sandbox
     [[ ! -z ${OP_MODULE_RESET} ]] \
-        && sandbox_curl_with_exit "module-mgr/reset"
+        && sandbox_curl_with_exit "sandbox-module-mgr/reset"
 
     # -u unload module
     [[ ! -z ${OP_MODULE_UNLOAD} ]] \
-        && sandbox_curl_with_exit "module-mgr/unload" "&action=unload&ids=${ARG_MODULE_UNLOAD}"
+        && sandbox_curl_with_exit "sandbox-module-mgr/unload" "&action=unload&ids=${ARG_MODULE_UNLOAD}"
 
     # -a active module
     [[ ! -z ${OP_MODULE_ACTIVE} ]] \
-        && sandbox_curl_with_exit "module-mgr/active" "&ids=${ARG_MODULE_ACTIVE}"
+        && sandbox_curl_with_exit "sandbox-module-mgr/active" "&ids=${ARG_MODULE_ACTIVE}"
 
     # -A frozen module
     [[ ! -z ${OP_MODULE_FROZEN} ]] \
-        && sandbox_curl_with_exit "module-mgr/frozen" "&ids=${ARG_MODULE_FROZEN}"
+        && sandbox_curl_with_exit "sandbox-module-mgr/frozen" "&ids=${ARG_MODULE_FROZEN}"
 
     # -m module detail
     [[ ! -z ${OP_MODULE_DETAIL} ]] \
-        && sandbox_curl_with_exit "module-mgr/detail" "&id=${ARG_MODULE_DETAIL}"
+        && sandbox_curl_with_exit "sandbox-module-mgr/detail" "&id=${ARG_MODULE_DETAIL}"
 
     # -S shutdown
     [[ ! -z ${OP_SHUTDOWN} ]] \
-        && sandbox_curl_with_exit "control/shutdown"
+        && sandbox_curl_with_exit "sandbox-control/shutdown"
 
     # -d debug
     if [[ ! -z ${OP_DEBUG} ]]; then
