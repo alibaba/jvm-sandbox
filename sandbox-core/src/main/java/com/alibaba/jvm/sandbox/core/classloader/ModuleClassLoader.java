@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.core.classloader;
 
 import com.alibaba.jvm.sandbox.api.annotation.Stealth;
+import com.alibaba.jvm.sandbox.api.spi.ModuleJarLifeCycleProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -17,9 +18,11 @@ import java.security.AccessControlContext;
 import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.jar.JarFile;
 
+import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.*;
 
 /**
@@ -104,9 +107,21 @@ public class ModuleClassLoader extends RoutingURLClassLoader {
 
     }
 
+    private void onJarUnLoadCompleted() {
+        try {
+            final ServiceLoader<ModuleJarLifeCycleProvider> moduleJarLifeCycleProviders
+                    = ServiceLoader.load(ModuleJarLifeCycleProvider.class, this);
+            for (ModuleJarLifeCycleProvider provider : moduleJarLifeCycleProviders) {
+                logger.info("unloading module-jar: onJarUnLoadCompleted() loader={};provider={};", this, getJavaClassName(provider.getClass()));
+                provider.onJarUnLoadCompleted();
+            }
+        } catch (Throwable cause) {
+            logger.warn("unloading module-jar: onJarUnLoadCompleted() occur error! loader={};", this, cause);
+        }
+    }
 
     public void closeIfPossible() {
-
+        onJarUnLoadCompleted();
         try {
 
             // 如果是JDK7+的版本, URLClassLoader实现了Closeable接口，直接调用即可

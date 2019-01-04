@@ -73,7 +73,7 @@ public class EventListenerHandlers {
                 processor.listener
         );
 
-        processor.clean();
+        // processor.clean();
     }
 
     /**

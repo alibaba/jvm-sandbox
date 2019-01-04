@@ -2,6 +2,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
+import com.alibaba.jvm.sandbox.api.spi.ModuleJarLifeCycleProvider;
 import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -111,6 +112,9 @@ class ModuleJarLoader {
 
                 final ClassLoader preTCL = Thread.currentThread().getContextClassLoader();
                 Thread.currentThread().setContextClassLoader(moduleClassLoader);
+
+                // 模块Jar加载前回调
+
 
                 try {
 

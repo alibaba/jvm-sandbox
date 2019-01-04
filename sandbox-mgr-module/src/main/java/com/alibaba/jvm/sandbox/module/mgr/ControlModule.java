@@ -39,16 +39,20 @@ public class ControlModule implements Module {
     }
 
     // 清理命名空间所对应的SandboxClassLoader
-    private ClassLoader cleanSandboxClassLoader(final Class<?> classOfAgentLauncher)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    private ClassLoader cleanSandboxClassLoader(final Class<?> classOfAgentLauncher) {
         // 清理AgentLauncher.sandboxClassLoaderMap
-        final ClassLoader sandboxClassLoader = (ClassLoader) MethodUtils.invokeStaticMethod(
-                classOfAgentLauncher,
-                "cleanClassLoader",
-                configInfo.getNamespace()
-        );
-        logger.info("clean SandboxClassLoader from jvm-sandbox[{}] success, for shutdown.", configInfo.getNamespace());
-        return sandboxClassLoader;
+        try {
+            final ClassLoader sandboxClassLoader = (ClassLoader) MethodUtils.invokeStaticMethod(
+                    classOfAgentLauncher,
+                    "cleanClassLoader",
+                    configInfo.getNamespace()
+            );
+            logger.info("clean SandboxClassLoader from jvm-sandbox[{}] success, for shutdown.", configInfo.getNamespace());
+            return sandboxClassLoader;
+        } catch (Throwable cause) {
+            logger.warn("clean SandboxClassLoader from jvm-sandbox[{}] occur error for shutdown!", configInfo.getNamespace(), cause);
+            return null;
+        }
     }
 
     // 清理Spy中对Method的引用
@@ -83,29 +87,36 @@ public class ControlModule implements Module {
     }
 
     // 卸载自己
-    private void unloadSelf() throws ModuleException {
+    private void unloadSelf() {
         // 卸载自己
-        final String self = getClass().getAnnotation(Information.class).id();
-        moduleManager.unload(self);
-        logger.info("unload module={} from jvm-sandbox[{}] success, for shutdown.", self, configInfo.getNamespace());
+        try {
+            final String self = getClass().getAnnotation(Information.class).id();
+            moduleManager.unload(self);
+        } catch (Throwable cause) {
+            cause.printStackTrace();
+        }
+        // logger.info("unload module={} from jvm-sandbox[{}] success, for shutdown.", self, configInfo.getNamespace());
     }
 
     // 关闭HTTP服务器
-    private void shutdownServer(final ClassLoader sandboxClassLoader)
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private void shutdownServer(final ClassLoader sandboxClassLoader) {
 
-        if (null == sandboxClassLoader) {
-            logger.warn("detection an warning, target SandboxClassLoader[namespace={}] is null, shutdown server will be ignore",
-                    configInfo.getNamespace());
-            return;
+        try {
+            if (null == sandboxClassLoader) {
+                logger.warn("detection an warning, target SandboxClassLoader[namespace={}] is null, shutdown server will be ignore",
+                        configInfo.getNamespace());
+                return;
+            }
+
+            final Class<?> classOfCoreServer = sandboxClassLoader
+                    .loadClass("com.alibaba.jvm.sandbox.core.server.ProxyCoreServer");
+            final Object objectOfJettyCoreServer = classOfCoreServer.getMethod("getInstance").invoke(null);
+            final Method methodOfDestroy = classOfCoreServer.getMethod("destroy");
+            methodOfDestroy.invoke(objectOfJettyCoreServer);
+            logger.info("shutdown jvm-sandbox[{}] server success for shutdown.", configInfo.getNamespace());
+        } catch (Throwable cause) {
+            logger.warn("shutdown jvm-sandbox[{}] server occur error for shutdown!", configInfo.getNamespace(), cause);
         }
-
-        final Class<?> classOfCoreServer = sandboxClassLoader
-                .loadClass("com.alibaba.jvm.sandbox.core.server.ProxyCoreServer");
-        final Object objectOfJettyCoreServer = classOfCoreServer.getMethod("getInstance").invoke(null);
-        final Method methodOfDestroy = classOfCoreServer.getMethod("destroy");
-        methodOfDestroy.invoke(objectOfJettyCoreServer);
-        logger.info("shutdown jvm-sandbox[{}] server success for shutdown.", configInfo.getNamespace());
     }
 
     // @Http("/shutdown")
@@ -128,11 +139,9 @@ public class ControlModule implements Module {
             @Override
             public void run() {
                 try {
-
                     shutdownServer(getSandboxClassLoader(classOfAgentLauncher));
-                    unloadSelf();
                     cleanSandboxClassLoader(classOfAgentLauncher);
-
+                    unloadSelf();
                 } catch (Throwable cause) {
                     logger.warn("shutdown jvm-sandbox[{}] failed.", configInfo.getNamespace(), cause);
                 }

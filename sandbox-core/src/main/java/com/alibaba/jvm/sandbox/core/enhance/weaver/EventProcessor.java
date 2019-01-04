@@ -49,12 +49,10 @@ class EventProcessor {
                     stack.deep(),
                     listenerId
             );
-            // 这里注释掉，避免频繁删除和创建ThreadLocal的开销
-            // 采用frozen的方式来释放
-//            if (stack.isEmpty()) {
-//                processRef.remove();
-//                logger.debug("clean TLS: event-processor, listener={};", listenerId);
-//            }
+            if (stack.isEmpty()) {
+                processRef.remove();
+                logger.debug("clean TLS: event-processor, listener={};", listenerId);
+            }
             return invokeId;
         }
 
@@ -125,11 +123,6 @@ class EventProcessor {
         this.listener = isInterruptEventHandler(listener.getClass())
                 ? new InterruptedEventListenerImpl(listener)
                 : listener;
-    }
-
-    void clean() {
-        processRef.remove();
-        logger.debug("clean TLS: event-processor, listener={};", listenerId);
     }
 
 
