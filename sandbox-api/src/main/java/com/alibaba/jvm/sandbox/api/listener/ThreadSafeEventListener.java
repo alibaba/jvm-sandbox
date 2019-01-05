@@ -10,7 +10,9 @@ import com.alibaba.jvm.sandbox.api.event.Event;
  *
  * @author luanjia@taobao.com
  * @since {@code sandbox-api:1.0.10}
+ * @deprecated
  */
+@Deprecated
 public class ThreadSafeEventListener implements EventListener {
 
     private final EventListenerFactory factory;

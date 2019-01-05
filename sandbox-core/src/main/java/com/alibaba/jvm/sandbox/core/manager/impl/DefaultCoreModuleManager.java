@@ -532,7 +532,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
     @Override
     public synchronized void reset() throws ModuleException {
-        
+
         logger.info("resetting all loaded modules:{}", loadedModuleBOMap.keySet());
 
         // 1. 强制卸载所有模块
@@ -546,7 +546,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
             // 对模块访问权限进行校验
             if (moduleLibDir.exists()
                     && moduleLibDir.canRead()) {
-                new ModuleJarLoader(moduleLibDir, cfg.getLaunchMode(), sandboxClassLoader)
+                new ModuleLibLoader(moduleLibDir, cfg.getLaunchMode(), sandboxClassLoader)
                         .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
             } else {
                 logger.warn("module-lib not access, ignore flush load this lib. path={}", moduleLibDir);
@@ -662,7 +662,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
             // 4. 加载add
             for (final File jarFile : appendJarFiles) {
-                new ModuleJarLoader(jarFile, cfg.getLaunchMode(), sandboxClassLoader)
+                new ModuleLibLoader(jarFile, cfg.getLaunchMode(), sandboxClassLoader)
                         .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
             }
         } catch (Throwable cause) {
@@ -716,7 +716,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
             if (userModuleLibDir.exists()
                     && userModuleLibDir.canRead()) {
                 logger.info("force-flush modules: module-lib={}", userModuleLibDir);
-                new ModuleJarLoader(userModuleLibDir, cfg.getLaunchMode(), sandboxClassLoader)
+                new ModuleLibLoader(userModuleLibDir, cfg.getLaunchMode(), sandboxClassLoader)
                         .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
             } else {
                 logger.warn("force-flush modules: module-lib can not access, will be ignored. module-lib={}", userModuleLibDir);

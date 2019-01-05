@@ -5,7 +5,9 @@ package com.alibaba.jvm.sandbox.api.listener;
  *
  * @author luanjia@taobao.com
  * @since {@code sandbox-api:1.0.10}
+ * @deprecated
  */
+@Deprecated
 public interface EventListenerFactory {
 
     /**
