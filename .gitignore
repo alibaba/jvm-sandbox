@@ -9,3 +9,7 @@ sandbox-common-api/target/
 sandbox-core/target/
 sandbox-provider-api/target/
 sandbox-spy/target/
+sandbox-agent/target/
+sandbox-debug-module/target/
+sandbox-mgr-module/target/
+sandbox-mgr-provider/target/
