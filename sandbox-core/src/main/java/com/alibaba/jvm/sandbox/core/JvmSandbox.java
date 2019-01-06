@@ -1,7 +1,6 @@
 package com.alibaba.jvm.sandbox.core;
 
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
-import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultLoadedClassDataSource;
@@ -16,8 +15,6 @@ import java.lang.instrument.Instrumentation;
 public class JvmSandbox {
 
     private final CoreConfigure cfg;
-    private final Instrumentation inst;
-    private final CoreLoadedClassDataSource loadedClassDataSource;
     private final CoreModuleManager coreModuleManager;
 
     public JvmSandbox(final CoreConfigure cfg,
@@ -26,8 +23,8 @@ public class JvmSandbox {
         this.cfg = cfg;
         this.coreModuleManager = new DefaultCoreModuleManager(
                 cfg,
-                this.inst = inst,
-                this.loadedClassDataSource = new DefaultLoadedClassDataSource(inst, cfg.isEnableUnsafe()),
+                inst,
+                new DefaultLoadedClassDataSource(inst, cfg.isEnableUnsafe()),
                 new DefaultProviderManager(cfg)
         );
 
