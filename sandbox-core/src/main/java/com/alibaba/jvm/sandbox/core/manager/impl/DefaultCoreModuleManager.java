@@ -214,19 +214,6 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                             cfg.isEnableUnsafe(),
                             cfg.getNamespace()
                     );
-                    coreModule.append(new CoreModule.ReleaseResource<ModuleEventWatcher>(moduleEventWatcher) {
-
-                        @Override
-                        public void release() {
-                            for (final SandboxClassFileTransformer transformer
-                                    : new ArrayList<SandboxClassFileTransformer>(coreModule.getSandboxClassFileTransformers())) {
-                                logger.info("delete watch[id={}] by module[id={};] unload.",
-                                        transformer.getWatchId(), coreModule.getUniqueId());
-                                moduleEventWatcher.delete(transformer.getWatchId());
-                            }
-                        }
-
-                    });
                     writeField(
                             resourceField,
                             module,
@@ -372,6 +359,9 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 标记模块为：已卸载
         coreModule.markLoaded(false);
+
+        // 释放所有可释放资源
+        coreModule.releaseAll();
 
         // 尝试关闭ClassLoader
         closeModuleClassLoaderIfNecessary(coreModule.getLoader());

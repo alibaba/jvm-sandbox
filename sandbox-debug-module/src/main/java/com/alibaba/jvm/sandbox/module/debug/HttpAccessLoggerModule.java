@@ -32,7 +32,7 @@ import static org.apache.commons.lang3.ArrayUtils.contains;
  */
 @MetaInfServices(Module.class)
 @Information(id = "debug-http-logger", version = "0.0.2", author = "luanjia@taobao.com")
-public class HttpHttpAccessLoggerModule implements Module, LoadCompleted {
+public class HttpAccessLoggerModule implements Module, LoadCompleted {
 
     private final Logger stLogger = LoggerFactory.getLogger("DEBUG-SERVLET-LOGGER");
 

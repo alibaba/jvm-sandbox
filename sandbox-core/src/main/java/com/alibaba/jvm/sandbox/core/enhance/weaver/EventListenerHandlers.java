@@ -64,7 +64,7 @@ public class EventListenerHandlers {
     public void frozen(int listenerId) {
         final EventProcessor processor = mappingOfEventProcessor.remove(listenerId);
         if (null == processor) {
-            logger.debug("ignore frozen listener[id={};], because not found.");
+            logger.debug("ignore frozen listener={}, because not found.", listenerId);
             return;
         }
 

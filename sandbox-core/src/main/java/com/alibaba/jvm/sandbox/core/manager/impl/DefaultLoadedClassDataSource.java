@@ -86,7 +86,7 @@ public class DefaultLoadedClassDataSource implements CoreLoadedClassDataSource {
             // 过滤掉对于JVM认为不可修改的类
             if (isRemoveUnsupported
                     && !inst.isModifiableClass(clazz)) {
-                logger.debug("remove from findForReTransform, because class:{} is unModifiable", clazz.getName());
+                // logger.debug("remove from findForReTransform, because class:{} is unModifiable", clazz.getName());
                 continue;
             }
             try {

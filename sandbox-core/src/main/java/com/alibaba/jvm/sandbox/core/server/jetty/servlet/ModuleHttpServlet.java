@@ -137,7 +137,7 @@ public class ModuleHttpServlet extends HttpServlet {
         } finally {
             Thread.currentThread().setContextClassLoader(oriThreadContextClassLoader);
             method.setAccessible(isAccessible);
-            coreModule.remove(writer);
+            coreModule.release(writer);
         }
 
     }

@@ -89,12 +89,12 @@ public interface Express {
      */
     class ExpressFactory {
 
-        private static final ThreadLocal<Express> expressRef = new ThreadLocal<Express>() {
-            @Override
-            protected Express initialValue() {
-                return new OgnlExpress();
-            }
-        };
+//        private static final ThreadLocal<Express> expressRef = new ThreadLocal<Express>() {
+//            @Override
+//            protected Express initialValue() {
+//                return new OgnlExpress();
+//            }
+//        };
 
         /**
          * 构造表达式执行类
@@ -103,7 +103,7 @@ public interface Express {
          * @return 返回表达式实现
          */
         public static Express newExpress(Object object) {
-            return expressRef.get().reset().bind(object);
+            return new OgnlExpress().reset().bind(object);
             // return new OgnlExpress().bind(object);
         }
 

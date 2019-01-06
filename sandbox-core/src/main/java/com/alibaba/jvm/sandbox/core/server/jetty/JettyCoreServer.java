@@ -81,6 +81,7 @@ public class JettyCoreServer implements CoreServer {
 
             // destroy http server
             logger.info("{} is destroying", this);
+            while (!httpServer.isStopped());
             httpServer.destroy();
 
         } catch (Throwable cause) {
@@ -218,6 +219,9 @@ public class JettyCoreServer implements CoreServer {
     @Override
     public void destroy() {
 
+        // 关闭JVM-SANDBOX
+        jvmSandbox.destroy();
+
         // 关闭HTTP服务器
         if (isBind()) {
             try {
@@ -226,9 +230,6 @@ public class JettyCoreServer implements CoreServer {
                 logger.warn("{} unBind failed when destroy.", this, e);
             }
         }
-
-        // 关闭JVM-SANDBOX
-        jvmSandbox.destroy();
 
         // 关闭LOGBACK
         LogbackUtils.destroy();

@@ -6,6 +6,7 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.core.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
@@ -176,7 +177,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                      final EventListener listener,
                      final Progress progress,
                      final Event.Type... eventType) {
-        return watch(new ExtFilterMatcher(make(filter)), listener, progress, eventType);
+        return watch(true, new ExtFilterMatcher(make(filter)), listener, progress, eventType);
     }
 
     @Override
@@ -184,21 +185,30 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                      final EventListener listener,
                      final Progress progress,
                      final Event.Type... eventType) {
-        return watch(toOrGroupMatcher(condition.getOrFilterArray()), listener, progress, eventType);
+        return watch(true, toOrGroupMatcher(condition.getOrFilterArray()), listener, progress, eventType);
     }
 
     // 这里是用matcher重制过后的watch
-    private int watch(final Matcher matcher,
+    private int watch(final boolean isAutoRelease,
+                      final Matcher matcher,
                       final EventListener listener,
                       final Progress progress,
                       final Event.Type... eventType) {
         final int watchId = watchIdSequencer.next();
         // 给对应的模块追加ClassFileTransformer
         final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(
-                watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
+                isAutoRelease, watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
 
         // 注册到CoreModule中
         coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
+        coreModule.append(new ReleaseResource<SandboxClassFileTransformer>(sandClassFileTransformer) {
+            @Override
+            public void release() {
+                if (get().isAutoRelease()) {
+                    delete(get().getWatchId());
+                }
+            }
+        });
 
         // 注册到JVM加载上ClassFileTransformer处理新增的类
         inst.addTransformer(sandClassFileTransformer, true);
@@ -269,6 +279,9 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                 // 清除掉该SandboxClassFileTransformer
                 cftIt.remove();
 
+                // 删除可释放资源
+                coreModule.release(sandboxClassFileTransformer);
+
             }
         }
 
@@ -308,7 +321,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                          final WatchCallback watchCb,
                          final Progress dProgress,
                          final Event.Type... eventType) throws Throwable {
-        final int watchId = watch(filter, listener, wProgress, eventType);
+        final int watchId = watch(false, new ExtFilterMatcher(make(filter)), listener, wProgress, eventType);
         try {
             watchCb.watchCompleted();
         } finally {

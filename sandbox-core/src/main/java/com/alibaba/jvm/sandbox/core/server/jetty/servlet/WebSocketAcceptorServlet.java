@@ -143,7 +143,7 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
             try {
                 listener.onClose(closeCode, message);
             } finally {
-                coreModule.remove(conn);
+                coreModule.release(conn);
             }
         }
 
