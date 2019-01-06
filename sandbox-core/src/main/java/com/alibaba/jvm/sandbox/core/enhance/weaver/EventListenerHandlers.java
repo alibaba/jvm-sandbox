@@ -7,13 +7,13 @@ import com.alibaba.jvm.sandbox.api.event.ImmediatelyReturnEvent;
 import com.alibaba.jvm.sandbox.api.event.ImmediatelyThrowsEvent;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
-import com.alibaba.jvm.sandbox.core.util.Sequencer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.IMMEDIATELY_RETURN;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.IMMEDIATELY_THROWS;
@@ -32,7 +32,8 @@ public class EventListenerHandlers {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     // 调用序列生成器
-    private final Sequencer invokeIdSequencer = new Sequencer(1000);
+    // private final Sequencer invokeIdSequencer = new Sequencer();
+    private final AtomicInteger invokeIdSequencer = new AtomicInteger(1000);
 
     // 全局处理器ID:处理器映射集合
     private final Map<Integer/*LISTENER_ID*/, EventProcessor> mappingOfEventProcessor
@@ -314,7 +315,7 @@ public class EventListenerHandlers {
         final EventProcessor.Process process = wrap.processRef.get();
 
         // 调用ID
-        final int invokeId = invokeIdSequencer.next();
+        final int invokeId = invokeIdSequencer.getAndIncrement();
         process.pushInvokeId(invokeId);
 
         // 调用过程ID

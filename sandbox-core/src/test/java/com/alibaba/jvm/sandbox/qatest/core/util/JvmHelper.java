@@ -8,6 +8,7 @@ import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
+import com.alibaba.jvm.sandbox.core.util.SpyUtils;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
@@ -40,6 +41,7 @@ public class JvmHelper {
 
     public JvmHelper(final String namespace) {
         this.namespace = namespace;
+        SpyUtils.init(namespace);
         toConfigure(String.format(";namespace=%s;", namespace), "");
     }
 

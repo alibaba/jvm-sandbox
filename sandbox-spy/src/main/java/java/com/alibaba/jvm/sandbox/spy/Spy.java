@@ -93,6 +93,21 @@ public class Spy {
     }
 
 
+    // 全局序列
+    private static volatile int sequence = 1000;
+
+    /**
+     * 生成全局唯一序列，
+     * 在JVM-SANDBOX中允许多个命名空间的存在，不同的命名空间下listenerId/objectId将会被植入到同一份字节码中，
+     * 此时需要用全局的ID生成策略规避不同的命名空间
+     *
+     * @return 全局自增序列
+     */
+    public static synchronized int nextSequence() {
+        return sequence++;
+    }
+
+
     private static void handleException(Throwable cause) throws Throwable {
         if (isSpyThrowException) {
             throw cause;
