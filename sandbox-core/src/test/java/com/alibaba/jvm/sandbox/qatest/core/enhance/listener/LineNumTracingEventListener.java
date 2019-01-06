@@ -8,6 +8,7 @@ import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.alibaba.jvm.sandbox.qatest.core.util.AssertUtils.assertArrayEquals;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.junit.Assert.assertEquals;
 
@@ -52,10 +53,4 @@ public class LineNumTracingEventListener extends InterruptedEventListener {
                 .checkEventProcessor(ObjectIDs.instance.identity(this));
     }
 
-    private <E> void assertArrayEquals(E[] exceptArray, E[] actualArray) {
-        assertEquals("except size not matched!", getLength(exceptArray), getLength(actualArray));
-        for (int index = 0; index < exceptArray.length; index++) {
-            assertEquals("[" + index + "] not matched", exceptArray[index], actualArray[index]);
-        }
-    }
 }

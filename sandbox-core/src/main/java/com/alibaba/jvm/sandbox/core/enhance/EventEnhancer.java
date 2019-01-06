@@ -3,7 +3,6 @@ package com.alibaba.jvm.sandbox.core.enhance;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
-import com.alibaba.jvm.sandbox.core.util.SpyUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.slf4j.Logger;
@@ -73,36 +72,6 @@ public class EventEnhancer implements Enhancer {
         };
     }
 
-    /**
-     * 编织事件方法
-     *
-     * @param sourceByteCodeArray 原始字节码数组
-     * @return 编织后的字节码数组
-     */
-    private byte[] weavingEvent(final ClassLoader targetClassLoader,
-                                final byte[] sourceByteCodeArray,
-                                final Set<String> signCodes,
-                                final String namespace,
-                                final int listenerId,
-                                final Event.Type[] eventTypeArray) {
-        final ClassReader cr = new ClassReader(sourceByteCodeArray);
-        final ClassWriter cw = createClassWriter(targetClassLoader, cr);
-        final int targetClassLoaderObjectID = ObjectIDs.instance.identity(targetClassLoader);
-        cr.accept(
-                new EventWeaver(
-                        ASM7, cw, namespace, listenerId,
-                        targetClassLoaderObjectID,
-                        cr.getClassName(),
-                        signCodes,
-                        eventTypeArray
-                ),
-                EXPAND_FRAMES
-        );
-        return cw.toByteArray();
-        // return dumpClassIfNecessary(SandboxStringUtils.toJavaClassName(cr.getClassName()), cw.toByteArray());
-    }
-
-
 //    /*
 //     * dump class to file
 //     * 用于代码调试
@@ -136,17 +105,21 @@ public class EventEnhancer implements Enhancer {
                                   final String namespace,
                                   final int listenerId,
                                   final Event.Type[] eventTypeArray) {
-        // 如果定义间谍类失败了,则后续不需要增强
-        try {
-            SpyUtils.init(namespace);
-            // defineSpyIfNecessary(targetClassLoader);
-        } catch (Throwable cause) {
-            logger.warn("define Spy to target ClassLoader={} failed.", targetClassLoader, cause);
-            return byteCodeArray;
-        }
-
         // 返回增强后字节码
-        return weavingEvent(targetClassLoader, byteCodeArray, signCodes, namespace, listenerId, eventTypeArray);
+        final ClassReader cr = new ClassReader(byteCodeArray);
+        final ClassWriter cw = createClassWriter(targetClassLoader, cr);
+        final int targetClassLoaderObjectID = ObjectIDs.instance.identity(targetClassLoader);
+        cr.accept(
+                new EventWeaver(
+                        ASM7, cw, namespace, listenerId,
+                        targetClassLoaderObjectID,
+                        cr.getClassName(),
+                        signCodes,
+                        eventTypeArray
+                ),
+                EXPAND_FRAMES
+        );
+        return cw.toByteArray();
     }
 
 }

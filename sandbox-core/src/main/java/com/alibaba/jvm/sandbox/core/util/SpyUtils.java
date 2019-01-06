@@ -13,14 +13,13 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtGetC
  */
 public class SpyUtils {
 
-    private static final Initializer isSpyInit = new Initializer();
 
     /**
      * 初始化Spy类
      *
-     * @throws Throwable 初始化失败
+     * @param namespace 命名空间
      */
-    public synchronized static void init(final String namespace) throws Throwable {
+    public synchronized static void init(final String namespace) {
 
         if (Spy.isInit(namespace)) {
             return;
@@ -68,6 +67,15 @@ public class SpyUtils {
                 )
         );
 
+    }
+
+    /**
+     * 清理Spy中的命名空间
+     *
+     * @param namespace 命名空间
+     */
+    public synchronized static void clean(final String namespace) {
+        Spy.clean(namespace);
     }
 
 }

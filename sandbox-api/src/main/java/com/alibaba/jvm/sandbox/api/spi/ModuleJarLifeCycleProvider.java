@@ -9,6 +9,14 @@ package com.alibaba.jvm.sandbox.api.spi;
 public interface ModuleJarLifeCycleProvider {
 
     /**
+     * 等待
+     * @param loaded
+     * @param inComing
+     * @return
+     */
+    ClassLoader waitingFor(ClassLoader[] loaded, ClassLoader inComing);
+
+    /**
      * 模块Jar文件卸载完所有模块后，正式卸载Jar文件之前之后调用！
      */
     void onJarUnLoadCompleted();

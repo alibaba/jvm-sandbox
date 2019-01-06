@@ -1,7 +1,7 @@
 package com.alibaba.jvm.sandbox.core.manager;
 
 import com.alibaba.jvm.sandbox.api.ModuleException;
-import com.alibaba.jvm.sandbox.core.domain.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule;
 
 import java.util.Collection;
 
@@ -22,9 +22,10 @@ public interface CoreModuleManager {
     /**
      * 沙箱重置
      *
+     * @return this
      * @throws ModuleException 沙箱重置失败
      */
-    void reset() throws ModuleException;
+    CoreModuleManager reset() throws ModuleException;
 
     /**
      * 激活模块
@@ -79,5 +80,9 @@ public interface CoreModuleManager {
      */
     CoreModule unload(CoreModule coreModule, boolean isIgnoreModuleException) throws ModuleException;
 
+    /**
+     * 卸载所有模块
+     */
+    void unloadAll();
 
 }

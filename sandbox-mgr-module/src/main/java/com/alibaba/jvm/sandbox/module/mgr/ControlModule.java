@@ -2,11 +2,8 @@ package com.alibaba.jvm.sandbox.module.mgr;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
-import com.alibaba.jvm.sandbox.api.ModuleException;
 import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.resource.ConfigInfo;
-import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
@@ -15,10 +12,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Resource;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 @MetaInfServices(Module.class)
-@Information(id = "sandbox-control", version = "0.0.2", author = "luanjia@taobao.com")
+@Information(id = "sandbox-control", version = "0.0.3", author = "luanjia@taobao.com")
 public class ControlModule implements Module {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -26,122 +22,30 @@ public class ControlModule implements Module {
     @Resource
     private ConfigInfo configInfo;
 
-    @Resource
-    private ModuleManager moduleManager;
+    // 卸载jvm-sandbox
+    private void uninstall() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        final Class<?> classOfAgentLauncher = getClass().getClassLoader()
+                .loadClass("com.alibaba.jvm.sandbox.agent.AgentLauncher");
 
-    private ClassLoader getSandboxClassLoader(final Class<?> classOfAgentLauncher)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        return (ClassLoader) MethodUtils.invokeStaticMethod(
+        MethodUtils.invokeStaticMethod(
                 classOfAgentLauncher,
-                "getClassLoader",
+                "uninstall",
                 configInfo.getNamespace()
         );
     }
 
-    // 清理命名空间所对应的SandboxClassLoader
-    private ClassLoader cleanSandboxClassLoader(final Class<?> classOfAgentLauncher) {
-        // 清理AgentLauncher.sandboxClassLoaderMap
-        try {
-            final ClassLoader sandboxClassLoader = (ClassLoader) MethodUtils.invokeStaticMethod(
-                    classOfAgentLauncher,
-                    "cleanClassLoader",
-                    configInfo.getNamespace()
-            );
-            logger.info("clean SandboxClassLoader from jvm-sandbox[{}] success, for shutdown.", configInfo.getNamespace());
-            return sandboxClassLoader;
-        } catch (Throwable cause) {
-            logger.warn("clean SandboxClassLoader from jvm-sandbox[{}] occur error for shutdown!", configInfo.getNamespace(), cause);
-            return null;
-        }
-    }
-
-    // 清理Spy中对Method的引用
-    private void cleanSpy() throws ClassNotFoundException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        final String namespace = configInfo.getNamespace();
-        MethodUtils.invokeStaticMethod(
-                getClass().getClassLoader().loadClass("java.com.alibaba.jvm.sandbox.spy.Spy"),
-                "clean",
-                namespace
-        );
-        logger.info("clean Spy's method from jvm-sandbox[{}] success, for shutdown.", namespace);
-    }
-
-    // 卸载所有模块
-    // 从这里开始只允许调用JDK自带的反射方法，因为ControlModule已经完成卸载，你找不到apache的包了
-    private void unloadModules() throws ModuleException {
-
-        for (final Module module : moduleManager.list()) {
-            final Information information = module.getClass().getAnnotation(Information.class);
-            if (null == information
-                    || StringUtils.isBlank(information.id())) {
-                continue;
-            }
-            // 如果遇到自己，需要最后才卸载
-            if (module == this) {
-                continue;
-            }
-            moduleManager.unload(information.id());
-            logger.info("unload module={} from jvm-sandbox[{}] success, for shutdown.", information.id(), configInfo.getNamespace());
-        }
-
-    }
-
-    // 卸载自己
-    private void unloadSelf() {
-        // 卸载自己
-        try {
-            final String self = getClass().getAnnotation(Information.class).id();
-            moduleManager.unload(self);
-        } catch (Throwable cause) {
-            cause.printStackTrace();
-        }
-        // logger.info("unload module={} from jvm-sandbox[{}] success, for shutdown.", self, configInfo.getNamespace());
-    }
-
-    // 关闭HTTP服务器
-    private void shutdownServer(final ClassLoader sandboxClassLoader) {
-
-        try {
-            if (null == sandboxClassLoader) {
-                logger.warn("detection an warning, target SandboxClassLoader[namespace={}] is null, shutdown server will be ignore",
-                        configInfo.getNamespace());
-                return;
-            }
-
-            final Class<?> classOfCoreServer = sandboxClassLoader
-                    .loadClass("com.alibaba.jvm.sandbox.core.server.ProxyCoreServer");
-            final Object objectOfJettyCoreServer = classOfCoreServer.getMethod("getInstance").invoke(null);
-            final Method methodOfDestroy = classOfCoreServer.getMethod("destroy");
-            methodOfDestroy.invoke(objectOfJettyCoreServer);
-            logger.info("shutdown jvm-sandbox[{}] server success for shutdown.", configInfo.getNamespace());
-        } catch (Throwable cause) {
-            logger.warn("shutdown jvm-sandbox[{}] server occur error for shutdown!", configInfo.getNamespace(), cause);
-        }
-    }
-
     // @Http("/shutdown")
     @Command("shutdown")
-    public void shutdown(final PrintWriter writer) throws Exception {
+    public void shutdown(final PrintWriter writer) {
 
         logger.info("prepare to shutdown jvm-sandbox[{}].", configInfo.getNamespace());
-
-        final Class<?> classOfAgentLauncher = getClass().getClassLoader()
-                .loadClass("com.alibaba.jvm.sandbox.agent.AgentLauncher");
-
-        // 卸载模块
-        unloadModules();
-
-        // 清理Spy的注册方法回调
-        cleanSpy();
 
         // 关闭HTTP服务器
         final Thread shutdownJvmSandboxHook = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    shutdownServer(getSandboxClassLoader(classOfAgentLauncher));
-                    cleanSandboxClassLoader(classOfAgentLauncher);
-                    unloadSelf();
+                    uninstall();
                 } catch (Throwable cause) {
                     logger.warn("shutdown jvm-sandbox[{}] failed.", configInfo.getNamespace(), cause);
                 }

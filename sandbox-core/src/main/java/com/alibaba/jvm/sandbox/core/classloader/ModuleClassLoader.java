@@ -45,18 +45,16 @@ public class ModuleClassLoader extends RoutingURLClassLoader {
         return tempFile;
     }
 
-    public ModuleClassLoader(final File moduleJarFile,
-                             final ClassLoader sandboxClassLoader) throws IOException {
-        this(moduleJarFile, copyToTempFile(moduleJarFile), sandboxClassLoader);
+    public ModuleClassLoader(final File moduleJarFile) throws IOException {
+        this(moduleJarFile, copyToTempFile(moduleJarFile));
     }
 
     private ModuleClassLoader(final File moduleJarFile,
-                              final File tempModuleJarFile,
-                              final ClassLoader sandboxClassLoader) throws IOException {
+                              final File tempModuleJarFile) throws IOException {
         super(
                 new URL[]{new URL("file:" + tempModuleJarFile.getPath())},
                 new Routing(
-                        sandboxClassLoader,
+                        ModuleClassLoader.class.getClassLoader(),
                         "^com\\.alibaba\\.jvm\\.sandbox\\.api\\..*",
                         "^javax\\.servlet\\..*",
                         "^javax\\.annotation\\.Resource.*$"

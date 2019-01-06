@@ -14,6 +14,7 @@ import java.util.List;
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassNameArray;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassNameArray;
+import static com.alibaba.jvm.sandbox.qatest.core.util.AssertUtils.assertArrayEquals;
 import static com.sun.tools.javac.util.StringUtils.toUpperCase;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.StringUtils.join;
@@ -233,13 +234,6 @@ public class TracingAdviceListener extends AdviceListener {
         EventListenerHandlers
                 .getSingleton()
                 .checkEventProcessor(ObjectIDs.instance.identity(eventListener));
-    }
-
-    private <E> void assertArrayEquals(E[] exceptArray, E[] actualArray) {
-        assertEquals("except size not matched!", getLength(exceptArray), getLength(actualArray));
-        for (int index = 0; index < exceptArray.length; index++) {
-            assertEquals("[" + index + "] not matched", exceptArray[index], actualArray[index]);
-        }
     }
 
 }

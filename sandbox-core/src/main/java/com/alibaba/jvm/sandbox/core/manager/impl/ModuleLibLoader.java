@@ -7,10 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
 
-import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.apache.commons.io.FileUtils.convertFileCollectionToFileArray;
 import static org.apache.commons.io.FileUtils.listFiles;
 import static org.apache.commons.lang3.StringUtils.join;
@@ -30,15 +27,10 @@ class ModuleLibLoader {
     // 沙箱加载模式
     private final Information.Mode mode;
 
-    // 沙箱加载ClassLoader
-    private final ClassLoader sandboxClassLoader;
-
     ModuleLibLoader(final File moduleLibDir,
-                    final Information.Mode mode,
-                    final ClassLoader sandboxClassLoader) {
+                    final Information.Mode mode) {
         this.moduleLibDir = moduleLibDir;
         this.mode = mode;
-        this.sandboxClassLoader = sandboxClassLoader;
     }
 
     private File[] toModuleJarFileArray() {
@@ -74,7 +66,7 @@ class ModuleLibLoader {
      * @param mjCb 模块文件加载回调
      * @param mCb  模块加载回掉
      */
-    void load(final ModuleJarLoader.ModuleJarLoadCallback mjCb,
+    void load(final ModuleJarLoadCallback mjCb,
               final ModuleJarLoader.ModuleLoadCallback mCb) {
 
         // 开始逐条加载
@@ -94,11 +86,7 @@ class ModuleLibLoader {
 //                }
 //            });
             try {
-                new ModuleJarLoader(
-                        moduleJarFile,
-                        mode,
-                        sandboxClassLoader
-                ).load(mjCb, mCb);
+                new ModuleJarLoader(moduleJarFile, mode).load(mCb);
             } catch (Exception cause) {
                 logger.warn("loading module-jar occur error! module-jar={};", moduleJarFile, cause);
             }
@@ -119,4 +107,20 @@ class ModuleLibLoader {
 //    static void shutdown() {
 //        moduleJarLoaderExecutor.shutdown();
 //    }
+
+    /**
+     * 模块文件加载回调
+     */
+    public interface ModuleJarLoadCallback {
+
+        /**
+         * 模块文件加载回调
+         *
+         * @param moduleJarFile 模块文件
+         * @throws Throwable 加载回调异常
+         */
+        void onLoad(File moduleJarFile) throws Throwable;
+
+    }
+
 }

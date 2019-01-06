@@ -5,10 +5,9 @@ import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
-import com.alibaba.jvm.sandbox.core.domain.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
-import com.alibaba.jvm.sandbox.core.manager.ModuleLifeCycleEventBus;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.GroupMatcher;
@@ -18,16 +17,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import static com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory.make;
 import static com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher.toOrGroupMatcher;
 
 /**
  * 默认事件观察者实现
- * Created by luanjia@taobao.com on 2017/2/23.
+ *
+ * @author luanjia@taobao.com
  */
-public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLifeCycleEventBus.ModuleLifeCycleEventListener {
+public class DefaultModuleEventWatcher implements ModuleEventWatcher {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -101,7 +104,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
         boolean batchReTransformSuccess = true;
         if (null == progress) {
             try {
-                inst.retransformClasses(waitingReTransformClasses.toArray(new Class[waitingReTransformClasses.size()]));
+                inst.retransformClasses(waitingReTransformClasses.toArray(new Class[0]));
                 logger.info("module[id:{}] watch[id:{}] batch reTransform classes[count:{}] success.",
                         coreModule.getUniqueId(), watchId, waitingReTransformClasses.size());
             } catch (Throwable e) {
@@ -307,23 +310,4 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher, ModuleLife
         }
     }
 
-    @Override
-    public boolean onFire(final CoreModule coreModule,
-                          final ModuleLifeCycleEventBus.Event event) {
-
-        if (this.coreModule == coreModule
-                && event == ModuleLifeCycleEventBus.Event.UNLOAD) {
-            // 是当前模块的卸载事件，需要主动清理掉之前的埋点
-            for (final SandboxClassFileTransformer transformer : new ArrayList<SandboxClassFileTransformer>(coreModule.getSandboxClassFileTransformers())) {
-                logger.info("delete watch[id={}] by module[id={};] unload.",
-                        transformer.getWatchId(), coreModule.getUniqueId());
-                delete(transformer.getWatchId());
-            }
-            // 当前模块都卸载了，我还留着做啥...
-            return false;
-        }
-
-        // 不是当前模块的卸载事件，继续保持监听
-        return true;
-    }
 }

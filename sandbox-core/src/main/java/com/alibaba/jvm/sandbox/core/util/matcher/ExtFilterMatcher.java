@@ -126,7 +126,7 @@ public class ExtFilterMatcher implements Matcher {
      * 兼容{@code sandbox-api:1.0.10}时
      * 在{@link EventWatchCondition#getOrFilterArray()}中将{@link Filter}直接暴露出来的问题，
      * 所以这里做一个兼容性的强制转换
-     * <p>
+     *
      * <ul>
      * <li>如果filterArray[index]是一个{@link ExtFilter}，则不需要再次转换</li>
      * <li>如果filterArray[index]是一个{@link Filter}，则需要进行{@link ExtFilterFactory#make(Filter)}的转换</li>

@@ -9,6 +9,11 @@ import org.slf4j.LoggerFactory;
 public class OnJarUnLoadCompleted implements ModuleJarLifeCycleProvider {
 
     @Override
+    public ClassLoader waitingFor(ClassLoader[] loaded, ClassLoader inComing) {
+        return null;
+    }
+
+    @Override
     public void onJarUnLoadCompleted() {
         closeLogback();
     }

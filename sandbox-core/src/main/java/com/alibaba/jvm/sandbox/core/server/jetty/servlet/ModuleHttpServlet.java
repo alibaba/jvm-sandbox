@@ -2,9 +2,9 @@ package com.alibaba.jvm.sandbox.core.server.jetty.servlet;
 
 import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.http.Http;
-import com.alibaba.jvm.sandbox.core.domain.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
-import com.alibaba.jvm.sandbox.core.manager.ModuleResourceManager;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,12 +36,9 @@ public class ModuleHttpServlet extends HttpServlet {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final CoreModuleManager coreModuleManager;
-    private final ModuleResourceManager moduleResourceManager;
 
-    public ModuleHttpServlet(final CoreModuleManager coreModuleManager,
-                             final ModuleResourceManager moduleResourceManager) {
+    public ModuleHttpServlet(final CoreModuleManager coreModuleManager) {
         this.coreModuleManager = coreModuleManager;
-        this.moduleResourceManager = moduleResourceManager;
     }
 
     @Override
@@ -104,18 +101,16 @@ public class ModuleHttpServlet extends HttpServlet {
         // 生成方法调用参数
         final Object[] parameterObjectArray = generateParameterObjectArray(method, req, resp);
 
-        final PrintWriter writer = resp.getWriter();
+        final PrintWriter writer = coreModule.append(new ReleaseResource<PrintWriter>(resp.getWriter()) {
 
-        // 调用方法
-        moduleResourceManager.append(uniqueId,
-                new ModuleResourceManager.WeakResource<PrintWriter>(writer) {
+            @Override
+            public void release() {
+                IOUtils.closeQuietly(get());
+            }
 
-                    @Override
-                    public void release() {
-                        IOUtils.closeQuietly(get());
-                    }
+        });
 
-                });
+
         final boolean isAccessible = method.isAccessible();
         final ClassLoader oriThreadContextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
@@ -142,7 +137,7 @@ public class ModuleHttpServlet extends HttpServlet {
         } finally {
             Thread.currentThread().setContextClassLoader(oriThreadContextClassLoader);
             method.setAccessible(isAccessible);
-            moduleResourceManager.remove(uniqueId, writer);
+            coreModule.remove(writer);
         }
 
     }

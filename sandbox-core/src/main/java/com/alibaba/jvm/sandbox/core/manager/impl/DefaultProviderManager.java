@@ -33,18 +33,16 @@ public class DefaultProviderManager implements ProviderManager {
     private final Collection<ModuleLoadingChain> moduleLoadingChains = new ArrayList<ModuleLoadingChain>();
     private final CoreConfigure cfg;
 
-    public DefaultProviderManager(final CoreConfigure cfg,
-                                  final ClassLoader sandboxClassLoader) {
+    public DefaultProviderManager(final CoreConfigure cfg) {
         this.cfg = cfg;
         try {
-            init(cfg, sandboxClassLoader);
+            init(cfg);
         } catch (Throwable cause) {
             logger.warn("loading sandbox's provider-lib[{}] failed.", cfg.getProviderLibPath(), cause);
         }
     }
 
-    private void init(final CoreConfigure cfg,
-                      final ClassLoader sandboxClassLoader) {
+    private void init(final CoreConfigure cfg) {
         final File providerLibDir = new File(cfg.getProviderLibPath());
         if (!providerLibDir.exists()
                 || !providerLibDir.canRead()) {
@@ -55,7 +53,7 @@ public class DefaultProviderManager implements ProviderManager {
         for (final File providerJarFile : FileUtils.listFiles(providerLibDir, new String[]{"jar"}, false)) {
 
             try {
-                final ProviderClassLoader providerClassLoader = new ProviderClassLoader(providerJarFile, sandboxClassLoader);
+                final ProviderClassLoader providerClassLoader = new ProviderClassLoader(providerJarFile, getClass().getClassLoader());
 
                 // load ModuleJarLoadingChain
                 inject(moduleJarLoadingChains, ModuleJarLoadingChain.class, providerClassLoader, providerJarFile);

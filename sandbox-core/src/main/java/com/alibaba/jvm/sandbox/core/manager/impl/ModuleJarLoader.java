@@ -25,20 +25,14 @@ class ModuleJarLoader {
     // 沙箱加载模式
     private final Information.Mode mode;
 
-    // 沙箱加载ClassLoader
-    private final ClassLoader sandboxClassLoader;
-
     ModuleJarLoader(final File moduleJarFile,
-                    final Information.Mode mode,
-                    final ClassLoader sandboxClassLoader) {
+                    final Information.Mode mode) {
         this.moduleJarFile = moduleJarFile;
         this.mode = mode;
-        this.sandboxClassLoader = sandboxClassLoader;
     }
 
 
     private boolean loadingModules(final ModuleClassLoader moduleClassLoader,
-                                   final ModuleJarLoadCallback mjCb,
                                    final ModuleLoadCallback mCb) {
 
         final Set<String> loadedModuleUniqueIds = new LinkedHashSet<String>();
@@ -117,20 +111,19 @@ class ModuleJarLoader {
     }
 
 
-    public void load(final ModuleJarLoadCallback mjCb,
-                     final ModuleLoadCallback mCb) throws IOException {
+    void load(final ModuleLoadCallback mCb) throws IOException {
 
         boolean hasModuleLoadedSuccessFlag = false;
         ModuleClassLoader moduleClassLoader = null;
         logger.info("prepare loading module-jar={};", moduleJarFile);
         try {
-            moduleClassLoader = new ModuleClassLoader(moduleJarFile, sandboxClassLoader);
+            moduleClassLoader = new ModuleClassLoader(moduleJarFile);
 
             final ClassLoader preTCL = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(moduleClassLoader);
 
             try {
-                hasModuleLoadedSuccessFlag = loadingModules(moduleClassLoader, mjCb, mCb);
+                hasModuleLoadedSuccessFlag = loadingModules(moduleClassLoader, mCb);
             } finally {
                 Thread.currentThread().setContextClassLoader(preTCL);
             }
@@ -139,27 +132,9 @@ class ModuleJarLoader {
             if (!hasModuleLoadedSuccessFlag
                     && null != moduleClassLoader) {
                 logger.warn("loading module-jar completed, but NONE module loaded, will be close ModuleClassLoader. module-jar={};", moduleJarFile);
-                if (null != moduleClassLoader) {
-                    moduleClassLoader.closeIfPossible();
-                }
+                moduleClassLoader.closeIfPossible();
             }
         }
-
-    }
-
-
-    /**
-     * 模块文件加载回调
-     */
-    public interface ModuleJarLoadCallback {
-
-        /**
-         * 模块文件加载回调
-         *
-         * @param moduleJarFile 模块文件
-         * @throws Throwable 加载回调异常
-         */
-        void onLoad(File moduleJarFile) throws Throwable;
 
     }
 

@@ -12,9 +12,10 @@ import java.net.InetSocketAddress;
 
 /**
  * 默认配置信息实现
- * Created by luanjia@taobao.com on 2017/2/9.
+ *
+ * @author luanjia@taobao.com
  */
-public class DefaultConfigInfo implements ConfigInfo {
+class DefaultConfigInfo implements ConfigInfo {
 
     private final CoreConfigure cfg;
 

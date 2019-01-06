@@ -3,7 +3,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.ModuleException;
 import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
-import com.alibaba.jvm.sandbox.core.domain.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 
 import java.io.File;

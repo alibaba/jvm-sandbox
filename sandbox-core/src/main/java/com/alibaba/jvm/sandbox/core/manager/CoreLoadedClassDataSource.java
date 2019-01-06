@@ -3,6 +3,7 @@ package com.alibaba.jvm.sandbox.core.manager;
 import com.alibaba.jvm.sandbox.api.resource.LoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 
+import java.lang.instrument.ClassFileTransformer;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ import java.util.List;
  *
  * @author luanjia@taobao.com
  */
-public interface CoreLoadedClassDataSource extends LoadedClassDataSource {
+public interface CoreLoadedClassDataSource extends LoadedClassDataSource, ClassFileTransformer {
 
     /**
      * 使用{@link Matcher}来完成类的检索
@@ -22,5 +23,16 @@ public interface CoreLoadedClassDataSource extends LoadedClassDataSource {
      * @return 匹配的类
      */
     List<Class<?>> findForReTransform(Matcher matcher);
+
+    /**
+     * 列出所有已经加载的ClassLoader
+     *
+     * @return 已经加载的ClassLoader
+     */
+    ClassLoader[] listLoadedClassLoader();
+
+    void appendLoadedClassLoaderListener(LoadedClassLoaderListener listener);
+
+    void removeLoadedClassLoaderListener(LoadedClassLoaderListener listener);
 
 }
