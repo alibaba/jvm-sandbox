@@ -71,42 +71,15 @@ class ModuleLibLoader {
 
         // 开始逐条加载
         for (final File moduleJarFile : listModuleJarFileInLib()) {
-//            moduleJarLoaderExecutor.submit(new Runnable() {
-//                @Override
-//                public void run() {
-//                    try {
-//                        new ModuleJarLoader(
-//                                moduleJarFile,
-//                                mode,
-//                                sandboxClassLoader
-//                        ).load(mjCb, mCb);
-//                    } catch (Exception cause) {
-//                        logger.warn("loading module-jar occur error! module-jar={};", moduleJarFile, cause);
-//                    }
-//                }
-//            });
             try {
+                mjCb.onLoad(moduleJarFile);
                 new ModuleJarLoader(moduleJarFile, mode).load(mCb);
-            } catch (Exception cause) {
+            } catch (Throwable cause) {
                 logger.warn("loading module-jar occur error! module-jar={};", moduleJarFile, cause);
             }
         }
 
     }
-
-
-//    private static final ExecutorService moduleJarLoaderExecutor = newCachedThreadPool(new ThreadFactory() {
-//        @Override
-//        public Thread newThread(Runnable runnable) {
-//            final Thread moduleJarLoaderThread = new Thread(runnable, "sandbox-module-jar-loader");
-//            moduleJarLoaderThread.setDaemon(true);
-//            return moduleJarLoaderThread;
-//        }
-//    });
-//
-//    static void shutdown() {
-//        moduleJarLoaderExecutor.shutdown();
-//    }
 
     /**
      * 模块文件加载回调

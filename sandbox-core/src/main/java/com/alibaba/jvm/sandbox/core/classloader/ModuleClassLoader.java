@@ -1,7 +1,7 @@
 package com.alibaba.jvm.sandbox.core.classloader;
 
 import com.alibaba.jvm.sandbox.api.annotation.Stealth;
-import com.alibaba.jvm.sandbox.api.spi.ModuleJarLifeCycleProvider;
+import com.alibaba.jvm.sandbox.api.spi.ModuleJarUnLoadSpi;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -107,11 +107,14 @@ public class ModuleClassLoader extends RoutingURLClassLoader {
 
     private void onJarUnLoadCompleted() {
         try {
-            final ServiceLoader<ModuleJarLifeCycleProvider> moduleJarLifeCycleProviders
-                    = ServiceLoader.load(ModuleJarLifeCycleProvider.class, this);
-            for (ModuleJarLifeCycleProvider provider : moduleJarLifeCycleProviders) {
-                logger.info("unloading module-jar: onJarUnLoadCompleted() loader={};provider={};", this, getJavaClassName(provider.getClass()));
-                provider.onJarUnLoadCompleted();
+            final ServiceLoader<ModuleJarUnLoadSpi> moduleJarUnLoadSpiServiceLoader
+                    = ServiceLoader.load(ModuleJarUnLoadSpi.class, this);
+            for (final ModuleJarUnLoadSpi moduleJarUnLoadSpi : moduleJarUnLoadSpiServiceLoader) {
+                logger.info("unloading module-jar: onJarUnLoadCompleted() loader={};moduleJarUnLoadSpi={};",
+                        this,
+                        getJavaClassName(moduleJarUnLoadSpi.getClass())
+                );
+                moduleJarUnLoadSpi.onJarUnLoadCompleted();
             }
         } catch (Throwable cause) {
             logger.warn("unloading module-jar: onJarUnLoadCompleted() occur error! loader={};", this, cause);

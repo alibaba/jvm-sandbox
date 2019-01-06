@@ -1,13 +1,9 @@
 package com.alibaba.jvm.sandbox.qatest.core.util;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 

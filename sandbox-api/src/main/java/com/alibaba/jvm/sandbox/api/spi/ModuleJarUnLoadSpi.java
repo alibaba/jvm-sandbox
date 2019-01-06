@@ -1,20 +1,12 @@
 package com.alibaba.jvm.sandbox.api.spi;
 
 /**
- * 模块Jar包生命周期管理
+ * 模块文件卸载
  *
  * @author oldmanpushcart@gmail.com
  * @since {@code sandbox-api:1.2.0}
  */
-public interface ModuleJarLifeCycleProvider {
-
-    /**
-     * 等待
-     * @param loaded
-     * @param inComing
-     * @return
-     */
-    ClassLoader waitingFor(ClassLoader[] loaded, ClassLoader inComing);
+public interface ModuleJarUnLoadSpi {
 
     /**
      * 模块Jar文件卸载完所有模块后，正式卸载Jar文件之前之后调用！

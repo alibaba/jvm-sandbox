@@ -2,7 +2,6 @@ package com.alibaba.jvm.sandbox.qatest.core.manager;
 
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.NameRegexFilter;
-import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.qatest.core.mock.EmptyInstrumentation;
@@ -10,13 +9,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.lang.instrument.ClassDefinition;
-import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.jar.JarFile;
 
 class MockLoadedClassesOnlyInstrumentation extends EmptyInstrumentation {
 

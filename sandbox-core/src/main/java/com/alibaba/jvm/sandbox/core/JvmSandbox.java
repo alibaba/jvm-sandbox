@@ -10,6 +10,9 @@ import com.alibaba.jvm.sandbox.core.util.SpyUtils;
 
 import java.lang.instrument.Instrumentation;
 
+/**
+ * 沙箱
+ */
 public class JvmSandbox {
 
     private final CoreConfigure cfg;
@@ -33,22 +36,22 @@ public class JvmSandbox {
 
     private void init() {
         SpyUtils.init(cfg.getNamespace());
-        inst.addTransformer(this.loadedClassDataSource);
     }
 
 
     /**
      * 获取模块管理器
      *
-     * @return
+     * @return 模块管理器
      */
     public CoreModuleManager getCoreModuleManager() {
         return coreModuleManager;
     }
 
+    /**
+     * 销毁沙箱
+     */
     public void destroy() {
-
-        inst.removeTransformer(loadedClassDataSource);
 
         // 卸载所有的模块
         coreModuleManager.unloadAll();

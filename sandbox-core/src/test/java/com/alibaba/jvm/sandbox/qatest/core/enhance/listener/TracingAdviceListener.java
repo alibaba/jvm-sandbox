@@ -1,6 +1,5 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance.listener;
 
-import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
@@ -16,9 +15,7 @@ import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassNameArr
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassNameArray;
 import static com.alibaba.jvm.sandbox.qatest.core.util.AssertUtils.assertArrayEquals;
 import static com.sun.tools.javac.util.StringUtils.toUpperCase;
-import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.StringUtils.join;
-import static org.junit.Assert.assertEquals;
 
 public class TracingAdviceListener extends AdviceListener {
 

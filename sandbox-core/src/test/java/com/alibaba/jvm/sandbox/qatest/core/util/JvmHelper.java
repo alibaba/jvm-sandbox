@@ -13,7 +13,6 @@ import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedAdviceAdapterListener;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
@@ -28,7 +27,6 @@ import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
 import static com.alibaba.jvm.sandbox.core.CoreConfigure.toConfigure;
 import static com.alibaba.jvm.sandbox.qatest.core.util.QaClassUtils.toByteArray;
 import static com.alibaba.jvm.sandbox.qatest.core.util.QaClassUtils.toResourceName;
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.ArrayUtils.toArray;
 
 /**

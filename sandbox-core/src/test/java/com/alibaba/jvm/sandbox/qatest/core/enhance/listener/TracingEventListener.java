@@ -1,6 +1,5 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance.listener;
 
-import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
@@ -9,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.alibaba.jvm.sandbox.qatest.core.util.AssertUtils.assertArrayEquals;
-import static org.apache.commons.lang3.ArrayUtils.getLength;
-import static org.junit.Assert.assertEquals;
 
 /**
  * 事件跟踪监听器

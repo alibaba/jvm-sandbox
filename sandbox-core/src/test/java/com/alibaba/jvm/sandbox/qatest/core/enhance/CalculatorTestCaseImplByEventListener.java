@@ -16,7 +16,8 @@ import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
 import static com.alibaba.jvm.sandbox.api.ProcessController.throwsImmediately;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
 import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.ERROR_EXCEPTION_MESSAGE;
-import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.TestCase.*;
+import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.TestCase.ADD$EXCEPTION;
+import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.TestCase.SUM$EXCEPTION;
 import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
 import static org.junit.Assert.assertEquals;
 

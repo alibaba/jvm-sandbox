@@ -7,7 +7,6 @@ import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
-import com.alibaba.jvm.sandbox.module.debug.util.InterfaceProxyUtils;
 import com.alibaba.jvm.sandbox.module.debug.util.InterfaceProxyUtils.MethodInterceptor;
 import com.alibaba.jvm.sandbox.module.debug.util.InterfaceProxyUtils.MethodInvocation;
 import com.alibaba.jvm.sandbox.module.debug.util.InterfaceProxyUtils.ProxyMethod;

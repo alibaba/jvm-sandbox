@@ -1,17 +1,12 @@
 package com.alibaba.jvm.sandbox.module.debug;
 
 import ch.qos.logback.classic.LoggerContext;
-import com.alibaba.jvm.sandbox.api.spi.ModuleJarLifeCycleProvider;
+import com.alibaba.jvm.sandbox.api.spi.ModuleJarUnLoadSpi;
 import org.kohsuke.MetaInfServices;
 import org.slf4j.LoggerFactory;
 
-@MetaInfServices(ModuleJarLifeCycleProvider.class)
-public class OnJarUnLoadCompleted implements ModuleJarLifeCycleProvider {
-
-    @Override
-    public ClassLoader waitingFor(ClassLoader[] loaded, ClassLoader inComing) {
-        return null;
-    }
+@MetaInfServices(ModuleJarUnLoadSpi.class)
+public class OnJarUnLoadCompleted implements ModuleJarUnLoadSpi {
 
     @Override
     public void onJarUnLoadCompleted() {

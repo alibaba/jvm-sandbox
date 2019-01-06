@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
-import java.security.ProtectionDomain;
 import java.util.*;
 
 import static com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory.make;
@@ -128,55 +127,4 @@ public class DefaultLoadedClassDataSource implements CoreLoadedClassDataSource {
         return new LinkedHashSet<Class<?>>(find(new ExtFilterMatcher(make(filter)), false));
     }
 
-    private void appendClassLoader(final ClassLoader loader,
-                                   final Set<ClassLoader> loadedClassLoaderSet) {
-        if (null == loader) {
-            return;
-        }
-        loadedClassLoaderSet.add(loader);
-        loadedClassLoaderSet.add(loader.getParent());
-    }
-
-    @Override
-    public ClassLoader[] listLoadedClassLoader() {
-        final Set<ClassLoader> loadedClassLoaderSet = new LinkedHashSet<ClassLoader>();
-        for (Class<?> loadedClass : list()) {
-            if (null == loadedClass) {
-                continue;
-            }
-            appendClassLoader(loadedClass.getClassLoader(), loadedClassLoaderSet);
-
-        }
-        return loadedClassLoaderSet.toArray(new ClassLoader[]{});
-    }
-
-    @Override
-    public void appendLoadedClassLoaderListener(LoadedClassLoaderListener listener) {
-        synchronized (loadedClassLoaderListeners) {
-            loadedClassLoaderListeners.add(listener);
-        }
-    }
-
-    @Override
-    public void removeLoadedClassLoaderListener(LoadedClassLoaderListener listener) {
-        synchronized (loadedClassLoaderListeners) {
-            loadedClassLoaderListeners.remove(listener);
-        }
-    }
-
-    @Override
-    public byte[] transform(final ClassLoader loader,
-                            final String className,
-                            final Class<?> classBeingRedefined,
-                            final ProtectionDomain protectionDomain,
-                            final byte[] classfileBuffer) {
-        final List<LoadedClassLoaderListener> cloneLoadedClassLoaderListener
-                = new ArrayList<LoadedClassLoaderListener>(loadedClassLoaderListeners);
-        if (null != loader) {
-            for (final LoadedClassLoaderListener listener : cloneLoadedClassLoaderListener) {
-                listener.onLoaded(loader);
-            }
-        }
-        return classfileBuffer;
-    }
 }

@@ -1,13 +1,6 @@
 package com.alibaba.jvm.sandbox.qatest.core.issues;
 
-import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingEventListener;
-import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
-import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
 import org.junit.Test;
-
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
-import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
-import static org.junit.Assert.assertEquals;
 
 /**
  * 修复<a href="https://github.com/alibaba/jvm-sandbox/issues/125">#125</a>

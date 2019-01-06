@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.alibaba.jvm.sandbox.qatest.core.util.AssertUtils.assertArrayEquals;
-import static org.apache.commons.lang3.ArrayUtils.getLength;
-import static org.junit.Assert.assertEquals;
 
 public class LineNumTracingEventListener extends InterruptedEventListener {
     private final List<Integer> lineTracing = new ArrayList<Integer>();
