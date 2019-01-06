@@ -108,7 +108,11 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
             conn = coreModule.append(new CoreModule.ReleaseResource<WebSocketConnection>(toWebSocketConnection(connection)) {
                 @Override
                 public void release() {
-                    get().disconnect();
+                    final WebSocketConnection resource = get();
+                    if(null != resource) {
+                        resource.disconnect();
+                    }
+
                 }
             });
             listener.onOpen(conn);

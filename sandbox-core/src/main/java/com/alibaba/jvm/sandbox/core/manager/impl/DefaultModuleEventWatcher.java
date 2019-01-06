@@ -201,14 +201,17 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
 
         // 注册到CoreModule中
         coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
-        coreModule.append(new ReleaseResource<SandboxClassFileTransformer>(sandClassFileTransformer) {
-            @Override
-            public void release() {
-                if (get().isAutoRelease()) {
-                    delete(get().getWatchId());
+        if (sandClassFileTransformer.isAutoRelease()) {
+            coreModule.append(new ReleaseResource<SandboxClassFileTransformer>(sandClassFileTransformer) {
+                @Override
+                public void release() {
+                    final SandboxClassFileTransformer resource = get();
+                    if (null != resource) {
+                        delete(resource.getWatchId());
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // 注册到JVM加载上ClassFileTransformer处理新增的类
         inst.addTransformer(sandClassFileTransformer, true);
@@ -280,7 +283,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                 cftIt.remove();
 
                 // 删除可释放资源
-                if(sandboxClassFileTransformer.isAutoRelease()) {
+                if (!sandboxClassFileTransformer.isAutoRelease()) {
                     coreModule.release(sandboxClassFileTransformer);
                 }
 

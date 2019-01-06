@@ -220,13 +220,14 @@ public class CoreModule {
             }
 
             // 删除掉已经被GC掉的资源
-            if (null == resourceRef.get()) {
+            final Object resource = resourceRef.get();
+            if (null == resource) {
                 resourceRefIt.remove();
                 logger.info("remove empty resource in module={}", uniqueId);
                 continue;
             }
 
-            if (target.equals(resourceRef.get())) {
+            if (target.equals(resource)) {
                 resourceRefIt.remove();
                 logger.debug("release resource={} in module={}", resourceRef.get(), uniqueId);
                 try {
