@@ -280,7 +280,9 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                 cftIt.remove();
 
                 // 删除可释放资源
-                coreModule.release(sandboxClassFileTransformer);
+                if(sandboxClassFileTransformer.isAutoRelease()) {
+                    coreModule.release(sandboxClassFileTransformer);
+                }
 
             }
         }
