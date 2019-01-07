@@ -27,7 +27,6 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final boolean isAutoRelease;
     private final int watchId;
     private final String uniqueId;
     private final Matcher matcher;
@@ -39,15 +38,13 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
     private final int listenerId;
     private final AffectStatistic affectStatistic = new AffectStatistic();
 
-    SandboxClassFileTransformer(final boolean isAutoRelease,
-                                final int watchId,
+    SandboxClassFileTransformer(final int watchId,
                                 final String uniqueId,
                                 final Matcher matcher,
                                 final EventListener eventListener,
                                 final boolean isEnableUnsafe,
                                 final Event.Type[] eventTypeArray,
                                 final String namespace) {
-        this.isAutoRelease = isAutoRelease;
         this.watchId = watchId;
         this.uniqueId = uniqueId;
         this.matcher = matcher;
@@ -214,12 +211,4 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
         return affectStatistic;
     }
 
-    /**
-     * 是否是自释放资源
-     *
-     * @return TRUE:自释放;FALSE:非自释放
-     */
-    public boolean isAutoRelease() {
-        return isAutoRelease;
-    }
 }

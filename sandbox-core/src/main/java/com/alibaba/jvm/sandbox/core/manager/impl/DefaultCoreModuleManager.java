@@ -5,6 +5,7 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.resource.*;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
 import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
@@ -207,13 +208,26 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
                 // ModuleEventWatcher对象注入
                 else if (ModuleEventWatcher.class.isAssignableFrom(fieldType)) {
-                    final ModuleEventWatcher moduleEventWatcher = new DefaultModuleEventWatcher(
+                    final ModuleEventWatcher moduleEventWatcher = coreModule.append(new ReleaseResource<ModuleEventWatcher>(new DefaultModuleEventWatcher(
                             inst,
                             classDataSource,
                             coreModule,
                             cfg.isEnableUnsafe(),
                             cfg.getNamespace()
-                    );
+                    )) {
+                        @Override
+                        public void release() {
+                            logger.info("release all SandboxClassFileTransformer for module={}", coreModule.getUniqueId());
+                            final ModuleEventWatcher moduleEventWatcher = get();
+                            if (null != moduleEventWatcher) {
+                                for (final SandboxClassFileTransformer sandboxClassFileTransformer
+                                        : new ArrayList<SandboxClassFileTransformer>(coreModule.getSandboxClassFileTransformers())) {
+                                    moduleEventWatcher.delete(sandboxClassFileTransformer.getWatchId());
+                                }
+                            }
+                        }
+                    });
+
                     writeField(
                             resourceField,
                             module,
