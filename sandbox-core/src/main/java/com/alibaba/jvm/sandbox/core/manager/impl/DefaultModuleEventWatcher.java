@@ -42,7 +42,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
     private final String namespace;
 
     // 观察ID序列生成器
-    private static final Sequencer watchIdSequencer = new Sequencer();
+    private final Sequencer watchIdSequencer = new Sequencer();
 
     DefaultModuleEventWatcher(final Instrumentation inst,
                               final CoreLoadedClassDataSource classDataSource,
