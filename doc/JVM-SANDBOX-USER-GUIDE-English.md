@@ -155,7 +155,7 @@ Then the success of the start, the sandbox has been successfully implanted in th
          2. You must implement the `com.alibaba.jvm.sandbox.api.Module` interface
          3. You must complete the registration in the `META-INF / services / com.alibaba.jvm.sandbox.api.Module` file (Java SPI specification requirements)
         
-     - All modules declared in the same JAR package share the same ModuleClassLoader   
+     - All modules declared in the same JAR package share the same ModuleJarClassLoader   
         
      - There are four states in the module
 
@@ -234,7 +234,7 @@ Then the success of the start, the sandbox has been successfully implanted in th
 
      - HTTP link
      - WEBSOCKET link
-     - ModuleClassLoader
+     - ModuleJarClassLoader
      - The event is caused by the unloading of the module
 
 - `-f`
@@ -283,7 +283,7 @@ Then the success of the start, the sandbox has been successfully implanted in th
    >    STATE : FROZEN
     >     MODE : {AGENT,ATTACH}
    >    CLASS : class com.alibaba.jvm.sandbox.module.mgr.ModuleMgrModule
-  >   LOADER : ModuleClassLoader[crc32=1721245995;file=/Users/vlinux/opt/sandbox/lib/../module/sandbox-mgr-module.jar;]
+  >   LOADER : ModuleJarClassLoader[crc32=1721245995;file=/Users/vlinux/opt/sandbox/lib/../module/sandbox-mgr-module.jar;]
     >     cCnt : 0
     >     mCnt : 0
   > ```

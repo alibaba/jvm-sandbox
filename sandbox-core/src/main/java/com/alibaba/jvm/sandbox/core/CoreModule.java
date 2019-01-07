@@ -1,7 +1,7 @@
 package com.alibaba.jvm.sandbox.core;
 
 import com.alibaba.jvm.sandbox.api.Module;
-import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
+import com.alibaba.jvm.sandbox.core.classloader.ModuleJarClassLoader;
 import com.alibaba.jvm.sandbox.core.manager.impl.SandboxClassFileTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class CoreModule {
     private final File jarFile;
 
     // 模块加载的ClassLoader
-    private final ModuleClassLoader loader;
+    private final ModuleJarClassLoader loader;
 
     // 模块
     private final Module module;
@@ -55,7 +55,7 @@ public class CoreModule {
      */
     public CoreModule(final String uniqueId,
                       final File jarFile,
-                      final ModuleClassLoader loader,
+                      final ModuleJarClassLoader loader,
                       final Module module) {
         this.uniqueId = uniqueId;
         this.jarFile = jarFile;
@@ -114,11 +114,11 @@ public class CoreModule {
     }
 
     /**
-     * 获取对应的ModuleClassLoader
+     * 获取对应的ModuleJarClassLoader
      *
-     * @return ModuleClassLoader
+     * @return ModuleJarClassLoader
      */
-    public ModuleClassLoader getLoader() {
+    public ModuleJarClassLoader getLoader() {
         return loader;
     }
 

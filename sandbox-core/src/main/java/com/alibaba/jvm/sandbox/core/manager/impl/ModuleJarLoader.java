@@ -2,7 +2,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
-import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
+import com.alibaba.jvm.sandbox.core.classloader.ModuleJarClassLoader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ class ModuleJarLoader {
     }
 
 
-    private boolean loadingModules(final ModuleClassLoader moduleClassLoader,
+    private boolean loadingModules(final ModuleJarClassLoader moduleClassLoader,
                                    final ModuleLoadCallback mCb) {
 
         final Set<String> loadedModuleUniqueIds = new LinkedHashSet<String>();
@@ -114,25 +114,25 @@ class ModuleJarLoader {
     void load(final ModuleLoadCallback mCb) throws IOException {
 
         boolean hasModuleLoadedSuccessFlag = false;
-        ModuleClassLoader moduleClassLoader = null;
+        ModuleJarClassLoader moduleJarClassLoader = null;
         logger.info("prepare loading module-jar={};", moduleJarFile);
         try {
-            moduleClassLoader = new ModuleClassLoader(moduleJarFile);
+            moduleJarClassLoader = new ModuleJarClassLoader(moduleJarFile);
 
             final ClassLoader preTCL = Thread.currentThread().getContextClassLoader();
-            Thread.currentThread().setContextClassLoader(moduleClassLoader);
+            Thread.currentThread().setContextClassLoader(moduleJarClassLoader);
 
             try {
-                hasModuleLoadedSuccessFlag = loadingModules(moduleClassLoader, mCb);
+                hasModuleLoadedSuccessFlag = loadingModules(moduleJarClassLoader, mCb);
             } finally {
                 Thread.currentThread().setContextClassLoader(preTCL);
             }
 
         } finally {
             if (!hasModuleLoadedSuccessFlag
-                    && null != moduleClassLoader) {
-                logger.warn("loading module-jar completed, but NONE module loaded, will be close ModuleClassLoader. module-jar={};", moduleJarFile);
-                moduleClassLoader.closeIfPossible();
+                    && null != moduleJarClassLoader) {
+                logger.warn("loading module-jar completed, but NONE module loaded, will be close ModuleJarClassLoader. module-jar={};", moduleJarFile);
+                moduleJarClassLoader.closeIfPossible();
             }
         }
 
@@ -157,7 +157,7 @@ class ModuleJarLoader {
                     Class moduleClass,
                     Module module,
                     File moduleJarFile,
-                    ModuleClassLoader moduleClassLoader) throws Throwable;
+                    ModuleJarClassLoader moduleClassLoader) throws Throwable;
 
     }
 

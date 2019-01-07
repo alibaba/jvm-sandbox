@@ -157,7 +157,7 @@ EVENT_POOL_KEY_MAX : 2000
          1. 必须实现`com.alibaba.jvm.sandbox.api.Module`接口
          1. 必须完成`META-INF/services/com.alibaba.jvm.sandbox.api.Module`文件中的注册（Java SPI规范要求）
         
-     - 同一个JAR包所声明的所有模块共享同一个ModuleClassLoader   
+     - 同一个JAR包所声明的所有模块共享同一个ModuleJarClassLoader   
         
      - 模块一共有四种状态
 
@@ -234,7 +234,7 @@ EVENT_POOL_KEY_MAX : 2000
 
      - HTTP链接
      - WEBSOCKET链接
-     - ModuleClassLoader
+     - ModuleJarClassLoader
      - 待卸载模块引起的事件插桩
 
 - `-f`
@@ -283,7 +283,7 @@ EVENT_POOL_KEY_MAX : 2000
    >    STATE : FROZEN
     >     MODE : {AGENT,ATTACH}
    >    CLASS : class com.alibaba.jvm.sandbox.module.mgr.ModuleMgrModule
-  >   LOADER : ModuleClassLoader[crc32=1721245995;file=/Users/luanjia/opt/sandbox/lib/../module/sandbox-mgr-module.jar;]
+  >   LOADER : ModuleJarClassLoader[crc32=1721245995;file=/Users/luanjia/opt/sandbox/lib/../module/sandbox-mgr-module.jar;]
     >     cCnt : 0
     >     mCnt : 0
   > ```

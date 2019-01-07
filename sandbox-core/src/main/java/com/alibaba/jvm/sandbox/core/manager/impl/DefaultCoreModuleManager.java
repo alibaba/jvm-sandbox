@@ -6,7 +6,7 @@ import com.alibaba.jvm.sandbox.api.resource.*;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
-import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
+import com.alibaba.jvm.sandbox.core.classloader.ModuleJarClassLoader;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
@@ -155,7 +155,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     private synchronized void load(final String uniqueId,
                                    final Module module,
                                    final File moduleJarFile,
-                                   final ModuleClassLoader moduleClassLoader) throws ModuleException {
+                                   final ModuleJarClassLoader moduleClassLoader) throws ModuleException {
 
         if (loadedModuleBOMap.containsKey(uniqueId)) {
             logger.debug("module already loaded. module={};", uniqueId);
@@ -378,7 +378,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         coreModule.releaseAll();
 
         // 尝试关闭ClassLoader
-        closeModuleClassLoaderIfNecessary(coreModule.getLoader());
+        closeModuleJarClassLoaderIfNecessary(coreModule.getLoader());
 
         return coreModule;
     }
@@ -529,7 +529,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                            final Class moduleClass,
                            final Module module,
                            final File moduleJarFile,
-                           final ModuleClassLoader moduleClassLoader) throws Throwable {
+                           final ModuleJarClassLoader moduleClassLoader) throws Throwable {
 
             // 如果之前已经加载过了相同ID的模块，则放弃当前模块的加载
             if (loadedModuleBOMap.containsKey(uniqueId)) {
@@ -600,18 +600,18 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     }
 
     /**
-     * 关闭Module的ClassLoader
-     * 如ModuleClassLoader所加载上来的所有模块都已经被卸载，则该ClassLoader需要主动进行关闭
+     * 关闭ModuleJarClassLoader
+     * 如ModuleJarClassLoader所加载上来的所有模块都已经被卸载，则该ClassLoader需要主动进行关闭
      *
      * @param loader 需要被关闭的ClassLoader
      */
-    private void closeModuleClassLoaderIfNecessary(final ClassLoader loader) {
+    private void closeModuleJarClassLoaderIfNecessary(final ClassLoader loader) {
 
-        if (!(loader instanceof ModuleClassLoader)) {
+        if (!(loader instanceof ModuleJarClassLoader)) {
             return;
         }
 
-        // 查找已经注册的模块中是否仍然还包含有ModuleClassLoader的引用
+        // 查找已经注册的模块中是否仍然还包含有ModuleJarClassLoader的引用
         boolean hasRef = false;
         for (final CoreModule coreModule : loadedModuleBOMap.values()) {
             if (loader == coreModule.getLoader()) {
@@ -621,8 +621,8 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         }
 
         if (!hasRef) {
-            logger.info("module-classloader will be close: all module unloaded.", loader);
-            ((ModuleClassLoader) loader).closeIfPossible();
+            logger.info("ModuleJarClassLoader will be close: all module unloaded.", loader);
+            ((ModuleJarClassLoader) loader).closeIfPossible();
         }
 
     }
@@ -673,7 +673,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
             // 2. 找出所有待卸载的已加载用户模块
             for (final CoreModule coreModule : loadedModuleBOMap.values()) {
-                final ModuleClassLoader moduleClassLoader = coreModule.getLoader();
+                final ModuleJarClassLoader moduleJarClassLoader = coreModule.getLoader();
 
                 // 如果是系统模块目录则跳过
                 if (isOptimisticDirectoryContainsFile(systemModuleLibDir, coreModule.getJarFile())) {
@@ -685,10 +685,10 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 }
 
                 // 如果CRC32已经在这次待加载的集合中，则说明这个文件没有变动，忽略
-                if (checksumCRC32s.contains(moduleClassLoader.getChecksumCRC32())) {
+                if (checksumCRC32s.contains(moduleJarClassLoader.getChecksumCRC32())) {
                     logger.info("soft-flushing module: module-jar already loaded, ignored. module-jar={};CRC32={};",
                             coreModule.getJarFile(),
-                            moduleClassLoader.getChecksumCRC32()
+                            moduleJarClassLoader.getChecksumCRC32()
                     );
                     continue;
                 }
