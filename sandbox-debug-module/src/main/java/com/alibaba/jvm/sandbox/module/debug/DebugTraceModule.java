@@ -10,6 +10,7 @@ import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatcher;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
+import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
 import com.alibaba.jvm.sandbox.module.debug.textui.TTree;
 import org.kohsuke.MetaInfServices;
 
@@ -27,6 +28,7 @@ public class DebugTraceModule extends ParamSupported implements Module {
 
     @Resource
     private ModuleEventWatcher moduleEventWatcher;
+
 
     @Command("trace")
     public void trace(final Map<String, String> param, final PrintWriter writer) {
