@@ -416,7 +416,6 @@ public class EventListenerHandlers {
             return;
         }
 
-
         final EventProcessor.Process process = wrap.processRef.get();
 
         // 如果当前调用过程信息堆栈是空的,说明BEFORE/LINE错位

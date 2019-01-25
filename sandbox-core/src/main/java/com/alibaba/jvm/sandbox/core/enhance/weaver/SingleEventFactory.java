@@ -4,6 +4,8 @@ import com.alibaba.jvm.sandbox.api.event.*;
 import com.alibaba.jvm.sandbox.core.util.UnsafeUtils;
 import sun.misc.Unsafe;
 
+import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtSetClassDeclaredJavaFieldValue;
+
 /**
  * 单例事件工厂
  */
@@ -198,11 +200,16 @@ class SingleEventFactory {
                 break;
             case IMMEDIATELY_THROWS:
             case THROWS:
-                unsafe.putObject(event, throwableFieldInThrowsEventOffset, null);
+                // FIXED #130
+                // unsafe.putObject(event, throwableFieldInThrowsEventOffset, null);
+                unCaughtSetClassDeclaredJavaFieldValue(ThrowsEvent.class, "throwable", event, null);
                 break;
             case IMMEDIATELY_RETURN:
             case RETURN:
-                unsafe.putObject(event, objectFieldInReturnEventOffset, null);
+                // FIXED #130
+                // unsafe.putObject(event, objectFieldInReturnEventOffset, null);
+                unCaughtSetClassDeclaredJavaFieldValue(ReturnEvent.class, "object", event, null);
+                break;
         }
     }
 
