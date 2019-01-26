@@ -20,8 +20,6 @@ public class EventWatchBuilderTestCase {
 
         final MockForBuilderModuleEventWatcher mockForBuilderModuleEventWatcher
                 = new MockForBuilderModuleEventWatcher();
-        final MockForBuilderProgress mockForBuilderProgress
-                = new MockForBuilderProgress();
         new EventWatchBuilder(mockForBuilderModuleEventWatcher)
                 .onClass(String.class)
                 .onBehavior("toString")
@@ -41,15 +39,12 @@ public class EventWatchBuilderTestCase {
 
         final MockForBuilderModuleEventWatcher mockForBuilderModuleEventWatcher
                 = new MockForBuilderModuleEventWatcher();
-        final MockForBuilderProgress mockForBuilderProgress
-                = new MockForBuilderProgress();
         new EventWatchBuilder(mockForBuilderModuleEventWatcher)
                 .onClass(String.class)
                 .onBehavior("toString")
                 .onWatching()
                 .withCall()
                 .withLine()
-                .withProgress(mockForBuilderProgress)
                 .onWatch(new AdviceListener());
 
         Assert.assertEquals(9, mockForBuilderModuleEventWatcher.getEventTypeArray().length);
@@ -70,14 +65,11 @@ public class EventWatchBuilderTestCase {
 
         final MockForBuilderModuleEventWatcher mockForBuilderModuleEventWatcher
                 = new MockForBuilderModuleEventWatcher();
-        final MockForBuilderProgress mockForBuilderProgress
-                = new MockForBuilderProgress();
         new EventWatchBuilder(mockForBuilderModuleEventWatcher)
                 .onClass(String.class)
                 .onBehavior("toString")
                 .onWatching()
                 .withCall()
-                .withProgress(mockForBuilderProgress)
                 .onWatch(new AdviceListener());
 
         Assert.assertEquals(8, mockForBuilderModuleEventWatcher.getEventTypeArray().length);
@@ -98,14 +90,11 @@ public class EventWatchBuilderTestCase {
 
         final MockForBuilderModuleEventWatcher mockForBuilderModuleEventWatcher
                 = new MockForBuilderModuleEventWatcher();
-        final MockForBuilderProgress mockForBuilderProgress
-                = new MockForBuilderProgress();
         new EventWatchBuilder(mockForBuilderModuleEventWatcher)
                 .onClass(String.class)
                 .onBehavior("toString")
                 .onWatching()
                 .withLine()
-                .withProgress(mockForBuilderProgress)
                 .onWatch(new AdviceListener());
 
         Assert.assertEquals(6, mockForBuilderModuleEventWatcher.getEventTypeArray().length);
