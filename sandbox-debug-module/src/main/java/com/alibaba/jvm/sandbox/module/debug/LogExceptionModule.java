@@ -24,7 +24,7 @@ import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
  */
 @MetaInfServices(Module.class)
 @Information(id = "debug-exception-logger", version = "0.0.2", author = "luanjia@taobao.com")
-public class ExceptionLoggerModule implements Module, LoadCompleted {
+public class LogExceptionModule implements Module, LoadCompleted {
 
     private final Logger exLogger = LoggerFactory.getLogger("DEBUG-EXCEPTION-LOGGER");
 

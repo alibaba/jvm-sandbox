@@ -31,10 +31,10 @@ import static org.apache.commons.lang3.ArrayUtils.contains;
  * @author luanjia@taobao.com
  */
 @MetaInfServices(Module.class)
-@Information(id = "debug-http-logger", version = "0.0.2", author = "luanjia@taobao.com")
-public class HttpAccessLoggerModule implements Module, LoadCompleted {
+@Information(id = "debug-servlet-access", version = "0.0.2", author = "luanjia@taobao.com")
+public class LogServletAccessModule implements Module, LoadCompleted {
 
-    private final Logger stLogger = LoggerFactory.getLogger("DEBUG-SERVLET-LOGGER");
+    private final Logger logger = LoggerFactory.getLogger("DEBUG-SERVLET-ACCESS");
 
     @Resource
     private ModuleEventWatcher moduleEventWatcher;
@@ -213,7 +213,7 @@ public class HttpAccessLoggerModule implements Module, LoadCompleted {
     private void logAccess(final HttpAccess ha,
                            final long costMs,
                            final Throwable cause) {
-        stLogger.info("{};{};{};{}ms;{};[{}];{};",
+        logger.info("{};{};{};{}ms;{};[{}];{};",
                 ha.from,
                 ha.status,
                 ha.method,
