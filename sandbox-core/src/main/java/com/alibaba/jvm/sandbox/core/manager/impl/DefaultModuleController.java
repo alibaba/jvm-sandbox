@@ -2,7 +2,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.ModuleException;
 import com.alibaba.jvm.sandbox.api.resource.ModuleController;
-import com.alibaba.jvm.sandbox.core.domain.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 
 /**

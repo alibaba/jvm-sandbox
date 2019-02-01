@@ -16,11 +16,6 @@ public class CoreLauncher {
                         final String agentJarPath,
                         final String token) throws Exception {
 
-        System.out.println(String.format("attaching to JVM(%s), agent-jar=%s;",
-                targetJvmPid,
-                agentJarPath
-        ));
-
         // 加载agent
         attachAgent(targetJvmPid, agentJarPath, token);
 

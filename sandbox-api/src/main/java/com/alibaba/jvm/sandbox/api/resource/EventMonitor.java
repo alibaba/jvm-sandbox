@@ -7,7 +7,9 @@ import com.alibaba.jvm.sandbox.api.event.Event;
  *
  * @author luanjia@taobao.com
  * @since {@code sandbox-api:1.0.9}
+ * @deprecated 后续不再支持事件池
  */
+@Deprecated
 public interface EventMonitor {
 
     /**
@@ -15,6 +17,7 @@ public interface EventMonitor {
      *
      * @author luanjia@taobao.com
      * @since {@code sandbox-api:1.0.9}
+     * @deprecated 后续不再支持事件池
      */
     interface EventPoolInfo {
 

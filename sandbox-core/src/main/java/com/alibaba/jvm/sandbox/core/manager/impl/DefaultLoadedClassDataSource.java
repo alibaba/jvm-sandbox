@@ -1,8 +1,8 @@
 package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.filter.Filter;
-import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
+import com.alibaba.jvm.sandbox.core.manager.LoadedClassLoaderListener;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.UnsupportedMatcher;
@@ -24,12 +24,14 @@ public class DefaultLoadedClassDataSource implements CoreLoadedClassDataSource {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Instrumentation inst;
-    private final CoreConfigure cfg;
+    private final boolean isEnableUnsafe;
+    private final List<LoadedClassLoaderListener> loadedClassLoaderListeners
+            = new ArrayList<LoadedClassLoaderListener>();
 
     public DefaultLoadedClassDataSource(final Instrumentation inst,
-                                        final CoreConfigure cfg) {
+                                        final boolean isEnableUnsafe) {
         this.inst = inst;
-        this.cfg = cfg;
+        this.isEnableUnsafe = isEnableUnsafe;
     }
 
     @Override
@@ -84,12 +86,12 @@ public class DefaultLoadedClassDataSource implements CoreLoadedClassDataSource {
             // 过滤掉对于JVM认为不可修改的类
             if (isRemoveUnsupported
                     && !inst.isModifiableClass(clazz)) {
-                logger.debug("remove from findForReTransform, because class:{} is unModifiable", clazz.getName());
+                // logger.debug("remove from findForReTransform, because class:{} is unModifiable", clazz.getName());
                 continue;
             }
             try {
                 if (isRemoveUnsupported) {
-                    if (new UnsupportedMatcher(clazz.getClassLoader(), cfg.isEnableUnsafe())
+                    if (new UnsupportedMatcher(clazz.getClassLoader(), isEnableUnsafe)
                             .and(matcher)
                             .matching(ClassStructureFactory.createClassStructure(clazz))
                             .isMatched()) {

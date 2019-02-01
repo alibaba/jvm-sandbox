@@ -12,9 +12,10 @@ import java.net.InetSocketAddress;
 
 /**
  * 默认配置信息实现
- * Created by luanjia@taobao.com on 2017/2/9.
+ *
+ * @author luanjia@taobao.com
  */
-public class DefaultConfigInfo implements ConfigInfo {
+class DefaultConfigInfo implements ConfigInfo {
 
     private final CoreConfigure cfg;
 
@@ -69,45 +70,45 @@ public class DefaultConfigInfo implements ConfigInfo {
 
     @Override
     public boolean isEnableEventPool() {
-        return cfg.isEventPoolEnable();
+        return false;
     }
 
     @Deprecated
     @Override
     public int getEventPoolKeyMin() {
-        return getEventPoolMaxIdlePerEvent();
+        return 0;
     }
 
     @Deprecated
     @Override
     public int getEventPoolKeyMax() {
-        return getEventPoolMaxTotal();
+        return 0;
     }
 
     @Deprecated
     @Override
     public int getEventPoolTotal() {
-        return getEventPoolMaxTotal();
+        return 0;
     }
 
     @Override
     public int getEventPoolMaxTotal() {
-        return cfg.getEventPoolMaxTotal();
+        return 0;
     }
 
     @Override
     public int getEventPoolMinIdlePerEvent() {
-        return cfg.getEventPoolMinIdlePerEvent();
+        return 0;
     }
 
     @Override
     public int getEventPoolMaxIdlePerEvent() {
-        return cfg.getEventPoolMaxIdlePerEvent();
+        return 0;
     }
 
     @Override
     public int getEventPoolMaxTotalPerEvent() {
-        return cfg.getEventPoolMaxTotalPerEvent();
+        return 0;
     }
 
     @Override

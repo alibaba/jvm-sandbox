@@ -15,38 +15,13 @@ import static java.lang.String.format;
 /**
  * SandboxAgent启动器
  * <ul>
- *     <li>这个类的所有静态属性都必须和版本、环境无关</li>
- *     <li>这个类删除、修改方法时必须考虑多版本情况下，兼容性问题!</li>
+ * <li>这个类的所有静态属性都必须和版本、环境无关</li>
+ * <li>这个类删除、修改方法时必须考虑多版本情况下，兼容性问题!</li>
  * </ul>
  *
  * @author luanjia@taobao.com
  */
 public class AgentLauncher {
-
-//    // sandbox配置文件目录
-//    private static final String SANDBOX_CFG_PATH
-//            = SANDBOX_HOME + File.separatorChar + "cfg";
-//
-//    // 模块目录
-//    private static final String SANDBOX_MODULE_PATH
-//            = SANDBOX_HOME + File.separatorChar + "module";
-//
-//
-//    // sandbox核心工程文件
-//    private static final String SANDBOX_CORE_JAR_PATH
-//            = SANDBOX_HOME + File.separatorChar + "lib" + File.separator + "sandbox-core.jar";
-//
-//    // sandbox-spy工程文件
-//    private static final String SANDBOX_SPY_JAR_PATH
-//            = SANDBOX_HOME + File.separatorChar + "lib" + File.separator + "sandbox-spy.jar";
-//
-//    private static final String SANDBOX_PROPERTIES_PATH
-//            = SANDBOX_CFG_PATH + File.separator + "sandbox.properties";
-//
-//    // sandbox-provider库目录
-//    private static final String SANDBOX_PROVIDER_LIB_PATH
-//            = SANDBOX_HOME + File.separatorChar + "provider";
-
 
     private static String getSandboxCfgPath(String sandboxHome) {
         return sandboxHome + File.separatorChar + "cfg";
@@ -114,7 +89,7 @@ public class AgentLauncher {
      */
     public static void premain(String featureString, Instrumentation inst) {
         LAUNCH_MODE = LAUNCH_MODE_AGENT;
-        main(toFeatureMap(featureString), inst);
+        install(toFeatureMap(featureString), inst);
     }
 
     /**
@@ -130,7 +105,7 @@ public class AgentLauncher {
         writeAttachResult(
                 getNamespace(featureMap),
                 getToken(featureMap),
-                main(featureMap, inst)
+                install(featureMap, inst)
         );
     }
 
@@ -202,40 +177,37 @@ public class AgentLauncher {
     }
 
     /**
-     * 获取当前命名空间下的ClassLoader
-     * <p>
-     * 该方法将会被{@code ControlModule#shutdown}通过反射调用，
-     * 请保持方法声明一致
+     * 删除指定命名空间下的jvm-sandbox
      *
-     * @param namespace 命名空间
-     * @return 当前的ClassLoader
-     * @since {@code sandbox-api:1.0.15}
+     * @param namespace 指定命名空间
+     * @throws Throwable 删除失败
      */
     @SuppressWarnings("unused")
-    public static ClassLoader getClassLoader(final String namespace) {
-        return sandboxClassLoaderMap.get(namespace);
+    public static synchronized void uninstall(final String namespace) throws Throwable {
+        final SandboxClassLoader sandboxClassLoader = sandboxClassLoaderMap.get(namespace);
+        if (null == sandboxClassLoader) {
+            return;
+        }
+
+        // 关闭服务器
+        final Class<?> classOfProxyServer = sandboxClassLoader.loadClass(CLASS_OF_PROXY_CORE_SERVER);
+        classOfProxyServer.getMethod("destroy")
+                .invoke(classOfProxyServer.getMethod("getInstance").invoke(null));
+
+        // 关闭SandboxClassLoader
+        sandboxClassLoader.closeIfPossible();
+        sandboxClassLoaderMap.remove(namespace);
     }
 
     /**
-     * 清理namespace所指定的ClassLoader
-     * <p>
-     * 该方法将会被{@code ControlModule#shutdown}通过反射调用，
-     * 请保持方法声明一致
+     * 在当前JVM安装jvm-sandbox
      *
-     * @param namespace 命名空间
-     * @return 被清理的ClassLoader
+     * @param featureMap 启动参数配置
+     * @param inst       inst
+     * @return 服务器IP:PORT
      */
-    @SuppressWarnings("unused")
-    public static synchronized ClassLoader cleanClassLoader(final String namespace) {
-        final SandboxClassLoader sandboxClassLoader = sandboxClassLoaderMap.remove(namespace);
-        if (null != sandboxClassLoader) {
-            sandboxClassLoader.closeIfPossible();
-        }
-        return sandboxClassLoader;
-    }
-
-    private static synchronized InetSocketAddress main(final Map<String, String> featureMap,
-                                                       final Instrumentation inst) {
+    private static synchronized InetSocketAddress install(final Map<String, String> featureMap,
+                                                          final Instrumentation inst) {
 
         final String namespace = getNamespace(featureMap);
         final String propertiesFilePath = getPropertiesFilePath(featureMap);
@@ -250,29 +222,29 @@ public class AgentLauncher {
             )));
 
             // 构造自定义的类加载器，尽量减少Sandbox对现有工程的侵蚀
-            final ClassLoader agentLoader = loadOrDefineClassLoader(
+            final ClassLoader sandboxClassLoader = loadOrDefineClassLoader(
                     namespace,
                     getSandboxCoreJarPath(getSandboxHome(featureMap))
                     // SANDBOX_CORE_JAR_PATH
             );
 
             // CoreConfigure类定义
-            final Class<?> classOfConfigure = agentLoader.loadClass(CLASS_OF_CORE_CONFIGURE);
+            final Class<?> classOfConfigure = sandboxClassLoader.loadClass(CLASS_OF_CORE_CONFIGURE);
 
             // 反序列化成CoreConfigure类实例
             final Object objectOfCoreConfigure = classOfConfigure.getMethod("toConfigure", String.class, String.class)
                     .invoke(null, coreFeatureString, propertiesFilePath);
 
             // CoreServer类定义
-            final Class<?> classOfProxyServer = agentLoader.loadClass(CLASS_OF_PROXY_CORE_SERVER);
+            final Class<?> classOfProxyServer = sandboxClassLoader.loadClass(CLASS_OF_PROXY_CORE_SERVER);
 
             // 获取CoreServer单例
-            final Object objectOfCoreServer = classOfProxyServer
+            final Object objectOfProxyServer = classOfProxyServer
                     .getMethod("getInstance")
                     .invoke(null);
 
             // CoreServer.isBind()
-            final boolean isBind = (Boolean) classOfProxyServer.getMethod("isBind").invoke(objectOfCoreServer);
+            final boolean isBind = (Boolean) classOfProxyServer.getMethod("isBind").invoke(objectOfProxyServer);
 
 
             // 如果未绑定,则需要绑定一个地址
@@ -280,9 +252,9 @@ public class AgentLauncher {
                 try {
                     classOfProxyServer
                             .getMethod("bind", classOfConfigure, Instrumentation.class)
-                            .invoke(objectOfCoreServer, objectOfCoreConfigure, inst);
+                            .invoke(objectOfProxyServer, objectOfCoreConfigure, inst);
                 } catch (Throwable t) {
-                    classOfProxyServer.getMethod("destroy").invoke(objectOfCoreServer);
+                    classOfProxyServer.getMethod("destroy").invoke(objectOfProxyServer);
                     throw t;
                 }
 
@@ -291,7 +263,7 @@ public class AgentLauncher {
             // 返回服务器绑定的地址
             return (InetSocketAddress) classOfProxyServer
                     .getMethod("getLocal")
-                    .invoke(objectOfCoreServer);
+                    .invoke(objectOfProxyServer);
 
 
         } catch (Throwable cause) {

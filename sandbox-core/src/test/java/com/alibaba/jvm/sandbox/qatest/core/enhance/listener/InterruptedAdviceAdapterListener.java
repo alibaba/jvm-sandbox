@@ -9,6 +9,9 @@ public class InterruptedAdviceAdapterListener extends AdviceAdapterListener {
 
     public InterruptedAdviceAdapterListener(AdviceListener adviceListener) {
         super(adviceListener);
+        if(adviceListener instanceof TracingAdviceListener) {
+            ((TracingAdviceListener) adviceListener).setEventListener(this);
+        }
     }
 
 }

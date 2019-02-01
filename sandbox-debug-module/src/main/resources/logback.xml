@@ -2,11 +2,11 @@
 <configuration scan="true" scanPeriod="10000">
 
     <!-- DEBUG模块：Servlet监控日志 -->
-    <logger name="DEBUG-SERVLET-LOGGER" level="INFO">
+    <logger name="DEBUG-SERVLET-ACCESS" level="INFO">
         <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>${user.home}/logs/sandbox/debug/servlet-monitor.log</file>
+            <file>${user.home}/logs/sandbox/debug/servlet-access.log</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <FileNamePattern>${user.home}/logs/sandbox/debug/servlet-monitor.log.%d{yyyy-MM-dd}</FileNamePattern>
+                <FileNamePattern>${user.home}/logs/sandbox/debug/servlet-access.log.%d{yyyy-MM-dd}</FileNamePattern>
                 <MaxHistory>30</MaxHistory>
             </rollingPolicy>
             <encoder>
@@ -15,6 +15,22 @@
             </encoder>
         </appender>
     </logger>
+
+    <!-- DEBUG模块：Servlet输出日志
+    <logger name="DEBUG-SERVLET-PRINTER" level="INFO">
+        <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${user.home}/logs/sandbox/debug/servlet-printer.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <FileNamePattern>${user.home}/logs/sandbox/debug/servlet-printer.log.%d{yyyy-MM-dd}</FileNamePattern>
+                <MaxHistory>30</MaxHistory>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %msg%n</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+    </logger>
+    -->
 
     <!-- DEBUG模块：Exception监控日志 -->
     <logger name="DEBUG-EXCEPTION-LOGGER" level="INFO">

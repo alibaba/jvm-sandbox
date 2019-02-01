@@ -1,7 +1,6 @@
 package com.alibaba.jvm.sandbox.core;
 
 import com.alibaba.jvm.sandbox.api.Information;
-import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.core.util.FeatureCodec;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -34,16 +33,6 @@ public class CoreConfigure {
     private static final String KEY_CFG_LIB_PATH = "cfg";
     private static final String VAL_LAUNCH_MODE_AGENT = "agent";
     private static final String VAL_LAUNCH_MODE_ATTACH = "attach";
-    private static final String KEY_EVENT_POOL_ENABLE = "event.pool.enable";
-
-    // ------------------------------------- 事件池配置 -------------------------------------
-    private static final String KEY_EVENT_POOL_MAX_TOTAL = "event.pool.max.total";
-    private static final String KEY_EVENT_POOL_MIN_IDLE_PER_EVENT = "event.pool.min.idle.per.event";
-    private static final int DEFAULT_VAL_EVENT_POOL_MIN_IDLE_PER_EVENT = 50;
-    private static final String KEY_EVENT_POOL_MAX_IDLE_PER_EVENT = "event.pool.max.idle.per.event";
-    private static final int DEFAULT_VAL_EVENT_POOL_MAX_IDLE_PER_EVENT = 100;
-    private static final String KEY_EVENT_POOL_MAX_TOTAL_PER_EVENT = "event.pool.max.total.per.event";
-    private static final int DEFAULT_VAL_EVENT_POOL_MAX_TOTAL_PER_EVENT = 2000;
 
     private static final String KEY_UNSAFE_ENABLE = "unsafe.enable";
 
@@ -176,16 +165,6 @@ public class CoreConfigure {
             }
         }
 
-//        final DirectoryScanner scanner = new DirectoryScanner();
-//        scanner.setIncludes(getUserModuleLibPaths());
-//        scanner.setCaseSensitive(false);
-//        scanner.scan();
-//        final String[] filePaths = scanner.getIncludedDirectories();
-//        final File[] files = new File[filePaths.length];
-//        for (int index = 0; index < filePaths.length; index++) {
-//            files[index] = new File(filePaths[index]);
-//        }
-
         return GET_USER_MODULE_LIB_FILES_CACHE = foundModuleJarFiles.toArray(new File[]{});
     }
 
@@ -252,45 +231,6 @@ public class CoreConfigure {
             return Information.Mode.ATTACH;
         }
         return Information.Mode.ATTACH;
-    }
-
-
-    public int getEventPoolMaxTotal() {
-        return NumberUtils.toInt(
-                featureMap.get(KEY_EVENT_POOL_MAX_TOTAL),
-                getEventPoolMaxTotalPerEvent() * Event.Type.values().length
-        );
-    }
-
-    public int getEventPoolMinIdlePerEvent() {
-        return NumberUtils.toInt(
-                featureMap.get(KEY_EVENT_POOL_MIN_IDLE_PER_EVENT),
-                DEFAULT_VAL_EVENT_POOL_MIN_IDLE_PER_EVENT
-        );
-    }
-
-    public int getEventPoolMaxIdlePerEvent() {
-        return NumberUtils.toInt(
-                featureMap.get(KEY_EVENT_POOL_MAX_IDLE_PER_EVENT),
-                DEFAULT_VAL_EVENT_POOL_MAX_IDLE_PER_EVENT
-        );
-    }
-
-    public int getEventPoolMaxTotalPerEvent() {
-        return NumberUtils.toInt(
-                featureMap.get(KEY_EVENT_POOL_MAX_TOTAL_PER_EVENT),
-                DEFAULT_VAL_EVENT_POOL_MAX_TOTAL_PER_EVENT
-        );
-    }
-
-
-    /**
-     * 是否启用事件池
-     *
-     * @return event.pool.enable
-     */
-    public boolean isEventPoolEnable() {
-        return BooleanUtils.toBoolean(featureMap.get(KEY_EVENT_POOL_ENABLE));
     }
 
     /**

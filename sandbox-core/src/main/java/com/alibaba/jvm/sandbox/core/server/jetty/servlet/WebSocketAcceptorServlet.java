@@ -4,9 +4,8 @@ import com.alibaba.jvm.sandbox.api.http.websocket.TextMessageListener;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketAcceptor;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketConnection;
 import com.alibaba.jvm.sandbox.api.http.websocket.WebSocketConnectionListener;
-import com.alibaba.jvm.sandbox.core.domain.CoreModule;
+import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
-import com.alibaba.jvm.sandbox.core.manager.ModuleResourceManager;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocket.OnTextMessage;
@@ -19,21 +18,19 @@ import java.io.IOException;
 
 /**
  * 构建WebSocket通讯
- * Created by luanjia@taobao.com on 2017/2/2.
+ *
+ * @author luanjia@taobao.com
+ * @deprecated 考虑废弃掉WebSocket的支持，不再维护
  */
+@Deprecated
 public class WebSocketAcceptorServlet extends WebSocketServlet {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    // WebSocket Connection auto release Map
-    private final ModuleResourceManager moduleResourceManager;
-
     private final CoreModuleManager coreModuleManager;
 
-    public WebSocketAcceptorServlet(final CoreModuleManager coreModuleManager,
-                                    final ModuleResourceManager moduleResourceManager) {
+    public WebSocketAcceptorServlet(final CoreModuleManager coreModuleManager) {
         this.coreModuleManager = coreModuleManager;
-        this.moduleResourceManager = moduleResourceManager;
     }
 
 
@@ -74,9 +71,9 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
                 uniqueId, coreModule.getModule().getClass().getName(), req.getPathInfo());
 
         if (listener instanceof TextMessageListener) {
-            return new InnerOnTextMessage(uniqueId, (TextMessageListener) listener);
+            return new InnerOnTextMessage(coreModule, (TextMessageListener) listener);
         } else {
-            return new InnerWebSocket(uniqueId, listener);
+            return new InnerWebSocket(coreModule, listener);
         }
     }
 
@@ -93,42 +90,31 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
         return null;
     }
 
-    private class WebSocketConnectionResource extends ModuleResourceManager.WeakResource<WebSocketConnection> {
-
-        final WebSocketConnection conn;
-
-        WebSocketConnectionResource(WebSocketConnection conn) {
-            super(conn);
-            this.conn = conn;
-        }
-
-        @Override
-        public void release() {
-            if (null != conn) {
-                conn.disconnect();
-            }
-        }
-
-    }
-
     private class InnerWebSocket implements WebSocket {
 
-        final String uniqueId;
+        final CoreModule coreModule;
         final WebSocketConnectionListener listener;
 
         private WebSocketConnection conn = null;
 
-        InnerWebSocket(String uniqueId, WebSocketConnectionListener listener) {
-            this.uniqueId = uniqueId;
+        InnerWebSocket(final CoreModule coreModule,
+                       final WebSocketConnectionListener listener) {
+            this.coreModule = coreModule;
             this.listener = listener;
         }
 
         @Override
         public void onOpen(Connection connection) {
-            conn = moduleResourceManager.append(
-                    uniqueId,
-                    new WebSocketConnectionResource(toWebSocketConnection(connection))
-            );
+            conn = coreModule.append(new CoreModule.ReleaseResource<WebSocketConnection>(toWebSocketConnection(connection)) {
+                @Override
+                public void release() {
+                    final WebSocketConnection resource = get();
+                    if(null != resource) {
+                        resource.disconnect();
+                    }
+
+                }
+            });
             listener.onOpen(conn);
         }
 
@@ -161,7 +147,7 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
             try {
                 listener.onClose(closeCode, message);
             } finally {
-                moduleResourceManager.remove(uniqueId, conn);
+                coreModule.release(conn);
             }
         }
 
@@ -171,8 +157,9 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
 
         private final TextMessageListener textMessageListener;
 
-        InnerOnTextMessage(String uniqueId, TextMessageListener listener) {
-            super(uniqueId, listener);
+        InnerOnTextMessage(final CoreModule coreModule,
+                           final TextMessageListener listener) {
+            super(coreModule, listener);
             this.textMessageListener = listener;
         }
 

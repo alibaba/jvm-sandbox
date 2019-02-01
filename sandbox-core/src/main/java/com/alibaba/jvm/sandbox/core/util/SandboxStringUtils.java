@@ -2,6 +2,7 @@ package com.alibaba.jvm.sandbox.core.util;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.objectweb.asm.Type;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,11 +36,22 @@ public class SandboxStringUtils {
 
     public static String[] toJavaClassNameArray(String[] internalClassNameArray) {
         if (null == internalClassNameArray) {
-            return null;
+            return new String[]{};
         }
         final String[] javaClassNameArray = new String[internalClassNameArray.length];
         for (int index = 0; index < internalClassNameArray.length; index++) {
             javaClassNameArray[index] = toJavaClassName(internalClassNameArray[index]);
+        }
+        return javaClassNameArray;
+    }
+
+    public static String[] toJavaClassNameArray(Type[] asmTypeArray) {
+        if (null == asmTypeArray) {
+            return new String[]{};
+        }
+        final String[] javaClassNameArray = new String[asmTypeArray.length];
+        for (int index = 0; index < asmTypeArray.length; index++) {
+            javaClassNameArray[index] = asmTypeArray[index].getClassName();
         }
         return javaClassNameArray;
     }

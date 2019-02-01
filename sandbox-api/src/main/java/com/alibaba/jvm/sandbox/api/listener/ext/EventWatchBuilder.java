@@ -672,6 +672,8 @@ public class EventWatchBuilder {
             eventTypeSet.add(BEFORE);
             eventTypeSet.add(RETURN);
             eventTypeSet.add(THROWS);
+            eventTypeSet.add(IMMEDIATELY_RETURN);
+            eventTypeSet.add(IMMEDIATELY_THROWS);
             return build(
                     new AdviceAdapterListener(adviceListener),
                     toProgressGroup(progresses),

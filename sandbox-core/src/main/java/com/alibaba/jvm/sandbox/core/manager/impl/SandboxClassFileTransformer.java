@@ -2,7 +2,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
-import com.alibaba.jvm.sandbox.core.classloader.ModuleClassLoader;
+import com.alibaba.jvm.sandbox.core.classloader.ModuleJarClassLoader;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
@@ -20,11 +20,13 @@ import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure
 
 /**
  * 沙箱类形变器
- * Created by luanjia@taobao.com on 2016/11/14.
+ *
+ * @author luanjia@taobao.com
  */
 public class SandboxClassFileTransformer implements ClassFileTransformer {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final int watchId;
     private final String uniqueId;
     private final Matcher matcher;
@@ -82,8 +84,8 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                 return null;
             }
 
-            // 过滤掉来自ModuleClassLoader加载的类
-            if (loader instanceof ModuleClassLoader) {
+            // 过滤掉来自ModuleJarClassLoader加载的类
+            if (loader instanceof ModuleJarClassLoader) {
                 return null;
             }
 
@@ -96,9 +98,11 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
 
 
         } catch (Throwable cause) {
-            logger.warn("sandbox transform class:{} in loader:{};namespace:{} failed, module[id:{}] at watch[id:{}] will ignore this transform.",
-                    internalClassName, loader, namespace,
-                    uniqueId, watchId,
+            logger.warn("sandbox transform {} in loader={}; failed, module={} at watch={}, will ignore this transform.",
+                    internalClassName,
+                    loader,
+                    uniqueId,
+                    watchId,
                     cause
             );
             return null;
@@ -112,7 +116,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
         // 如果未开启unsafe开关，是不允许增强来自BootStrapClassLoader的类
         if (!isEnableUnsafe
                 && null == loader) {
-            logger.debug("transform ignore class:{}, class from bootstrap but unsafe.enable:false.", internalClassName);
+            logger.debug("transform ignore {}, class from bootstrap but unsafe.enable=false.", internalClassName);
             return null;
         }
 
@@ -122,7 +126,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
 
         // 如果一个行为都没匹配上也不用继续了
         if (!matchingResult.isMatched()) {
-            logger.debug("transform ignore class:{}, no behaviors matched in loader:{};namespace:{}", internalClassName, loader, namespace);
+            logger.debug("transform ignore {}, no behaviors matched in loader={}", internalClassName, loader);
             return null;
         }
 
@@ -137,17 +141,17 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                     eventTypeArray
             );
             if (srcByteCodeArray == toByteCodeArray) {
-                logger.debug("transform ignore class:{}, nothing changed in loader:{}. namespace:{}", internalClassName, loader, namespace);
+                logger.debug("transform ignore {}, nothing changed in loader={}", internalClassName, loader);
                 return null;
             }
 
             // statistic affect
             affectStatistic.statisticAffect(loader, internalClassName, behaviorSignCodes);
 
-            logger.info("transform class:{} finished, by module[id:{}] in loader:{};namespace:{}", internalClassName, uniqueId, loader, namespace);
+            logger.info("transform {} finished, by module={} in loader={}", internalClassName, uniqueId, loader);
             return toByteCodeArray;
         } catch (Throwable cause) {
-            logger.warn("transform class:{} failed, by module[id={}] in loader:{}namespace:{};", internalClassName, uniqueId, loader, namespace, cause);
+            logger.warn("transform {} failed, by module={} in loader={}", internalClassName, uniqueId, loader, cause);
             return null;
         }
     }

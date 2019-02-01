@@ -3,26 +3,24 @@ package com.alibaba.jvm.sandbox.module.mgr;
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.ModuleException;
-import com.alibaba.jvm.sandbox.api.http.Http;
+import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.matching;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 /**
@@ -30,7 +28,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  *
  * @author luanjia@taobao.com
  */
-@Information(id = "module-mgr", author = "luanjia@taobao.com", version = "0.0.1")
+@MetaInfServices(Module.class)
+@Information(id = "sandbox-module-mgr", author = "luanjia@taobao.com", version = "0.0.2")
 public class ModuleMgrModule implements Module {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -39,8 +38,8 @@ public class ModuleMgrModule implements Module {
     private ModuleManager moduleManager;
 
     // 获取参数值
-    private String getParamWithDefault(final HttpServletRequest req, final String name, final String defaultValue) {
-        final String valueFromReq = req.getParameter(name);
+    private String getParamWithDefault(final Map<String, String> param, final String name, final String defaultValue) {
+        final String valueFromReq = param.get(name);
         return StringUtils.isBlank(valueFromReq)
                 ? defaultValue
                 : valueFromReq;
@@ -64,11 +63,11 @@ public class ModuleMgrModule implements Module {
         writer.println(String.format(format, objectArray));
     }
 
-    @Http("/list")
-    public void list(final HttpServletResponse resp) throws IOException {
+    // @Http("/list")
+    @Command("list")
+    public void list(final PrintWriter writer) throws IOException {
 
         int total = 0;
-        final PrintWriter writer = resp.getWriter();
         for (final Module module : moduleManager.list()) {
 
             final Information info = module.getClass().getAnnotation(Information.class);
@@ -104,26 +103,29 @@ public class ModuleMgrModule implements Module {
         output(writer, "total=%s", total);
     }
 
-    @Http("/flush")
-    public void flush(final HttpServletRequest req,
-                      final HttpServletResponse resp) throws ModuleException, IOException {
-        final String isForceString = getParamWithDefault(req, "force", EMPTY);
+    // @Http("/flush")
+    @Command("flush")
+    public void flush(final Map<String, String> param,
+                      final PrintWriter writer) throws ModuleException {
+        final String isForceString = getParamWithDefault(param, "force", EMPTY);
         final boolean isForce = BooleanUtils.toBoolean(isForceString);
         moduleManager.flush(isForce);
-        output(resp.getWriter(), "module flush finished, total=%s;", moduleManager.list().size());
+        output(writer, "module flush finished, total=%s;", moduleManager.list().size());
     }
 
-    @Http("/reset")
-    public void reset(final HttpServletResponse resp) throws ModuleException, IOException {
+    // @Http("/reset")
+    @Command("reset")
+    public void reset(final PrintWriter writer) throws ModuleException {
         moduleManager.reset();
-        output(resp.getWriter(), "module reset finished, total=%s;", moduleManager.list().size());
+        output(writer, "module reset finished, total=%s;", moduleManager.list().size());
     }
 
-    @Http("/unload")
-    public void unload(final HttpServletRequest req,
-                       final HttpServletResponse resp) throws ServletException, IOException {
+    // @Http("/unload")
+    @Command("unload")
+    public void unload(final Map<String, String> param,
+                       final PrintWriter writer) {
         int total = 0;
-        final String idsStringPattern = getParamWithDefault(req, "ids", EMPTY);
+        final String idsStringPattern = getParamWithDefault(param, "ids", EMPTY);
         for (final Module module : search(idsStringPattern)) {
             final Information info = module.getClass().getAnnotation(Information.class);
             try {
@@ -133,14 +135,15 @@ public class ModuleMgrModule implements Module {
                 logger.warn("unload module[id={};] occur error={}.", me.getUniqueId(), me.getErrorCode(), me);
             }
         }
-        output(resp.getWriter(), "total %s module unloaded.", total);
+        output(writer, "total %s module unloaded.", total);
     }
 
-    @Http("/active")
-    public void active(final HttpServletRequest req,
-                       final HttpServletResponse resp) throws ModuleException, IOException {
+    // @Http("/active")
+    @Command("active")
+    public void active(final Map<String, String> param,
+                       final PrintWriter writer) throws ModuleException {
         int total = 0;
-        final String idsStringPattern = getParamWithDefault(req, "ids", EMPTY);
+        final String idsStringPattern = getParamWithDefault(param, "ids", EMPTY);
         for (final Module module : search(idsStringPattern)) {
             final Information info = module.getClass().getAnnotation(Information.class);
             final boolean isActivated = moduleManager.isActivated(info.id());
@@ -155,14 +158,15 @@ public class ModuleMgrModule implements Module {
                 total++;
             }
         }// for
-        output(resp.getWriter(), "total %s module activated.", total);
+        output(writer, "total %s module activated.", total);
     }
 
-    @Http("/frozen")
-    public void frozen(final HttpServletRequest req,
-                       final HttpServletResponse resp) throws ModuleException, IOException {
+    // @Http("/frozen")
+    @Command("frozen")
+    public void frozen(final Map<String, String> param,
+                       final PrintWriter writer) throws ModuleException {
         int total = 0;
-        final String idsStringPattern = getParamWithDefault(req, "ids", EMPTY);
+        final String idsStringPattern = getParamWithDefault(param, "ids", EMPTY);
         for (final Module module : search(idsStringPattern)) {
             final Information info = module.getClass().getAnnotation(Information.class);
             final boolean isActivated = moduleManager.isActivated(info.id());
@@ -178,22 +182,23 @@ public class ModuleMgrModule implements Module {
             }
 
         }
-        output(resp.getWriter(), "total %s module frozen.", total);
+        output(writer, "total %s module frozen.", total);
     }
 
-    @Http("/detail")
-    public void detail(final HttpServletRequest req,
-                       final HttpServletResponse resp) throws ModuleException, IOException {
-        final String uniqueId = req.getParameter("id");
+    // @Http("/detail")
+    @Command("detail")
+    public void detail(final Map<String, String> param,
+                       final PrintWriter writer) throws ModuleException {
+        final String uniqueId = param.get("id");
         if (StringUtils.isBlank(uniqueId)) {
             // 如果参数不对，则认为找不到对应的沙箱模块，返回400
-            resp.sendError(SC_BAD_REQUEST, "id parameter was required.");
+            writer.println("id parameter was required.");
             return;
         }
 
         final Module module = moduleManager.get(uniqueId);
         if (null == module) {
-            resp.sendError(SC_BAD_REQUEST, String.format("module[id=%s] is not existed.", uniqueId));
+            writer.println(String.format("module[id=%s] is not existed.", uniqueId));
             return;
         }
 
@@ -214,7 +219,7 @@ public class ModuleMgrModule implements Module {
                 "    cCnt : " + cCnt + "\n" +
                 "    mCnt : " + mCnt;
 
-        output(resp.getWriter(), sb);
+        output(writer, sb);
 
     }
 

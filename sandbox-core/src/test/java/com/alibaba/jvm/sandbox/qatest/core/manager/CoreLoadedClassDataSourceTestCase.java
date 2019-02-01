@@ -2,22 +2,17 @@ package com.alibaba.jvm.sandbox.qatest.core.manager;
 
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.NameRegexFilter;
-import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultLoadedClassDataSource;
+import com.alibaba.jvm.sandbox.qatest.core.mock.EmptyInstrumentation;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.lang.instrument.ClassDefinition;
-import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.jar.JarFile;
 
-class MockLoadedClassesOnlyInstrumentation implements Instrumentation {
+class MockLoadedClassesOnlyInstrumentation extends EmptyInstrumentation {
 
     final Set<Class<?>> loadedClasses = new LinkedHashSet<Class<?>>();
 
@@ -26,79 +21,10 @@ class MockLoadedClassesOnlyInstrumentation implements Instrumentation {
     }
 
     @Override
-    public void addTransformer(ClassFileTransformer transformer, boolean canRetransform) {
-
-    }
-
-    @Override
-    public void addTransformer(ClassFileTransformer transformer) {
-
-    }
-
-    @Override
-    public boolean removeTransformer(ClassFileTransformer transformer) {
-        return false;
-    }
-
-    @Override
-    public boolean isRetransformClassesSupported() {
-        return false;
-    }
-
-    @Override
-    public void retransformClasses(Class<?>... classes) throws UnmodifiableClassException {
-
-    }
-
-    @Override
-    public boolean isRedefineClassesSupported() {
-        return false;
-    }
-
-    @Override
-    public void redefineClasses(ClassDefinition... definitions) throws ClassNotFoundException, UnmodifiableClassException {
-
-    }
-
-    @Override
-    public boolean isModifiableClass(Class<?> theClass) {
-        return false;
-    }
-
-    @Override
     public Class[] getAllLoadedClasses() {
         return loadedClasses.toArray(new Class<?>[]{});
     }
 
-    @Override
-    public Class[] getInitiatedClasses(ClassLoader loader) {
-        return new Class[0];
-    }
-
-    @Override
-    public long getObjectSize(Object objectToSize) {
-        return 0;
-    }
-
-    @Override
-    public void appendToBootstrapClassLoaderSearch(JarFile jarfile) {
-
-    }
-
-    @Override
-    public void appendToSystemClassLoaderSearch(JarFile jarfile) {
-
-    }
-
-    @Override
-    public boolean isNativeMethodPrefixSupported() {
-        return false;
-    }
-
-    @Override
-    public void setNativeMethodPrefix(ClassFileTransformer transformer, String prefix) {
-
-    }
 }
 
 public class CoreLoadedClassDataSourceTestCase {
@@ -208,7 +134,7 @@ public class CoreLoadedClassDataSourceTestCase {
     }
 
     private final CoreLoadedClassDataSource coreLoadedClassDataSource
-            = new DefaultLoadedClassDataSource(mockInstrumentation, CoreConfigure.toConfigure("", null));
+            = new DefaultLoadedClassDataSource(mockInstrumentation, false);
 
 
     @Test

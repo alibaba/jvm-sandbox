@@ -12,7 +12,9 @@ import com.alibaba.jvm.sandbox.api.listener.ext.Attachment;
  * @param <M> 哨点类型，一般喜欢用枚举
  * @author luanjia@taobao.com
  * @since {@code sandbox-api:1.0.10}
+ * @deprecated
  */
+@Deprecated
 public class Sentry<M> implements Attachment {
 
     /**
