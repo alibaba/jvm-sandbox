@@ -21,7 +21,7 @@ import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.Test
 import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
 import static org.junit.Assert.assertEquals;
 
-public class CalculatorTestCaseImplByEventListener implements ICalculatorTestCase {
+public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCase {
 
     @BeforeClass
     public static void initSpy() {

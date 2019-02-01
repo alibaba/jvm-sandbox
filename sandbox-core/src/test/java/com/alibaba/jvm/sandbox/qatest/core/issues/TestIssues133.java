@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import static com.alibaba.jvm.sandbox.core.util.AsmUtils.getCommonSuperClass;
 
-public class Issues133 {
+public class TestIssues133 {
 
     @Test
     public void test() {
