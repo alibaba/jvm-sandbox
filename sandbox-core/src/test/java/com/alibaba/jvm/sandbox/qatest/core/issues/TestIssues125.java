@@ -5,7 +5,7 @@ import org.junit.Test;
 /**
  * 修复<a href="https://github.com/alibaba/jvm-sandbox/issues/125">#125</a>
  */
-public class Issues125 {
+public class TestIssues125 {
 
     /**
      * 怀疑Spy被重新加载后EventListenerHandlers的计数器被重置

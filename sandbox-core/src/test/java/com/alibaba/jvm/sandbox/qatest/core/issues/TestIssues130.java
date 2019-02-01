@@ -14,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * 修复<a href="https://github.com/alibaba/jvm-sandbox/issues/130">#130</a>
  */
-public class Issues130 {
+public class TestIssues130 {
 
     @Test
     public void cal$sum_add$call_before() throws Throwable {
