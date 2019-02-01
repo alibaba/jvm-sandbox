@@ -2,16 +2,18 @@ package com.alibaba.jvm.sandbox.core.enhance;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
+import com.alibaba.jvm.sandbox.core.util.AsmUtils;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 
-import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
-import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
+import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
@@ -19,7 +21,8 @@ import static org.objectweb.asm.Opcodes.ASM7;
 
 /**
  * 事件代码增强器
- * Created by luanjia@taobao.com on 16/7/12.
+ *
+ * @author luanjia@taobao.com
  */
 public class EventEnhancer implements Enhancer {
 
@@ -46,57 +49,42 @@ public class EventEnhancer implements Enhancer {
              */
             @Override
             protected String getCommonSuperClass(String type1, String type2) {
-                Class<?> c, d;
-                try {
-                    c = Class.forName(toJavaClassName(type1), false, targetClassLoader);
-                    d = Class.forName(toJavaClassName(type2), false, targetClassLoader);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                if (c.isAssignableFrom(d)) {
-                    return type1;
-                }
-                if (d.isAssignableFrom(c)) {
-                    return type2;
-                }
-                if (c.isInterface() || d.isInterface()) {
-                    return "java/lang/Object";
-                } else {
-                    do {
-                        c = c.getSuperclass();
-                    } while (!c.isAssignableFrom(d));
-                    return toInternalClassName(c.getName());
-                }
+                return AsmUtils.getCommonSuperClass(type1, type2, targetClassLoader);
             }
 
         };
     }
 
-//    /*
-//     * dump class to file
-//     * 用于代码调试
-//     */
-//    private static byte[] dumpClassIfNecessary(String className, byte[] data) {
-//        final File dumpClassFile = new File("./sandbox-class-dump/" + className + ".class");
-//        final File classPath = new File(dumpClassFile.getParent());
-//
-//        // 创建类所在的包路径
-//        if (!classPath.mkdirs()
-//                && !classPath.exists()) {
-//            logger.warn("create dump classpath={} failed.", classPath);
-//            return data;
-//        }
-//
-//        // 将类字节码写入文件
-//        try {
-//            writeByteArrayToFile(dumpClassFile, data);
-//            logger.info("dump {} to {} success.", className, dumpClassFile);
-//        } catch (IOException e) {
-//            logger.warn("dump {} to {} failed.", className, dumpClassFile, e);
-//        }
-//
-//        return data;
-//    }
+    private static final boolean isDumpClass = false;
+
+    /*
+     * dump class to file
+     * 用于代码调试
+     */
+    private static byte[] dumpClassIfNecessary(String className, byte[] data) {
+        if (!isDumpClass) {
+            return data;
+        }
+        final File dumpClassFile = new File("./sandbox-class-dump/" + className + ".class");
+        final File classPath = new File(dumpClassFile.getParent());
+
+        // 创建类所在的包路径
+        if (!classPath.mkdirs()
+                && !classPath.exists()) {
+            logger.warn("create dump classpath={} failed.", classPath);
+            return data;
+        }
+
+        // 将类字节码写入文件
+        try {
+            writeByteArrayToFile(dumpClassFile, data);
+            logger.info("dump {} to {} success.", className, dumpClassFile);
+        } catch (IOException e) {
+            logger.warn("dump {} to {} failed.", className, dumpClassFile, e);
+        }
+
+        return data;
+    }
 
     @Override
     public byte[] toByteCodeArray(final ClassLoader targetClassLoader,
@@ -119,7 +107,7 @@ public class EventEnhancer implements Enhancer {
                 ),
                 EXPAND_FRAMES
         );
-        return cw.toByteArray();
+        return dumpClassIfNecessary(cr.getClassName(), cw.toByteArray());
     }
 
 }

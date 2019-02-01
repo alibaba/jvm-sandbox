@@ -8,6 +8,7 @@ import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.filter.NameRegexFilter;
 import com.alibaba.jvm.sandbox.core.util.UnCaughtException;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
+import com.alibaba.jvm.sandbox.qatest.core.enhance.target.MyCalculator;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Stack;
@@ -22,6 +23,7 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtInvo
 public class CalculatorHelper {
 
     public static final String CALCULATOR_CLASS_NAME = getJavaClassName(Calculator.class);
+    public static final String MY_CALCULATOR_CLASS_NAME = getJavaClassName(MyCalculator.class);
 
     /**
      * 拦截sum()方法过滤器
@@ -66,6 +68,15 @@ public class CalculatorHelper {
             = new NameRegexFilter(
             "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.Calculator$",
             "<init>"
+    );
+
+    /**
+     * 拦截sum()方法过滤器
+     */
+    public static final Filter MY_CALCULATOR_SUM_FILTER
+            = new NameRegexFilter(
+            "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.MyCalculator$",
+            "^sum$"
     );
 
     public static final Filter CALCULATOR_INIT_FILTER_WITH_TEST_CASE

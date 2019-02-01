@@ -6,7 +6,6 @@ import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder;
 import com.alibaba.jvm.sandbox.qatest.api.mock.MockForBuilderModuleEventWatcher;
-import com.alibaba.jvm.sandbox.qatest.api.mock.MockForBuilderProgress;
 import com.alibaba.jvm.sandbox.qatest.api.util.ApiQaArrayUtils;
 import org.junit.Assert;
 import org.junit.Test;

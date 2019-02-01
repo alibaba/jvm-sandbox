@@ -7,4 +7,13 @@ public class MyCalculator extends Calculator {
                 .toUpperCase());
     }
 
+    public MyCalculator() {
+        super();
+    }
+
+    @Override
+    public int sum(int... numArray) {
+        return super.sum(numArray);
+    }
+
 }

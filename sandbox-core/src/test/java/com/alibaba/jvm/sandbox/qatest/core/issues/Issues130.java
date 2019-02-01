@@ -9,7 +9,6 @@ import org.junit.Test;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.CALL_BEFORE;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.LINE;
 import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
-import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.newInstance;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -35,8 +34,9 @@ public class Issues130 {
                 )
                 .loadClass(CALCULATOR_CLASS_NAME);
 
+        final Object objectOfCal = newInstance(calculatorClass);
         for (int i = 0; i < 1000000; i++) {
-            assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
+            assertEquals(30, sum(objectOfCal, 10, 20));
         }
     }
 
@@ -58,8 +58,9 @@ public class Issues130 {
                 )
                 .loadClass(CALCULATOR_CLASS_NAME);
 
+        final Object objectOfCal = newInstance(calculatorClass);
         for (int i = 0; i < 1000000; i++) {
-            assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
+            assertEquals(30, sum(objectOfCal, 10, 20));
         }
     }
 
@@ -81,8 +82,9 @@ public class Issues130 {
                 )
                 .loadClass(CALCULATOR_CLASS_NAME);
 
+        final Object objectOfCal = newInstance(calculatorClass);
         for (int i = 0; i < 1000000; i++) {
-            assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
+            assertEquals(30, sum(objectOfCal, 10, 20));
         }
     }
 
