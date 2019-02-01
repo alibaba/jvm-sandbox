@@ -3,8 +3,6 @@ package com.alibaba.jvm.sandbox.qatest.core.issues;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.InputStream;
-
 import static com.alibaba.jvm.sandbox.core.util.AsmUtils.getCommonSuperClass;
 
 public class Issues133 {
