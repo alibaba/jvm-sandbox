@@ -6,7 +6,6 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.core.CoreModule;
-import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
@@ -100,68 +99,47 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                     waitingReTransformClasses, coreModule.getUniqueId(), watchId);
         }
 
-
-        // 如果不需要进行进度汇报,则可以进行批量形变
-        boolean batchReTransformSuccess = true;
-        if (null == progress) {
+        int index = 0;
+        for (final Class<?> waitingReTransformClass : waitingReTransformClasses) {
+            index++;
             try {
-                inst.retransformClasses(waitingReTransformClasses.toArray(new Class[0]));
-                logger.info("watch={} in module={} batch reTransform {} classes success.",
-                        watchId, coreModule.getUniqueId(), waitingReTransformClasses.size());
-            } catch (Throwable e) {
-                logger.warn("watch={} in module={} batch reTransform {} classes failed.",
-                        watchId, coreModule.getUniqueId(), waitingReTransformClasses.size(), e);
-                batchReTransformSuccess = false;
-            }
-        }
-
-        // 只有两种情况需要进行逐个形变
-        // 1. 需要进行形变进度报告,则只能一个个进行形变
-        // 2. 批量形变失败,需要转换为单个形变,以观察具体是哪个形变失败
-        if (!batchReTransformSuccess
-                || null != progress) {
-            int index = 0;
-            for (final Class<?> waitingReTransformClass : waitingReTransformClasses) {
-                index++;
-                try {
-                    if (null != progress) {
-                        try {
-                            progress.progressOnSuccess(waitingReTransformClass, index);
-                        } catch (Throwable cause) {
-                            // 在进行进度汇报的过程中抛出异常,直接进行忽略,因为不影响形变的主体流程
-                            // 仅仅只是一个汇报作用而已
-                            logger.warn("watch={} in module={} on {} report progressOnSuccess occur exception at index={};total={};",
-                                    watchId, coreModule.getUniqueId(), waitingReTransformClass,
-                                    index - 1, total,
-                                    cause
-                            );
-                        }
-                    }
-                    inst.retransformClasses(waitingReTransformClass);
-                    logger.info("watch={} in module={} single reTransform {} success, at index={};total={};",
-                            watchId, coreModule.getUniqueId(), waitingReTransformClass,
-                            index - 1, total
-                    );
-                } catch (Throwable causeOfReTransform) {
-                    logger.warn("watch={} in module={} single reTransform {} failed, at index={};total={}. ignore this class.",
-                            watchId, coreModule.getUniqueId(), waitingReTransformClass,
-                            index - 1, total,
-                            causeOfReTransform
-                    );
-                    if (null != progress) {
-                        try {
-                            progress.progressOnFailed(waitingReTransformClass, index, causeOfReTransform);
-                        } catch (Throwable cause) {
-                            logger.warn("watch={} in module={} on {} report progressOnFailed occur exception, at index={};total={};",
-                                    watchId, coreModule.getUniqueId(), waitingReTransformClass,
-                                    index - 1, total,
-                                    cause
-                            );
-                        }
+                if (null != progress) {
+                    try {
+                        progress.progressOnSuccess(waitingReTransformClass, index);
+                    } catch (Throwable cause) {
+                        // 在进行进度汇报的过程中抛出异常,直接进行忽略,因为不影响形变的主体流程
+                        // 仅仅只是一个汇报作用而已
+                        logger.warn("watch={} in module={} on {} report progressOnSuccess occur exception at index={};total={};",
+                                watchId, coreModule.getUniqueId(), waitingReTransformClass,
+                                index - 1, total,
+                                cause
+                        );
                     }
                 }
-            }//for
-        }
+                inst.retransformClasses(waitingReTransformClass);
+                logger.info("watch={} in module={} single reTransform {} success, at index={};total={};",
+                        watchId, coreModule.getUniqueId(), waitingReTransformClass,
+                        index - 1, total
+                );
+            } catch (Throwable causeOfReTransform) {
+                logger.warn("watch={} in module={} single reTransform {} failed, at index={};total={}. ignore this class.",
+                        watchId, coreModule.getUniqueId(), waitingReTransformClass,
+                        index - 1, total,
+                        causeOfReTransform
+                );
+                if (null != progress) {
+                    try {
+                        progress.progressOnFailed(waitingReTransformClass, index, causeOfReTransform);
+                    } catch (Throwable cause) {
+                        logger.warn("watch={} in module={} on {} report progressOnFailed occur exception, at index={};total={};",
+                                watchId, coreModule.getUniqueId(), waitingReTransformClass,
+                                index - 1, total,
+                                cause
+                        );
+                    }
+                }
+            }
+        }//for
 
     }
 
