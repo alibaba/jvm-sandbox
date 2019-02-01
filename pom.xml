@@ -68,12 +68,6 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.7</version>
-            </plugin>
-
             <!-- 为了发布到MAVEN中央仓库而用的插件 -->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
@@ -103,6 +97,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.7</version>
                 <configuration>
                     <outputDirectory>./target/tmpCobertura</outputDirectory>
                     <aggregate>true</aggregate>

@@ -16,7 +16,8 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalCla
 public class AsmUtils {
 
     /**
-     * {@see org.objectweb.asm.ClassWriter#getCommonSuperClass(String, String)}
+     * just the same
+     * {@code org.objectweb.asm.ClassWriter#getCommonSuperClass(String, String)}
      */
     public static String getCommonSuperClass(String type1, String type2, ClassLoader loader) {
         return getCommonSuperClassImplByAsm(type1, type2, loader);
