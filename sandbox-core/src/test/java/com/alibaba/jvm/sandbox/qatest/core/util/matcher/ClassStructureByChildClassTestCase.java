@@ -23,7 +23,7 @@ import static com.alibaba.jvm.sandbox.qatest.core.util.matcher.asserts.MappingAs
 import static java.util.Arrays.asList;
 
 @RunWith(Parameterized.class)
-public class ClassStructureTestCaseByChildClass {
+public class ClassStructureByChildClassTestCase {
 
     private static final String PACKAGE_PREFIX = "com.alibaba.jvm.sandbox.qatest.core.util.matcher.target.";
 
@@ -37,7 +37,7 @@ public class ClassStructureTestCaseByChildClass {
 
     private final ClassStructure childClassStructure;
 
-    public ClassStructureTestCaseByChildClass(ClassStructure childClassStructure) {
+    public ClassStructureByChildClassTestCase(ClassStructure childClassStructure) {
         this.childClassStructure = childClassStructure;
     }
 
