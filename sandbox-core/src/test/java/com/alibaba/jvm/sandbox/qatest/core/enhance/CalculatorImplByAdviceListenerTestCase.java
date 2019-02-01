@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * AdviceListener相关测试用例
  */
-public class CalculatorTestCaseImplByAdviceListener implements ICalculatorTestCase {
+public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCase {
 
     @BeforeClass
     public static void initSpy() {
