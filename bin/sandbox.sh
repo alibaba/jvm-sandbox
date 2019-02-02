@@ -164,6 +164,14 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
          Appoint the jvm-sandbox\` namespace
          when default, use \"${DEFAULT_NAMESPACE}\"
 
+    -d : Data
+         Send the command & data to module's command handle method.
+         <MODULE-ID>/<COMMAND-NAME>[?<PARAM1=VALUE1>[&PARAM2=VALUE2]]
+
+         EXAMPLE:
+            ${0} -d 'sandbox-info/version'
+            ${0} -d 'sandbox-module-mgr/detail?id=sandbox-info'
+
 "
 }
 
