@@ -3,6 +3,8 @@ package java.com.alibaba.jvm.sandbox.spy;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 间谍类，藏匿在各个ClassLoader中
@@ -85,16 +87,14 @@ public class Spy {
 
         // 如果是最后的一个命名空间，则需要重新清理Node中所持有的Thread
         if (namespaceMethodHookMap.isEmpty()) {
-            for (int index = 0; index < selfCallBarrier.nodeArray.length; index++) {
-                selfCallBarrier.nodeArray[index] = new SelfCallBarrier.Node();
-            }
+            selfCallBarrier.cleanAndInit();
         }
 
     }
 
 
     // 全局序列
-    private static volatile int sequence = 1000;
+    private static final AtomicInteger sequenceRef = new AtomicInteger(1000);
 
     /**
      * 生成全局唯一序列，
@@ -103,8 +103,8 @@ public class Spy {
      *
      * @return 全局自增序列
      */
-    public static synchronized int nextSequence() {
-        return sequence++;
+    public static int nextSequence() {
+        return sequenceRef.getAndIncrement();
     }
 
 
@@ -294,6 +294,7 @@ public class Spy {
 
         public static class Node {
             private final Thread thread;
+            private final ReentrantLock lock;
             private Node pre;
             private Node next;
 
@@ -302,7 +303,12 @@ public class Spy {
             }
 
             Node(final Thread thread) {
+                this(thread, null);
+            }
+
+            Node(final Thread thread, final ReentrantLock lock) {
                 this.thread = thread;
+                this.lock = lock;
             }
 
         }
@@ -327,14 +333,21 @@ public class Spy {
             top.next = node;
         }
 
-        static final int THREAD_LOCAL_ARRAY_LENGTH = 1024;
+        static final int THREAD_LOCAL_ARRAY_LENGTH = 512;
 
         final Node[] nodeArray = new Node[THREAD_LOCAL_ARRAY_LENGTH];
 
         SelfCallBarrier() {
-            // init root node
+            cleanAndInit();
+        }
+
+        Node createTopNode() {
+            return new Node(null, new ReentrantLock());
+        }
+
+        void cleanAndInit() {
             for (int i = 0; i < THREAD_LOCAL_ARRAY_LENGTH; i++) {
-                nodeArray[i] = new Node();
+                nodeArray[i] = createTopNode();
             }
         }
 
@@ -347,7 +360,9 @@ public class Spy {
         boolean isEnter(Thread thread) {
             final Node top = nodeArray[abs(thread.hashCode()) % THREAD_LOCAL_ARRAY_LENGTH];
             Node node = top;
-            synchronized (top) {
+            try {
+                // spin for lock
+                while (!top.lock.tryLock()) ;
                 while (null != node.next) {
                     node = node.next;
                     if (thread == node.thread) {
@@ -355,22 +370,30 @@ public class Spy {
                     }
                 }
                 return false;
-            }//sync
+            } finally {
+                top.lock.unlock();
+            }
         }
 
         Node enter(Thread thread) {
             final Node top = nodeArray[abs(thread.hashCode()) % THREAD_LOCAL_ARRAY_LENGTH];
             final Node node = new Node(thread);
-            synchronized (top) {
+            try {
+                while (!top.lock.tryLock()) ;
                 insert(top, node);
+            } finally {
+                top.lock.unlock();
             }
             return node;
         }
 
         void exit(Thread thread, Node node) {
             final Node top = nodeArray[abs(thread.hashCode()) % THREAD_LOCAL_ARRAY_LENGTH];
-            synchronized (top) {
+            try {
+                while (!top.lock.tryLock()) ;
                 delete(node);
+            } finally {
+                top.lock.unlock();
             }
         }
 
