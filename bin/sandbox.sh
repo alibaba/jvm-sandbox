@@ -151,20 +151,20 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
             ${0} -p <PID> -P 3658 -v
 
 
-    -C : Connect server only
+    -C : connect server only
          No attach target JVM, just connect server with appoint IP:PORT only.
 
          EXAMPLE:
              ${0} -C -I 192.168.0.1 -P 3658 -m debug
 
-    -S : Shutdown server
+    -S : shutdown server
          Shutdown jvm-sandbox\` server
 
-    -n : Namespace
+    -n : namespace
          Appoint the jvm-sandbox\` namespace
          when default, use \"${DEFAULT_NAMESPACE}\"
 
-    -d : Data
+    -d : data
          Send the command & data to module's command handle method.
          <MODULE-ID>/<COMMAND-NAME>[?<PARAM1=VALUE1>[&PARAM2=VALUE2]]
 
@@ -186,7 +186,7 @@ check_permission()
 
     # touch attach token file
     touch ${SANDBOX_TOKEN_FILE} \
-        || exit_on_err 1 "permission denied, ${SANDBOX_TOKEN_FILE} is not readable"
+        || exit_on_err 1 "permission denied, ${SANDBOX_TOKEN_FILE} is not readable."
 }
 
 # reset sandbox work environment
@@ -194,22 +194,15 @@ check_permission()
 reset_for_env()
 {
 
-    # if env define the JAVA_HOME, use it first
-    # if is alibaba opts, use alibaba ops's default JAVA_HOME
-    # [ -z ${JAVA_HOME} ] && JAVA_HOME=/opt/taobao/java
-    if [[ -z "${JAVA_HOME}" ]]; then
-        JAVA_HOME=$(ps aux|grep ${TARGET_JVM_PID}|grep java|awk '{print $11}'|xargs ls -l|awk '{if($1~/^l/){print $11}else{print $9}}'|sed 's/\/bin\/java//g')
-    fi
+    # use the target PID's java for SANDBOX_JAVA_BIN
+    SANDBOX_JAVA_BIN="$(ps aux|grep ${TARGET_JVM_PID}|grep java|awk '{print $11}')"
+    [[ ! -x "${SANDBOX_JAVA_BIN}" ]] \
+        && exit_on_err 1 "permission denied, ${SANDBOX_JAVA_BIN} is not executable."
 
-	
     # check the jvm version, we need 1.6+
-    local JAVA_VERSION=$("${JAVA_HOME}"/bin/java -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
-    [[ ! -x "${JAVA_HOME}" || -z ${JAVA_VERSION} ]] \
-        && exit_on_err 1 "illegal ENV, please set \$JAVA_HOME to JDK6+"
-
-    # reset BOOT_CLASSPATH
-    [ -f "${JAVA_HOME}"/lib/tools.jar ] \
-        && BOOT_CLASSPATH=-Xbootclasspath/a:"${JAVA_HOME}"/lib/tools.jar
+    local JAVA_VERSION=$("${SANDBOX_JAVA_BIN}" -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
+    [[ -z ${JAVA_VERSION} ]] \
+        && exit_on_err 1 "illegal java version: ${JAVA_VERSION}, please make sure target java process: ${TARGET_JVM_PID} run int JDK[6,11]"
 
 }
 
@@ -222,8 +215,7 @@ function attach_jvm() {
     local token=`date |head|cksum|sed 's/ //g'`
 
     # attach target jvm
-    "${JAVA_HOME}"/bin/java \
-        "${BOOT_CLASSPATH}" \
+    "${SANDBOX_JAVA_BIN}"\
         ${SANDBOX_JVM_OPS} \
         -jar ${SANDBOX_LIB_DIR}/sandbox-core.jar \
         ${TARGET_JVM_PID} \
