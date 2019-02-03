@@ -194,15 +194,35 @@ check_permission()
 reset_for_env()
 {
 
-    # use the target PID's java for SANDBOX_JAVA_BIN
-    SANDBOX_JAVA_BIN="$(ps aux|grep ${TARGET_JVM_PID}|grep java|awk '{print $11}')"
-    [[ ! -x "${SANDBOX_JAVA_BIN}" ]] \
-        && exit_on_err 1 "permission denied, ${SANDBOX_JAVA_BIN} is not executable."
+    # use the env JAVA_HOME for default
+    [[ ! -z ${JAVA_HOME} ]] \
+        && SANDBOX_JAVA_HOME="${JAVA_HOME}"
 
-    # check the jvm version, we need 1.6+
-    local JAVA_VERSION=$("${SANDBOX_JAVA_BIN}" -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
+    # use the target JVM for SANDBOX_JAVA_HOME
+    [[ -z ${SANDBOX_JAVA_HOME} ]] \
+        && SANDBOX_JAVA_HOME="$(\
+            ps aux\
+            |grep ${TARGET_JVM_PID}\
+            |grep java\
+            |awk '{print $11}'\
+            |xargs ls -l\
+            |awk '{if($1~/^l/){print $11}else{print $9}}'\
+            |sed 's/\/bin\/java//g'\
+        )"
+
+    [[ ! -x "${SANDBOX_JAVA_HOME}" ]] \
+        && exit_on_err 1 "permission denied, ${SANDBOX_JAVA_HOME} is not accessible! please set JAVA_HOME"
+
+    [[ ! -x "${SANDBOX_JAVA_HOME}/bin/java" ]] \
+        && exit_on_err 1 "permission denied, ${SANDBOX_JAVA_HOME}/bin/java is not executable!"
+
+    # check the jvm version, we need 6+
+    local JAVA_VERSION=$("${SANDBOX_JAVA_HOME}/bin/java" -version 2>&1|awk -F '"' '/version/&&$2>"1.5"{print $2}')
     [[ -z ${JAVA_VERSION} ]] \
         && exit_on_err 1 "illegal java version: ${JAVA_VERSION}, please make sure target java process: ${TARGET_JVM_PID} run int JDK[6,11]"
+
+    [[ -f "${SANDBOX_JAVA_HOME}"/lib/tools.jar ]] \
+        && SANDBOX_JVM_OPS="${SANDBOX_JVM_OPS} -Xbootclasspath/a:${SANDBOX_JAVA_HOME}/lib/tools.jar"
 
 }
 
@@ -215,7 +235,7 @@ function attach_jvm() {
     local token=`date |head|cksum|sed 's/ //g'`
 
     # attach target jvm
-    "${SANDBOX_JAVA_BIN}"\
+    "${SANDBOX_JAVA_HOME}/bin/java" \
         ${SANDBOX_JVM_OPS} \
         -jar ${SANDBOX_LIB_DIR}/sandbox-core.jar \
         ${TARGET_JVM_PID} \
