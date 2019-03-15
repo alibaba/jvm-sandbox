@@ -55,7 +55,7 @@ public class CoreConfigure {
 
     // 从配置文件中合并配置到CoreConfigure中
     private static CoreConfigure mergePropertiesFile(final CoreConfigure cfg, final String propertiesFilePath) {
-        cfg.featureMap.putAll(propertiesToStringMap(fetchProperties(propertiesFilePath)));
+        cfg.featureMap.putAll(propertiesToStringMap(cfg,fetchProperties(propertiesFilePath)));
         return cfg;
     }
 
@@ -75,12 +75,12 @@ public class CoreConfigure {
     }
 
     // 配置转map
-    private static Map<String, String> propertiesToStringMap(final Properties properties) {
+    private static Map<String, String> propertiesToStringMap(CoreConfigure cfg,final Properties properties) {
         final Map<String, String> map = new HashMap<String, String>();
         for (String key : properties.stringPropertyNames()) {
 
-            // 过滤掉受保护的key
-            if (ArrayUtils.contains(PROTECT_KEY_ARRAY, key)) {
+            //如果受保护的key已经由入参指定，则过滤掉受保护的key,防止入参被覆盖
+            if (cfg.featureMap.containsKey(key) && ArrayUtils.contains(PROTECT_KEY_ARRAY, key)) {
                 continue;
             }
 
