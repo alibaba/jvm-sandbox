@@ -36,7 +36,9 @@ public class UnsupportedMatcher implements Matcher {
                 classStructure.getJavaClassName(),
                 "$$Lambda$",
                 "$$FastClassBySpringCGLIB$$",
-                "$$EnhancerBySpringCGLIB$$"
+                "$$EnhancerBySpringCGLIB$$",
+                "$$EnhancerByCGLIB$$",
+                "$$FastClassByCGLIB$$"
         );
     }
 
