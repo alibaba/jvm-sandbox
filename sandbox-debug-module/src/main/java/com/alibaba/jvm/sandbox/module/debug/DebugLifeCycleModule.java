@@ -76,6 +76,8 @@ public class DebugLifeCycleModule implements Module, ModuleLifecycle{
 
         final String cnPattern = getParameter(param, "class");
         final String mnPattern = getParameter(param, "method");
+        lifeCLogger.info("param.class={}", cnPattern);
+        lifeCLogger.info("param.method={}", mnPattern);
 
 
         int watcherId = moduleEventWatcher.watch(

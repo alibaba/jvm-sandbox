@@ -55,8 +55,8 @@ public class AgentLauncher {
             .getParent();
 
     private static final String SANDBOX_USER_MODULE_PATH
-            = System.getProperties().getProperty("user.home")
-            + File.separator + ".sandbox-module";
+            = DEFAULT_SANDBOX_HOME
+            + File.separator + "sandbox-module";
 
     // 启动模式: agent方式加载
     private static final String LAUNCH_MODE_AGENT = "agent";

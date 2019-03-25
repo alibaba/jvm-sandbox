@@ -39,6 +39,9 @@ public class CoreConfigure {
     // 受保护key数组，在保护key范围之内，如果前端已经传递过参数了，只能认前端，后端无法修改
     private static final String[] PROTECT_KEY_ARRAY = {KEY_NAMESPACE, KEY_SANDBOX_HOME, KEY_LAUNCH_MODE, KEY_SERVER_IP, KEY_SERVER_PORT};
 
+    // 用户配置和系统默认配置都可以，需要进行合并的key，例如user_module
+    private static final String[] MULTI_KEY_ARRAY = {KEY_USER_MODULE_LIB_PATH};
+
     private static final FeatureCodec codec = new FeatureCodec(';', '=');
 
     private final Map<String, String> featureMap;
@@ -55,7 +58,15 @@ public class CoreConfigure {
 
     // 从配置文件中合并配置到CoreConfigure中
     private static CoreConfigure mergePropertiesFile(final CoreConfigure cfg, final String propertiesFilePath) {
-        cfg.featureMap.putAll(propertiesToStringMap(fetchProperties(propertiesFilePath)));
+
+//        cfg.featureMap.putAll(propertiesToStringMap(fetchProperties(propertiesFilePath)));
+        Map<String , String> propertiesMap = propertiesToStringMap(fetchProperties(propertiesFilePath));
+        for (String key : MULTI_KEY_ARRAY){
+            if (cfg.featureMap.containsKey(key) && propertiesMap.containsKey(key)){
+                propertiesMap.put(key, cfg.featureMap.get(key) + ";" + propertiesMap.get(key));
+            }
+        }
+        cfg.featureMap.putAll(propertiesMap);
         return cfg;
     }
 
