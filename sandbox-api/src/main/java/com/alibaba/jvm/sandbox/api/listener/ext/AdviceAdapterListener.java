@@ -104,8 +104,11 @@ public class AdviceAdapterListener implements EventListener {
                 final WrapAdvice wrapAdvice = opStack.popByExpectInvokeId(rEvent.invokeId);
                 if (null != wrapAdvice) {
                     Advice advice = wrapAdvice.advice.applyReturn(rEvent.object);
-                    adviceListener.afterReturning(advice);
-                    adviceListener.after(advice);
+                    try {
+                        adviceListener.afterReturning(advice);
+                    } finally {
+                        adviceListener.after(advice);
+                    }
                 }
                 break;
             }
@@ -114,8 +117,11 @@ public class AdviceAdapterListener implements EventListener {
                 final WrapAdvice wrapAdvice = opStack.popByExpectInvokeId(tEvent.invokeId);
                 if (null != wrapAdvice) {
                     Advice advice = wrapAdvice.advice.applyThrows(tEvent.throwable);
-                    adviceListener.afterThrowing(advice);
-                    adviceListener.after(advice);
+                    try {
+                        adviceListener.afterThrowing(advice);
+                    } finally {
+                        adviceListener.after(advice);
+                    }
                 }
                 break;
             }
@@ -154,21 +160,24 @@ public class AdviceAdapterListener implements EventListener {
                     // 这里做一个容灾保护，防止在callBefore()中发生什么异常导致beforeCall()之前失败
                     return;
                 }
-                adviceListener.afterCallReturning(
-                        wrapAdvice.advice,
-                        target.callLineNum,
-                        target.callJavaClassName,
-                        target.callJavaMethodName,
-                        target.callJavaMethodDesc
-                );
-                adviceListener.afterCall(
-                        wrapAdvice.advice,
-                        target.callLineNum,
-                        target.callJavaClassName,
-                        target.callJavaMethodName,
-                        target.callJavaMethodDesc,
-                        null
-                );
+                try {
+                    adviceListener.afterCallReturning(
+                            wrapAdvice.advice,
+                            target.callLineNum,
+                            target.callJavaClassName,
+                            target.callJavaMethodName,
+                            target.callJavaMethodDesc
+                    );
+                } finally {
+                    adviceListener.afterCall(
+                            wrapAdvice.advice,
+                            target.callLineNum,
+                            target.callJavaClassName,
+                            target.callJavaMethodName,
+                            target.callJavaMethodDesc,
+                            null
+                    );
+                }
                 break;
             }
 
@@ -183,22 +192,25 @@ public class AdviceAdapterListener implements EventListener {
                     // 这里做一个容灾保护，防止在callBefore()中发生什么异常导致beforeCall()之前失败
                     return;
                 }
-                adviceListener.afterCallThrowing(
-                        wrapAdvice.advice,
-                        target.callLineNum,
-                        target.callJavaClassName,
-                        target.callJavaMethodName,
-                        target.callJavaMethodDesc,
-                        ctEvent.throwException
-                );
-                adviceListener.afterCall(
-                        wrapAdvice.advice,
-                        target.callLineNum,
-                        target.callJavaClassName,
-                        target.callJavaMethodName,
-                        target.callJavaMethodDesc,
-                        ctEvent.throwException
-                );
+                try {
+                    adviceListener.afterCallThrowing(
+                            wrapAdvice.advice,
+                            target.callLineNum,
+                            target.callJavaClassName,
+                            target.callJavaMethodName,
+                            target.callJavaMethodDesc,
+                            ctEvent.throwException
+                    );
+                } finally {
+                    adviceListener.afterCall(
+                            wrapAdvice.advice,
+                            target.callLineNum,
+                            target.callJavaClassName,
+                            target.callJavaMethodName,
+                            target.callJavaMethodDesc,
+                            ctEvent.throwException
+                    );
+                }
                 break;
             }
 
