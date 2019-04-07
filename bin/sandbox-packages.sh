@@ -23,7 +23,7 @@ mkdir -p ${SANDBOX_TARGET_DIR}/lib
 mkdir -p ${SANDBOX_TARGET_DIR}/module
 mkdir -p ${SANDBOX_TARGET_DIR}/cfg
 mkdir -p ${SANDBOX_TARGET_DIR}/provider
-
+mkdir -p ${SANDBOX_TARGET_DIR}/sandbox-module
 
 # copy jar to TARGET_DIR
 cp ../sandbox-core/target/sandbox-core-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/lib/sandbox-core.jar \

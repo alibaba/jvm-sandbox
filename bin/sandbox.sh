@@ -79,7 +79,7 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
          if module reload occur error, ignore this module.
 
          MODULE LIB:
-            - ${HOME}/.sandbox-module/
+            - ${SANDBOX_HOME_DIR}/sandbox-module/
 
 
     -f : force flush
@@ -94,7 +94,7 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
          if module reload occur error, ignore this module.
 
          MODULE LIB:
-            - ${HOME}/.sandbox-module/
+            - ${SANDBOX_HOME_DIR}/sandbox-module/
 
 
     -R : restart sandbox
@@ -102,7 +102,7 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
 
          MODULE LIB:
             - ${SANDBOX_HOME_DIR}/module/
-            - ${HOME}/.sandbox-module/
+            - ${SANDBOX_HOME_DIR}/sandbox-module/
 
 
     -u : unload
