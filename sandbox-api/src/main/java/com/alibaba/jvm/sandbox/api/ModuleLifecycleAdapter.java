@@ -4,7 +4,7 @@ package com.alibaba.jvm.sandbox.api;
  * 模块生命周期适配器，用于简化接口实现
  *
  * @author dadiyang
- * @since 2019/4/7
+ * @since {@code sandbox-api:1.2.2}
  */
 public class ModuleLifecycleAdapter implements ModuleLifecycle {
     @Override

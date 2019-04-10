@@ -42,6 +42,7 @@ public interface Behavior {
      * 获取被封装的目标对象: Method/Constructor
      *
      * @return 目标对象
+     * @since {@code sandbox-api:1.2.2}
      */
     AccessibleObject getTarget();
 
