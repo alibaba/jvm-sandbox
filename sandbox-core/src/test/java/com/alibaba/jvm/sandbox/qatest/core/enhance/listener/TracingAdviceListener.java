@@ -187,7 +187,7 @@ public class TracingAdviceListener extends AdviceListener {
     @Override
     protected void afterCall(Advice advice, int callLineNum, String callJavaClassName, String callJavaMethodName, String callJavaMethodDesc, String callThrowJavaClassName) {
         tracing.add(generateTracing(
-                "AFTER_CALL",
+                "CALL-AFTER",
                 getJavaClassName(advice.getBehavior().getDeclaringClass()),
                 advice.getBehavior().getName(),
                 getJavaClassNameArray(advice.getBehavior().getParameterTypes()),
