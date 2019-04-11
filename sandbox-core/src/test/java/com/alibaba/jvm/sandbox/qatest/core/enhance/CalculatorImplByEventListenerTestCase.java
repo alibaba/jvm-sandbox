@@ -23,10 +23,10 @@ import static org.junit.Assert.assertEquals;
 
 public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCase {
 
-    @BeforeClass
-    public static void initSpy() {
-        Spy.isSpyThrowException = true;
-    }
+//    @BeforeClass
+//    public static void initSpy() {
+//        Spy.isSpyThrowException = true;
+//    }
 
     @Test
     @Override

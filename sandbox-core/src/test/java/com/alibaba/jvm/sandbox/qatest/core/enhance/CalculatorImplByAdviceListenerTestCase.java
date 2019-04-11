@@ -24,10 +24,10 @@ import static org.junit.Assert.assertTrue;
  */
 public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCase {
 
-    @BeforeClass
-    public static void initSpy() {
-        Spy.isSpyThrowException = true;
-    }
+//    @BeforeClass
+//    public static void initSpy() {
+//        Spy.isSpyThrowException = true;
+//    }
 
     @Test
     @Override

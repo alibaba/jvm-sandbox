@@ -63,6 +63,7 @@ public class AdviceAdapterListener implements EventListener {
                                 bEvent.javaMethodName,
                                 bEvent.javaMethodDesc
                         ),
+                        bEvent.javaClassLoader,
                         bEvent.argumentArray,
                         bEvent.target
                 );
