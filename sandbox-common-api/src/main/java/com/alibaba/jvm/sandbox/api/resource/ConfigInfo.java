@@ -3,6 +3,7 @@ package com.alibaba.jvm.sandbox.api.resource;
 import com.alibaba.jvm.sandbox.api.Information;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 /**
  * 沙箱配置信息
@@ -102,8 +103,7 @@ public interface ConfigInfo {
      * 沙箱事件对象池单个事件类型缓存最小数量，{@link #isEnableEventPool()}==true时候有意义
      *
      * @return 单个事件类型缓存最小数量
-     * @deprecated 已经被废弃，推荐使用{@link #getEventPoolMaxIdlePerEvent()}
-     * @deprecated 后续不再支持事件池
+     * @deprecated 已经被废弃，后续不再支持事件池，推荐使用{@link #getEventPoolMaxIdlePerEvent()}
      */
     @Deprecated
     int getEventPoolKeyMin();
@@ -112,8 +112,7 @@ public interface ConfigInfo {
      * 沙箱事件对象池单个事件类型缓存最大数量，{@link #isEnableEventPool()}==true时候有意义
      *
      * @return 单个事件类型缓存最大数量
-     * @deprecated 已被废弃，推荐使用{@link #getEventPoolMaxTotalPerEvent()}
-     * @deprecated 后续不再支持事件池
+     * @deprecated 已被废弃，后续不再支持事件池，推荐使用{@link #getEventPoolMaxTotalPerEvent()}
      */
     @Deprecated
     int getEventPoolKeyMax();
@@ -122,8 +121,7 @@ public interface ConfigInfo {
      * 沙箱事件对象池所有事件类型缓存最大总数量，{@link #isEnableEventPool()}==true时候有意义
      *
      * @return 所有事件类型缓存最大总数量
-     * @deprecated 已被废弃，推荐使用{@link #getEventPoolMaxTotal()}
-     * @deprecated 后续不再支持事件池
+     * @deprecated 已被废弃，后续不再支持事件池，推荐使用{@link #getEventPoolMaxTotal()}
      */
     @Deprecated
     int getEventPoolTotal();
@@ -184,4 +182,18 @@ public interface ConfigInfo {
      */
     String getVersion();
 
+    /**
+     * 获取 Agent 的启动参数
+     *
+     * @param key 键
+     * @return 值
+     */
+    String getProperty(String key);
+
+    /**
+     * 获取所有的 Agent 启动参数
+     *
+     * @return 所有的 Agent 启动参数
+     */
+    Map<String, String> getProperties();
 }

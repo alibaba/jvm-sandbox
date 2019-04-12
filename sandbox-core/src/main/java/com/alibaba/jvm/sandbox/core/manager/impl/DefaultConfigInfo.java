@@ -9,6 +9,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 /**
  * 默认配置信息实现
@@ -131,5 +132,15 @@ class DefaultConfigInfo implements ConfigInfo {
         } finally {
             IOUtils.closeQuietly(is);
         }
+    }
+
+    @Override
+    public String getProperty(String key) {
+        return cfg.getProperty(key);
+    }
+
+    @Override
+    public Map<String, String> getProperties() {
+        return cfg.getProperties();
     }
 }

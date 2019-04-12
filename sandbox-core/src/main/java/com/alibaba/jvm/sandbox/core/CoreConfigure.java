@@ -156,10 +156,10 @@ public class CoreConfigure {
         final Collection<File> foundModuleJarFiles = new LinkedHashSet<File>();
         for (final String path : getUserModuleLibPaths()) {
             final File fileOfPath = new File(path);
-            if(fileOfPath.isDirectory()) {
+            if (fileOfPath.isDirectory()) {
                 foundModuleJarFiles.addAll(FileUtils.listFiles(new File(path), new String[]{"jar"}, false));
             } else {
-                if(StringUtils.endsWithIgnoreCase(fileOfPath.getPath(), ".jar")) {
+                if (StringUtils.endsWithIgnoreCase(fileOfPath.getPath(), ".jar")) {
                     foundModuleJarFiles.add(fileOfPath);
                 }
             }
@@ -278,6 +278,25 @@ public class CoreConfigure {
      */
     public String getProviderLibPath() {
         return featureMap.get(KEY_PROVIDER_LIB_PATH);
+    }
+
+    /**
+     * 获取 Agent 的启动参数
+     *
+     * @param key 键
+     * @return 值
+     */
+    public String getProperty(String key) {
+        return featureMap.get(key);
+    }
+
+    /**
+     * 获取所有的 Agent 启动参数
+     *
+     * @return Agent 的所有启动参数
+     */
+    public Map<String, String> getProperties() {
+        return featureMap;
     }
 
 }

@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -371,43 +372,50 @@ public class AgentLauncher {
         );
     }
 
-    // 如果featureMap中有对应的key值，则将featureMap中的[K,V]对合并到featureSB中
-    private static void appendFromFeatureMap(final StringBuilder featureSB,
-                                             final Map<String, String> featureMap,
-                                             final String key,
-                                             final String defaultValue) {
-        if (featureMap.containsKey(key)) {
-            featureSB.append(format("%s=%s;", key, getDefault(featureMap, key, defaultValue)));
+    /**
+     * 将featureMap中的[K,V]对转换为featureString
+     */
+    private static String toFeatureString(final Map<String, String> featureMap) {
+        // 若有设置 home 则使用，没有则使用默认
+        String sandboxHome = featureMap == null || !featureMap.containsKey(KEY_SANDBOX_HOME)
+                ? DEFAULT_SANDBOX_HOME : featureMap.get(KEY_SANDBOX_HOME);
+        // 保留 featureMap 中的所有配置项
+        Map<String, String> map = copyMap(featureMap);
+        map.put(KEY_SANDBOX_HOME, sandboxHome);
+        map.put("cfg", getSandboxCfgPath(sandboxHome));
+        map.put("system_module", getSandboxModulePath(sandboxHome));
+        map.put("mode", LAUNCH_MODE);
+        map.put("sandbox_home", sandboxHome);
+        map.put("user_module", SANDBOX_USER_MODULE_PATH);
+        map.put("provider", getSandboxProviderPath(sandboxHome));
+        map.put("namespace", getNamespace(featureMap));
+        // 设置默认 ip
+        if (!map.containsKey(KEY_SERVER_IP)) {
+            map.put(KEY_SERVER_IP, DEFAULT_IP);
         }
+        // 设置默认 port
+        if (!map.containsKey(KEY_SERVER_PORT)) {
+            map.put(KEY_SERVER_PORT, DEFAULT_PORT);
+        }
+        // 将 map 按 key=value;key=value 的格式序列化
+        final StringBuilder featureSB = new StringBuilder(";");
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            featureSB.append(entry.getKey()).append("=").append(entry.getValue()).append(";");
+        }
+        return featureSB.toString();
     }
 
-    // 将featureMap中的[K,V]对转换为featureString
-    private static String toFeatureString(final Map<String, String> featureMap) {
-        final String sandboxHome = getSandboxHome(featureMap);
-        final StringBuilder featureSB = new StringBuilder(
-                format(
-                        ";cfg=%s;system_module=%s;mode=%s;sandbox_home=%s;user_module=%s;provider=%s;namespace=%s;",
-                        getSandboxCfgPath(sandboxHome),
-                        // SANDBOX_CFG_PATH,
-                        getSandboxModulePath(sandboxHome),
-                        // SANDBOX_MODULE_PATH,
-                        LAUNCH_MODE,
-                        sandboxHome,
-                        // SANDBOX_HOME,
-                        SANDBOX_USER_MODULE_PATH,
-                        getSandboxProviderPath(sandboxHome),
-                        // SANDBOX_PROVIDER_LIB_PATH,
-                        getNamespace(featureMap)
-                )
-        );
-
-        // 合并IP(如有)
-        appendFromFeatureMap(featureSB, featureMap, KEY_SERVER_IP, DEFAULT_IP);
-
-        // 合并PORT(如有)
-        appendFromFeatureMap(featureSB, featureMap, KEY_SERVER_PORT, DEFAULT_PORT);
-
-        return featureSB.toString();
+    /**
+     * 拷贝一个 map
+     */
+    private static Map<String, String> copyMap(Map<String, String> mapToCopy) {
+        Map<String, String> map = new HashMap<String, String>(mapToCopy != null ? mapToCopy.size() : 16);
+        if (mapToCopy != null && mapToCopy.size() > 0) {
+            for (Map.Entry<String, String> entry : mapToCopy.entrySet()) {
+                map.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return map;
     }
 
 
