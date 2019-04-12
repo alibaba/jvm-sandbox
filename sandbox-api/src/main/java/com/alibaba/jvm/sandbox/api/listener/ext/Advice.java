@@ -265,6 +265,15 @@ public class Advice implements Attachment {
     }
 
     /**
+     * 获取目标方法的类加载器
+     *
+     * @return 目标对象的类加载器
+     */
+    public ClassLoader getClassLoader() {
+        return behavior.getDeclaringClass().getClassLoader();
+    }
+
+    /**
      * 列出调用链路上所有拥有期待标记的调用通知
      *
      * @param exceptMark 期待标记
