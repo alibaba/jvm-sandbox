@@ -293,10 +293,11 @@ public class CoreConfigure {
     /**
      * 获取所有的 Agent 启动参数
      *
-     * @return Agent 的所有启动参数
+     * @return Agent 的所有启动参数，不允许被动态修改
      */
     public Map<String, String> getProperties() {
-        return featureMap;
+        // 保护性拷贝，防止被改
+        return Collections.unmodifiableMap(featureMap);
     }
 
 }
