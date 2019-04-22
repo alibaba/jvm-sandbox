@@ -13,6 +13,7 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.eclipse.jetty.util.thread.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,10 +167,11 @@ public class JettyCoreServer implements CoreServer {
         }
 
         httpServer = new Server(new InetSocketAddress(serverIp, serverPort));
-        if (httpServer.getThreadPool() instanceof QueuedThreadPool) {
-            final QueuedThreadPool qtp = (QueuedThreadPool) httpServer.getThreadPool();
-            qtp.setName("sandbox-jetty-qtp-" + qtp.hashCode());
-        }
+        QueuedThreadPool qtp = new QueuedThreadPool();
+        // jetty线程设置为daemon，防止应用启动失败进程无法正常退出
+        qtp.setDaemon(true);
+        qtp.setName("sandbox-jetty-qtp-" + qtp.hashCode());
+        httpServer.setThreadPool(qtp);
     }
 
     @Override
