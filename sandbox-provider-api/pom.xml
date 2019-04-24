@@ -6,7 +6,7 @@
     <parent>
         <artifactId>sandbox</artifactId>
         <groupId>com.alibaba.jvm.sandbox</groupId>
-        <version>1.2.0</version>
+        <version>1.2.1</version>
     </parent>
     <artifactId>sandbox-provider-api</artifactId>
     <name>sandbox-provider-api ${sandbox.version}</name>
