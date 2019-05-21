@@ -9,11 +9,10 @@
 
 ### Install the container
 
-
 - **Local installation**
 
-   - First need[Download](http://gitlab.alibaba-inc.com/jvm-sandbox/jvm-sandbox-doc/raw/master/release/sandbox-stable-bin.zip)latest stable version
-   - After downloading and decompressing `./sandbox`carried out`./install-local.sh`script，specify the installation directory for the sandbox。I personally like to install the program in `${HOME}/opt`.
+   - First [download](http://gitlab.alibaba-inc.com/jvm-sandbox/jvm-sandbox-doc/raw/master/release/sandbox-stable-bin.zip) latest stable version
+   - After downloading, run the `./install-local.sh` script and specify the installation directory for the sandbox。I personally like to install the program in `${HOME}/opt`.
 
        ```shell
        ./install-local.sh -p ~/opt
@@ -31,18 +30,18 @@
 
 ### Start mode
 
-There are two ways to start the sandbox：`ATTACH`和`AGENT`
+There are two ways to start the sandbox：`ATTACH` or `AGENT`
 
 - **ATTACH**
 
-  Plug and play mode, you can not restart the target JVM case to complete the sandbox implant. Principle and GREYS, BTrace similar to the use of the JVM Attach mechanism to achieve.
+  Plug and play mode, there is no need to restart the target JVM to complete the sandbox implant. Principle and GREYS, BTrace similar to the use of the JVM Attach mechanism to achieve.
 
   ```shell
   # Assume that the target JVM process number is`2343`
   ./sandbox.sh -p 2343
   ```
   
-  If output
+  If the output is similar to 
   
   ```
                VERSION : 0.0.0.i
@@ -53,24 +52,25 @@ There are two ways to start the sandbox：`ATTACH`和`AGENT`
           SANDBOX_HOME : /Users/vlinux/opt/sandbox/lib/..
             MODULE_LIB : /Users/vlinux/opt/sandbox/lib/../module
        USER_MODULE_LIB : /Users/vlinux/.sandbox-module
-EVENT_POOL_SUPPORT : ENABLE
-EVENT_POOL_KEY_MIN : 100
-EVENT_POOL_KEY_MAX : 2000
+    EVENT_POOL_SUPPORT : ENABLE
+    EVENT_POOL_KEY_MIN : 100
+    EVENT_POOL_KEY_MAX : 2000
       EVENT_POOL_TOTAL : 3000
   ```
-Then the success of the start, the sandbox has been successfully implanted in the target JVM, and completed the underlying port open and all modules loaded.
+
+Then the sandbox has been successfully implanted in the target JVM, and opened a port and loaded all modules.
 
 - **AGENT**
 
-  Sometimes we need the sandbox to work before the application code loads, or the larger scale of engineering. This needs to be enabled`AGENT`mode to start。
+  Sometimes we need the sandbox to start before the application code loads, or the larger scale of engineering. This is possible by starting in the `AGENT` mode.
   
-  Assume that SANDBOX is installed in `/Users/vlinux/opt/sandbox`，Need to be added in the JVM startup parameters
+  If we assume that `sandbox` is installed in `/Users/vlinux/opt/sandbox`，the following need to be added to the JVM startup parameters
   
   ```shell
   -javaagent:/Users/vlinux/opt/sandbox/lib/sandbox-agent.jar
   ```
   
-  This will be accompanied by the JVM boot and start the initiative to load and load the corresponding sandbox module.
+  When starting the JVM this will load the `sandbox` module before any of the application code is loaded.
 
 ### Introduction to Sandbox Engineering
 
@@ -94,21 +94,21 @@ Then the success of the start, the sandbox has been successfully implanted in th
 
   - **./sandbox/bin/sandbox.sh**
   
-     Sandbox client script for starting, managing sandboxes
+     This is the `sandbox` client script used for starting and managing sandboxes.
      
   - **./sandbox/cfg/**
   
-     Sandbox configuration file storage directory, which holds all the configuration file of the sandbox. For a detailed list of configuration files, please refer to the following link
+     This directory holds the `sandbox` configuration files. For a detailed list of configuration files, please refer to the following link
      
      - [sandbox-logback.xml](#sandbox-logback.xmlConfiguration)
      - [sandbox.properties](#sandbox.propertiesConfiguration)
      - version
 
-    - **./sandbox/lib/**
+  - **./sandbox/lib/**
     
-      Sandbox main program of the library package directory, where the sandbox is stored in the main program, can not be free to delete, rename and move!
+     This holds `sandbox`s main program and cannot be deleted, renamed or moved!
       
-      |file name|Explanation of the action|
+      |File name|What it is|
       |---|---|
       |sandbox-agent.jar|Sandbox start agent|
       |sandbox-core.jar|Sandbox kernel|
