@@ -205,6 +205,9 @@ reset_for_env()
             |grep ${TARGET_JVM_PID}\
             |grep java\
             |awk '{print $11}'\
+            |xargs which\
+            |xargs ls -l\
+            |awk '{if($1~/^l/){print $11}else{print $9}}'\
             |xargs ls -l\
             |awk '{if($1~/^l/){print $11}else{print $9}}'\
             |sed 's/\/bin\/java//g'\
