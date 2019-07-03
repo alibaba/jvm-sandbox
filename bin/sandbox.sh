@@ -201,11 +201,9 @@ reset_for_env()
     # use the target JVM for SANDBOX_JAVA_HOME
     [[ -z ${SANDBOX_JAVA_HOME} ]] \
         && SANDBOX_JAVA_HOME="$(\
-            ps aux\
-            |grep ${TARGET_JVM_PID}\
-            |grep java\
-            |awk '{print $11}'\
-            |xargs which\
+            lsof -p ${TARGET_JVM_PID}\
+            |grep "/bin/java"\
+            |awk '{print $9}'\
             |xargs ls -l\
             |awk '{if($1~/^l/){print $11}else{print $9}}'\
             |xargs ls -l\
