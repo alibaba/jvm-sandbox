@@ -13,3 +13,14 @@ sandbox-agent/target/
 sandbox-debug-module/target/
 sandbox-mgr-module/target/
 sandbox-mgr-provider/target/
+
+## for eclipse and vscode
+.classpath
+.project
+.settings
+.factorypath
+
+## for vim
+*.swp
+*.swo
+*.swn
