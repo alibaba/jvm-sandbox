@@ -243,6 +243,9 @@ function attach_jvm() {
         "home=${SANDBOX_HOME_DIR};token=${token};server.ip=${TARGET_SERVER_IP};server.port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" \
     || exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail."
 
+    //fix for windows  shell $HOME diff with user.home
+    test -n "$USERPROFILE"  -a -z "$(cat $SANDBOX_TOKEN_FILE)"  && SANDBOX_TOKEN_FILE=$USERPROFILE/.sandbox.token
+
     # get network from attach result
     SANDBOX_SERVER_NETWORK=$(grep ${token} ${SANDBOX_TOKEN_FILE}|grep ${TARGET_NAMESPACE}|tail -1|awk -F ";" '{print $3";"$4}');
     [[ -z ${SANDBOX_SERVER_NETWORK} ]]  \
@@ -266,6 +269,9 @@ function sandbox_curl_with_exit() {
 function sandbox_debug_curl() {
     local host=$(echo "${SANDBOX_SERVER_NETWORK}"|awk -F ";" '{print $1}')
     local port=$(echo "${SANDBOX_SERVER_NETWORK}"|awk -F ";" '{print $2}')
+    if [ "$host" = "0.0.0.0" ] ; then
+       host="127.0.0.1";
+    fi
     curl -N -s "http://${host}:${port}/sandbox/${TARGET_NAMESPACE}/${1}" \
         || exit_on_err 1 "target JVM ${TARGET_JVM_PID} lose response."
 }
