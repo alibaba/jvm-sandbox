@@ -32,6 +32,7 @@ cp ../sandbox-core/target/sandbox-core-*-jar-with-dependencies.jar ${SANDBOX_TAR
     && cp sandbox-logback.xml ${SANDBOX_TARGET_DIR}/cfg/sandbox-logback.xml \
     && cp sandbox.properties ${SANDBOX_TARGET_DIR}/cfg/sandbox.properties \
     && cp sandbox.sh ${SANDBOX_TARGET_DIR}/bin/sandbox.sh \
+    && cp jps.sh ${SANDBOX_TARGET_DIR}/bin/jps.sh \
     && cp install-local.sh ${SANDBOX_TARGET_DIR}/install-local.sh
 
 # sandbox's version
