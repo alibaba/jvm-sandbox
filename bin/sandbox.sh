@@ -270,6 +270,54 @@ function sandbox_debug_curl() {
         || exit_on_err 1 "target JVM ${TARGET_JVM_PID} lose response."
 }
 
+function call_jps()
+{
+    "${SANDBOX_JAVA_HOME}"/bin/jps -l -v
+}
+
+function choose_process(){
+        # interactive mode
+        local IFS=$'\n'
+        CANDIDATES=($(call_jps | grep -v sun.tools.jps.Jps | awk '{print $0}'))
+
+        if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
+            exit_on_err 1 "PID (-p) was missing.no available java process to attach."
+        fi
+
+        echo "Found existing java process, please choose one and hit RETURN."
+
+        index=0
+        suggest=1
+        # auto select tomcat/pandora-boot process
+        for process in "${CANDIDATES[@]}"; do
+            index=$(($index+1))
+            if [[ $(echo ${process} | grep -c org.apache.catalina.startup.Bootstrap) -eq 1 ]] \
+                || [[ $(echo ${process} | grep -c com.taobao.pandora.boot.loader.SarLauncher) -eq 1 ]]
+            then
+               suggest=${index}
+               break
+            fi
+        done
+
+        index=0
+        for process in "${CANDIDATES[@]}"; do
+            index=$(($index+1))
+            if [[ ${index} -eq ${suggest} ]]; then
+                echo "* [$index]: ${process}"
+            else
+                echo "  [$index]: ${process}"
+            fi
+        done
+
+        read choice
+
+        if [[ -z ${choice} ]]; then
+            choice=${suggest}
+        fi
+
+        TARGET_JVM_PID=`echo ${CANDIDATES[$(($choice-1))]} | cut -d ' ' -f 1`
+}
+
 # the sandbox main function
 function main() {
 
@@ -321,7 +369,7 @@ function main() {
     else
         # -p was missing
         [[ -z ${TARGET_JVM_PID} ]] \
-            && exit_on_err 1 "PID (-p) was missing.";
+            && choose_process;
         attach_jvm
     fi
 
