@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.api.listener.ext;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -36,6 +37,14 @@ public interface Behavior {
     Class<?>[] getExceptionTypes();
 
     Annotation[] getDeclaredAnnotations();
+
+    /**
+     * 获取被封装的目标对象: Method/Constructor
+     *
+     * @return 目标对象
+     * @since {@code sandbox-api:1.2.2}
+     */
+    AccessibleObject getTarget();
 
     /**
      * 类实现
@@ -102,6 +111,11 @@ public interface Behavior {
         @Override
         public Annotation[] getDeclaredAnnotations() {
             return target.getDeclaredAnnotations();
+        }
+
+        @Override
+        public AccessibleObject getTarget() {
+            return target;
         }
 
         @Override
@@ -181,6 +195,11 @@ public interface Behavior {
         @Override
         public Annotation[] getDeclaredAnnotations() {
             return target.getDeclaredAnnotations();
+        }
+
+        @Override
+        public AccessibleObject getTarget() {
+            return target;
         }
 
         @Override
