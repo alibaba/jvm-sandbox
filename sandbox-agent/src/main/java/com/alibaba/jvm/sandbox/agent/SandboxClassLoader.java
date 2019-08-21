@@ -2,12 +2,14 @@ package com.alibaba.jvm.sandbox.agent;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.jar.JarFile;
 
 /**
@@ -88,39 +90,41 @@ class SandboxClassLoader extends URLClassLoader {
      */
     @SuppressWarnings("unused")
     public void closeIfPossible() {
-
         // 如果是JDK7+的版本, URLClassLoader实现了Closeable接口，直接调用即可
-        if (this instanceof Closeable) {
-            try {
-                final Method closeMethod = URLClassLoader.class.getMethod("close");
-                closeMethod.invoke(this);
-            } catch (Throwable cause) {
-                // ignore...
-            }
-            return;
-        }
-
-
-        // 对于JDK6的版本，URLClassLoader要关闭起来就显得有点麻烦，这里弄了一大段代码来稍微处理下
-        // 而且还不能保证一定释放干净了，至少释放JAR文件句柄是没有什么问题了
         try {
-            final Object sun_misc_URLClassPath = URLClassLoader.class.getDeclaredField("ucp").get(this);
-            final Object java_util_Collection = sun_misc_URLClassPath.getClass().getDeclaredField("loaders").get(sun_misc_URLClassPath);
+            Class    clazz   = URLClassLoader.class;
+            Method[] methods = clazz.getMethods();
 
-            for (Object sun_misc_URLClassPath_JarLoader :
-                    ((Collection) java_util_Collection).toArray()) {
-                try {
-                    final JarFile java_util_jar_JarFile = (JarFile) sun_misc_URLClassPath_JarLoader.getClass().getDeclaredField("jar").get(sun_misc_URLClassPath_JarLoader);
-                    java_util_jar_JarFile.close();
-                } catch (Throwable t) {
-                    // if we got this far, this is probably not a JAR loader so skip it
+            for (Method method : methods) {
+                if (method.getName().equals("close")) {
+                    method.invoke(this);
+                    return;
                 }
             }
 
-        } catch (Throwable cause) {
+            // 如果不能直接通过URLClassLoader的close方法关闭那么就需要反向查找所有已经打开了的jar文件并关闭了,
+            // 对于JDK6的版本，URLClassLoader要关闭起来就显得有点麻烦，这里弄了一大段代码来稍微处理下
+            // 而且还不能保证一定释放干净了，至少释放JAR文件句柄是没有什么问题了
+            Field ucpField = clazz.getDeclaredField("ucp");
+            ucpField.setAccessible(true);
+            Object ucp = ucpField.get(this);
+
+            Field loadersField = ucp.getClass().getDeclaredField("loaders");
+            loadersField.setAccessible(true);
+            List loaders = (List) loadersField.get(ucp);
+
+            for (Object loader : loaders) {
+                Class  jarLoaderClass = loader.getClass();
+                Method method         = jarLoaderClass.getDeclaredMethod("getJarFile");
+                method.setAccessible(true);
+
+                // 释放jar文件连接
+                JarFile jarFile = (JarFile) method.invoke(loader);
+                jarFile.close();
+            }
+        } catch (Throwable t) {
             // ignore...
         }
-
     }
 
 }
