@@ -59,6 +59,7 @@ public class DebugWatchModule extends ParamSupported implements Module {
         final EventWatcher watcher = new EventWatchBuilder(moduleEventWatcher)
                 .onClass(cnPattern)
                 .includeSubClasses()
+                .includeBootstrap()
                 .onBehavior(mnPattern)
                 .onWatching()
                 .withProgress(new ProgressPrinter(printer))

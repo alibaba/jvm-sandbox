@@ -197,7 +197,7 @@ check_permission()
 # reset some options for env
 reset_for_env()
 {
-    TARGET_JVM_USER=$(ps aux | grep ${TARGET_JVM_PID} | grep java | awk '{print $1}')
+    TARGET_JVM_USER=$(ps aux | awk '$2==PID' PID=${TARGET_JVM_PID} | grep java | awk '{print $1}')
     if [[ "${USER}" != "${TARGET_JVM_USER}" ]]; then
         SANDBOX_TOKEN_FILE=$(eval echo "~${TARGET_JVM_USER}")/${SANDBOX_TOKEN_FILENAME}
         # touch attach token file
@@ -262,7 +262,7 @@ function attach_jvm() {
             || exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail. Attach command: $ATTACH_CMD"
     fi
 
-    //fix for windows  shell $HOME diff with user.home
+    #fix for windows  shell $HOME diff with user.home
     test -n "$USERPROFILE"  -a -z "$(cat $SANDBOX_TOKEN_FILE)"  && SANDBOX_TOKEN_FILE=$USERPROFILE/.sandbox.token
 
     # get network from attach result
