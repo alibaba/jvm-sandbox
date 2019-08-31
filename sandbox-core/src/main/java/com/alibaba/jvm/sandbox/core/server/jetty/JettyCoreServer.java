@@ -142,7 +142,7 @@ public class JettyCoreServer implements CoreServer {
         final String pathSpec = "/module/http/*";
         logger.info("initializing http-handler. path={}", contextPath + pathSpec);
         context.addServlet(
-                new ServletHolder(new ModuleHttpServlet(jvmSandbox.getCoreModuleManager())),
+                new ServletHolder(new ModuleHttpServlet(cfg, jvmSandbox.getCoreModuleManager())),
                 pathSpec
         );
 
