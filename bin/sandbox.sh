@@ -288,7 +288,7 @@ function sandbox_curl_with_exit() {
 function sandbox_debug_curl() {
     local host=$(echo "${SANDBOX_SERVER_NETWORK}"|awk -F ";" '{print $1}')
     local port=$(echo "${SANDBOX_SERVER_NETWORK}"|awk -F ";" '{print $2}')
-    if [ "$host" = "0.0.0.0" ] ; then
+    if [[ "$host" = "0.0.0.0" ]] ; then
        host="127.0.0.1";
     fi
     curl -N -s "http://${host}:${port}/sandbox/${TARGET_NAMESPACE}/${1}" \
