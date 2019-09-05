@@ -168,6 +168,12 @@
             <version>2.4.2</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+        </dependency>
+
         <!-- ant
         <dependency>
             <groupId>org.apache.ant</groupId>
