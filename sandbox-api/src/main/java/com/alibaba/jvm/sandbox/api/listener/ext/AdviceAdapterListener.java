@@ -53,18 +53,12 @@ public class AdviceAdapterListener implements EventListener {
         switch (event.type) {
             case BEFORE: {
                 final BeforeEvent bEvent = (BeforeEvent) event;
-                final ClassLoader loader = toClassLoader(bEvent.javaClassLoader);
-                final Class<?> targetClass = toClass(loader, bEvent.javaClassName);
                 final Advice advice = new Advice(
                         bEvent.processId,
                         bEvent.invokeId,
-                        toBehavior(
-                                targetClass,
-                                bEvent.javaMethodName,
-                                bEvent.javaMethodDesc
-                        ),
                         bEvent.argumentArray,
-                        bEvent.target
+                        bEvent.target,
+                        this
                 );
 
                 final Advice top;
@@ -85,6 +79,7 @@ public class AdviceAdapterListener implements EventListener {
 
                 opStackRef.get().pushForBegin(advice);
                 adviceListener.before(advice);
+                advice.setBeforeEvent(bEvent);
                 break;
             }
 
@@ -256,12 +251,12 @@ public class AdviceAdapterListener implements EventListener {
         if (GaStringUtils.isEmpty(internalClassName)) {
             return internalClassName;
         } else {
-            return internalClassName.replaceAll("/", ".");
+            return internalClassName.replace('/', '.');
         }
     }
 
     // 提取ClassLoader，从BeforeEvent中获取到的ClassLoader
-    private ClassLoader toClassLoader(ClassLoader loader) {
+    ClassLoader toClassLoader(ClassLoader loader) {
         return null == loader
                 // 如果此处为null，则说明遇到了来自Bootstrap的类，
                 ? AdviceAdapterListener.class.getClassLoader()
@@ -269,7 +264,7 @@ public class AdviceAdapterListener implements EventListener {
     }
 
     // 根据JavaClassName从ClassLoader中提取出Class<?>对象
-    private Class<?> toClass(ClassLoader loader, String javaClassName) throws ClassNotFoundException {
+    Class<?> toClass(ClassLoader loader, String javaClassName) throws ClassNotFoundException {
         return toClassLoader(loader).loadClass(javaClassName);
     }
 
@@ -384,7 +379,7 @@ public class AdviceAdapterListener implements EventListener {
      * @return 匹配的行为
      * @throws NoSuchMethodException 如果匹配不到行为，则抛出该异常
      */
-    private Behavior toBehavior(final Class<?> clazz,
+    Behavior toBehavior(final Class<?> clazz,
                                 final String javaMethodName,
                                 final String javaMethodDesc) throws NoSuchMethodException {
         final Behavior behavior = toBehaviorCacheGet.getFromCache(new BehaviorCacheKey(clazz, javaMethodName, javaMethodDesc));

@@ -181,7 +181,7 @@ public class EventWatchBuilder {
 
         IBuildingForWatching onWatching();
 
-        EventWatcher onWatch(AdviceListener adviceListener);
+        EventWatcher onWatch(AdviceListener adviceListener, Event.Type... eventTypeArray);
 
         EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray);
 
@@ -629,8 +629,11 @@ public class EventWatchBuilder {
         }
 
         @Override
-        public EventWatcher onWatch(final AdviceListener adviceListener) {
-            return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
+        public EventWatcher onWatch(final AdviceListener adviceListener, Event.Type... eventTypeArray) {
+            if (eventTypeArray == null) {
+                return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
+            }
+            return build(new AdviceAdapterListener(adviceListener), null, eventTypeArray);
         }
 
         @Override

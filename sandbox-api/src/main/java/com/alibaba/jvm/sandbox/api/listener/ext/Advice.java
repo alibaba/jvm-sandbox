@@ -1,5 +1,6 @@
 package com.alibaba.jvm.sandbox.api.listener.ext;
 
+import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.event.InvokeEvent;
 
@@ -18,10 +19,11 @@ public class Advice implements Attachment {
 
     private final int processId;
     private final int invokeId;
-    private final Behavior behavior;
+    private Behavior behavior;
 
     private final Object[] parameterArray;
     private final Object target;
+    private final AdviceAdapterListener listener;
 
     private Object returnObj;
     private Throwable throwable;
@@ -33,25 +35,28 @@ public class Advice implements Attachment {
     private Advice parent = this;
     private Event.Type state = Event.Type.BEFORE;
 
+    private BeforeEvent beforeEvent;
+
+
     /**
      * 构造通知
      *
      * @param processId      {@link InvokeEvent#processId}
      * @param invokeId       {@link InvokeEvent#invokeId}
-     * @param behavior       触发事件的行为
      * @param parameterArray 触发事件的行为入参
      * @param target         触发事件所归属的对象实例
+     * @param listener       触发事件的处理监听器
      */
     Advice(final int processId,
            final int invokeId,
-           final Behavior behavior,
            final Object[] parameterArray,
-           final Object target) {
+           final Object target,
+           final AdviceAdapterListener listener) {
         this.processId = processId;
         this.invokeId = invokeId;
-        this.behavior = behavior;
         this.parameterArray = parameterArray;
         this.target = target;
+        this.listener = listener;
     }
 
     /**
@@ -136,6 +141,31 @@ public class Advice implements Attachment {
      * @return 触发事件的行为
      */
     public Behavior getBehavior() {
+
+        try {
+            return internalGetBehavior();
+        } catch (NoSuchMethodException e) {
+            return null;
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
+    private Behavior internalGetBehavior() throws NoSuchMethodException, ClassNotFoundException {
+        if (behavior == null) {
+            synchronized (this) {
+                if (behavior == null) {
+                    final ClassLoader loader = listener.toClassLoader(beforeEvent.javaClassLoader);
+                    final Class<?> targetClass = listener.toClass(loader, beforeEvent.javaClassName);
+                    behavior = listener.toBehavior(
+                            targetClass,
+                            beforeEvent.javaMethodName,
+                            beforeEvent.javaMethodDesc
+                    );
+                }
+            }
+        }
+
         return behavior;
     }
 
@@ -281,4 +311,7 @@ public class Advice implements Attachment {
         return advices;
     }
 
+    public void setBeforeEvent(BeforeEvent beforeEvent) {
+        this.beforeEvent = beforeEvent;
+    }
 }
