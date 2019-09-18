@@ -40,10 +40,10 @@ class CallAsmCodeLock extends AsmCodeLock {
  */
 class AsmTryCatchBlock {
 
-    final Label start;
-    final Label end;
-    final Label handler;
-    final String type;
+    protected final Label start;
+    protected final Label end;
+    protected final Label handler;
+    protected final String type;
 
     AsmTryCatchBlock(Label start, Label end, Label handler, String type) {
         this.start = start;
@@ -109,12 +109,17 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
     private String getBehaviorSignCode(final String name,
                                        final String desc) {
-        final Type methodType = Type.getMethodType(desc);
-        final Collection<String> parameterClassNameArray = new ArrayList<String>();
-        for (final Type parameterType : methodType.getArgumentTypes()) {
-            parameterClassNameArray.add(parameterType.getClassName());
+        final StringBuilder sb = new StringBuilder(256).append(targetJavaClassName).append("#").append(name).append("(");
+
+        final Type[] methodTypes = Type.getMethodType(desc).getArgumentTypes();
+        if (methodTypes.length != 0) {
+            sb.append(methodTypes[0].getClassName());
+            for (int i = 1; i < methodTypes.length; i++) {
+                sb.append(",").append(methodTypes[i].getClassName());
+            }
         }
-        return targetJavaClassName + "#" + name + "(" + join(parameterClassNameArray, ",") + ")";
+
+        return sb.append(")").toString();
     }
 
     @Override
