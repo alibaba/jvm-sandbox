@@ -1,6 +1,6 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
-import com.alibaba.jvm.sandbox.core.util.LazyGet;
+import com.alibaba.jvm.sandbox.api.util.LazyGet;
 
 import java.lang.annotation.Inherited;
 import java.util.HashSet;

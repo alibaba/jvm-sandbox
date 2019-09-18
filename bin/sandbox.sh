@@ -263,7 +263,7 @@ function attach_jvm() {
     fi
 
     #fix for windows  shell $HOME diff with user.home
-    test -n "$USERPROFILE"  -a -z "$(cat $SANDBOX_TOKEN_FILE)"  && SANDBOX_TOKEN_FILE=$USERPROFILE/.sandbox.token
+    test -n "${USERPROFILE}"  -a -z "$(cat ${SANDBOX_TOKEN_FILE})"  && SANDBOX_TOKEN_FILE=${USERPROFILE}/.sandbox.token
 
     # get network from attach result
     SANDBOX_SERVER_NETWORK=$(grep ${token} ${SANDBOX_TOKEN_FILE}|grep ${TARGET_NAMESPACE}|tail -1|awk -F ";" '{print $3";"$4}');

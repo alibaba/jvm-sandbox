@@ -40,10 +40,10 @@ class CallAsmCodeLock extends AsmCodeLock {
  */
 class AsmTryCatchBlock {
 
-    protected final Label start;
-    protected final Label end;
-    protected final Label handler;
-    protected final String type;
+    final Label start;
+    final Label end;
+    final Label handler;
+    final String type;
 
     AsmTryCatchBlock(Label start, Label end, Label handler, String type) {
         this.start = start;

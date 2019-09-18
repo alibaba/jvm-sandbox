@@ -5,6 +5,7 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.util.BehaviorDescriptor;
 import com.alibaba.jvm.sandbox.api.util.CacheGet;
 import com.alibaba.jvm.sandbox.api.util.GaStringUtils;
+import com.alibaba.jvm.sandbox.api.util.LazyGet;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -53,12 +54,23 @@ public class AdviceAdapterListener implements EventListener {
         switch (event.type) {
             case BEFORE: {
                 final BeforeEvent bEvent = (BeforeEvent) event;
+                final ClassLoader loader = toClassLoader(bEvent.javaClassLoader);
                 final Advice advice = new Advice(
                         bEvent.processId,
                         bEvent.invokeId,
+                        new LazyGet<Behavior>() {
+                            @Override
+                            protected Behavior initialValue() throws Throwable {
+                                return toBehavior(
+                                        toClass(loader, bEvent.javaClassName),
+                                        bEvent.javaMethodName,
+                                        bEvent.javaMethodDesc
+                                );
+                            }
+                        },
+                        loader,
                         bEvent.argumentArray,
-                        bEvent.target,
-                        this
+                        bEvent.target
                 );
 
                 final Advice top;
@@ -79,7 +91,6 @@ public class AdviceAdapterListener implements EventListener {
 
                 opStackRef.get().pushForBegin(advice);
                 adviceListener.before(advice);
-                advice.setBeforeEvent(bEvent);
                 break;
             }
 
@@ -283,12 +294,12 @@ public class AdviceAdapterListener implements EventListener {
         if (GaStringUtils.isEmpty(internalClassName)) {
             return internalClassName;
         } else {
-            return internalClassName.replace('/', '.');
+            return internalClassName.replaceAll("/", ".");
         }
     }
 
     // 提取ClassLoader，从BeforeEvent中获取到的ClassLoader
-    ClassLoader toClassLoader(ClassLoader loader) {
+    private ClassLoader toClassLoader(ClassLoader loader) {
         return null == loader
                 // 如果此处为null，则说明遇到了来自Bootstrap的类，
                 ? AdviceAdapterListener.class.getClassLoader()
@@ -296,7 +307,7 @@ public class AdviceAdapterListener implements EventListener {
     }
 
     // 根据JavaClassName从ClassLoader中提取出Class<?>对象
-    Class<?> toClass(ClassLoader loader, String javaClassName) throws ClassNotFoundException {
+    private Class<?> toClass(ClassLoader loader, String javaClassName) throws ClassNotFoundException {
         return toClassLoader(loader).loadClass(javaClassName);
     }
 
@@ -411,7 +422,7 @@ public class AdviceAdapterListener implements EventListener {
      * @return 匹配的行为
      * @throws NoSuchMethodException 如果匹配不到行为，则抛出该异常
      */
-    Behavior toBehavior(final Class<?> clazz,
+    private Behavior toBehavior(final Class<?> clazz,
                                 final String javaMethodName,
                                 final String javaMethodDesc) throws NoSuchMethodException {
         final Behavior behavior = toBehaviorCacheGet.getFromCache(new BehaviorCacheKey(clazz, javaMethodName, javaMethodDesc));

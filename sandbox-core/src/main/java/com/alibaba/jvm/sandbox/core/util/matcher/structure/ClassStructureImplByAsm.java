@@ -1,7 +1,7 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
 import com.alibaba.jvm.sandbox.core.util.BitUtils;
-import com.alibaba.jvm.sandbox.core.util.LazyGet;
+import com.alibaba.jvm.sandbox.api.util.LazyGet;
 import com.alibaba.jvm.sandbox.core.util.collection.Pair;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.PrimitiveClassStructure.Primitive;
 import com.google.common.cache.Cache;

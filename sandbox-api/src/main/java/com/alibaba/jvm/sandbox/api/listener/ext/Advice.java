@@ -1,8 +1,8 @@
 package com.alibaba.jvm.sandbox.api.listener.ext;
 
-import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.event.InvokeEvent;
+import com.alibaba.jvm.sandbox.api.util.LazyGet;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,12 +19,11 @@ public class Advice implements Attachment {
 
     private final int processId;
     private final int invokeId;
-    private Behavior behavior;
 
     private final ClassLoader loader;
+    private final LazyGet<Behavior> behaviorLazyGet;
     private final Object[] parameterArray;
     private final Object target;
-    private final AdviceAdapterListener listener;
 
     private Object returnObj;
     private Throwable throwable;
@@ -36,28 +35,28 @@ public class Advice implements Attachment {
     private Advice parent = this;
     private Event.Type state = Event.Type.BEFORE;
 
-    private BeforeEvent beforeEvent;
-
-
     /**
      * 构造通知
      *
-     * @param processId      {@link InvokeEvent#processId}
-     * @param invokeId       {@link InvokeEvent#invokeId}
-     * @param parameterArray 触发事件的行为入参
-     * @param target         触发事件所归属的对象实例
-     * @param listener       触发事件的处理监听器
+     * @param processId       {@link InvokeEvent#processId}
+     * @param invokeId        {@link InvokeEvent#invokeId}
+     * @param behaviorLazyGet 触发事件的行为(懒加载)
+     * @param loader          触发事件的行为所在ClassLoader
+     * @param parameterArray  触发事件的行为入参
+     * @param target          触发事件所归属的对象实例
      */
     Advice(final int processId,
            final int invokeId,
+           final LazyGet<Behavior> behaviorLazyGet,
+           final ClassLoader loader,
            final Object[] parameterArray,
-           final Object target,
-           final AdviceAdapterListener listener) {
+           final Object target) {
         this.processId = processId;
         this.invokeId = invokeId;
+        this.behaviorLazyGet = behaviorLazyGet;
+        this.loader = loader;
         this.parameterArray = parameterArray;
         this.target = target;
-        this.listener = listener;
     }
 
     /**
@@ -142,32 +141,7 @@ public class Advice implements Attachment {
      * @return 触发事件的行为
      */
     public Behavior getBehavior() {
-
-        try {
-            return internalGetBehavior();
-        } catch (NoSuchMethodException e) {
-            return null;
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
-    }
-
-    private Behavior internalGetBehavior() throws NoSuchMethodException, ClassNotFoundException {
-        if (behavior == null) {
-            synchronized (this) {
-                if (behavior == null) {
-                    final ClassLoader loader = listener.toClassLoader(beforeEvent.javaClassLoader);
-                    final Class<?> targetClass = listener.toClass(loader, beforeEvent.javaClassName);
-                    behavior = listener.toBehavior(
-                            targetClass,
-                            beforeEvent.javaMethodName,
-                            beforeEvent.javaMethodDesc
-                    );
-                }
-            }
-        }
-
-        return behavior;
+        return behaviorLazyGet.get();
     }
 
     /**
@@ -237,13 +211,13 @@ public class Advice implements Attachment {
 
     @Override
     public boolean equals(Object obj) {
-        if (null == obj
-                || !(obj instanceof Advice)) {
+        if (obj instanceof Advice) {
+            final Advice advice = (Advice) obj;
+            return processId == advice.processId
+                    && invokeId == advice.invokeId;
+        } else {
             return false;
         }
-        final Advice advice = (Advice) obj;
-        return processId == advice.processId
-                && invokeId == advice.invokeId;
     }
 
     /**
@@ -322,7 +296,5 @@ public class Advice implements Attachment {
         return advices;
     }
 
-    public void setBeforeEvent(BeforeEvent beforeEvent) {
-        this.beforeEvent = beforeEvent;
-    }
 }
+
