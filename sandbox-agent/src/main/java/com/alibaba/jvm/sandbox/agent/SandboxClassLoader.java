@@ -18,14 +18,14 @@ import java.util.jar.JarFile;
  */
 class SandboxClassLoader extends URLClassLoader {
 
-    private final String namespace;
+    private final String toString;
     private final String path;
 
     SandboxClassLoader(final String namespace,
                        final String sandboxCoreJarFilePath) throws MalformedURLException {
         super(new URL[]{new URL("file:" + sandboxCoreJarFilePath)});
-        this.namespace = namespace;
         this.path = sandboxCoreJarFilePath;
+        this.toString = String.format("SandboxClassLoader[namespace=%s;path=%s;]", namespace, path);
     }
 
     @Override
@@ -73,7 +73,7 @@ class SandboxClassLoader extends URLClassLoader {
 
     @Override
     public String toString() {
-        return String.format("SandboxClassLoader[namespace=%s;path=%s;]", namespace, path);
+        return toString;
     }
 
 
@@ -127,7 +127,7 @@ class SandboxClassLoader extends URLClassLoader {
     private <T> T forceGetDeclaredFieldValue(Class<?> clazz, String name, Object target) throws NoSuchFieldException, IllegalAccessException {
         final Field field = clazz.getDeclaredField(name);
         field.setAccessible(true);
-        return (T)field.get(target);
+        return (T) field.get(target);
     }
 
 }
