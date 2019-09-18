@@ -109,20 +109,17 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
     private String getBehaviorSignCode(final String name,
                                        final String desc) {
-        final Type methodType = Type.getMethodType(desc);
-        final Collection<String> parameterClassNameArray = new ArrayList<String>();
-        if (null != methodType.getArgumentTypes()) {
-            for (final Type parameterType : methodType.getArgumentTypes()) {
-                parameterClassNameArray.add(parameterType.getClassName());
+        final StringBuilder sb = new StringBuilder(256).append(targetJavaClassName).append("#").append(name).append("(");
+
+        final Type[] methodTypes = Type.getMethodType(desc).getArgumentTypes();
+        if (methodTypes.length != 0) {
+            sb.append(methodTypes[0].getClassName());
+            for (int i = 1; i < methodTypes.length; i++) {
+                sb.append(",").append(methodTypes[i].getClassName());
             }
         }
-        final String signCode = String.format(
-                "%s#%s(%s)",
-                targetJavaClassName,
-                name,
-                join(parameterClassNameArray, ",")
-        );
-        return signCode;
+
+        return sb.append(")").toString();
     }
 
     @Override

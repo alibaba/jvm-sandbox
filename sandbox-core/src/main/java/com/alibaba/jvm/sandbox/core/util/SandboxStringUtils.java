@@ -20,8 +20,10 @@ public class SandboxStringUtils {
      * @return internal's classname
      */
     public static String toInternalClassName(String javaClassName) {
-        return StringUtils.replace(javaClassName, ".", "/");
-    }
+        if (StringUtils.isEmpty(javaClassName)) {
+            return javaClassName;
+        }
+        return javaClassName.replace('.', '/');    }
 
     /**
      * internal's classname to java's classname
@@ -31,8 +33,10 @@ public class SandboxStringUtils {
      * @return java's classname
      */
     public static String toJavaClassName(String internalClassName) {
-        return StringUtils.replace(internalClassName, "/", ".");
-    }
+        if (StringUtils.isEmpty(internalClassName)) {
+            return internalClassName;
+        }
+        return internalClassName.replace('/', '.');    }
 
     public static String[] toJavaClassNameArray(String[] internalClassNameArray) {
         if (null == internalClassNameArray) {
