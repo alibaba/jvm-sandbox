@@ -36,7 +36,9 @@ public class UnsupportedMatcher implements Matcher {
                 classStructure.getJavaClassName(),
                 "$$Lambda$",
                 "$$FastClassBySpringCGLIB$$",
-                "$$EnhancerBySpringCGLIB$$"
+                "$$EnhancerBySpringCGLIB$$",
+                "$$EnhancerByCGLIB$$",
+                "$$FastClassByCGLIB$$"
         );
     }
 
@@ -60,7 +62,7 @@ public class UnsupportedMatcher implements Matcher {
      * 判断是否隐形类
      */
     private boolean isStealthClass(final ClassStructure classStructure) {
-        return takeJavaClassNames(classStructure.getFamilyTypeClassStructures())
+        return takeJavaClassNames(classStructure.getFamilyAnnotationTypeClassStructures())
                 .contains(Stealth.class.getName());
     }
 

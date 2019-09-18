@@ -18,13 +18,17 @@ typeset SANDBOX_SERVER_NETWORK
 typeset SANDBOX_LIB_DIR=${SANDBOX_HOME_DIR}/lib
 
 # define sandbox attach token file
-typeset SANDBOX_TOKEN_FILE=${HOME}/.sandbox.token
+typeset SANDBOX_TOKEN_FILENAME=.sandbox.token
+typeset SANDBOX_TOKEN_FILE=${HOME}/${SANDBOX_TOKEN_FILENAME}
 
 # define JVM OPS
 typeset SANDBOX_JVM_OPS="-Xms128M -Xmx128M -Xnoclassgc -ea";
 
 # define target JVM Process ID
 typeset TARGET_JVM_PID
+
+# define target JVM starting user
+typeset TARGET_JVM_USER=${USER}
 
 # define target SERVER network interface
 typeset TARGET_SERVER_IP
@@ -193,6 +197,13 @@ check_permission()
 # reset some options for env
 reset_for_env()
 {
+    TARGET_JVM_USER=$(ps aux | awk '$2==PID' PID=${TARGET_JVM_PID} | grep java | awk '{print $1}')
+    if [[ "${USER}" != "${TARGET_JVM_USER}" ]]; then
+        SANDBOX_TOKEN_FILE=$(eval echo "~${TARGET_JVM_USER}")/${SANDBOX_TOKEN_FILENAME}
+        # touch attach token file
+        su - ${TARGET_JVM_USER} -c "touch ${SANDBOX_TOKEN_FILE}" \
+            || exit_on_err 1 "permission denied, ${SANDBOX_TOKEN_FILE} is not readable."
+    fi
 
     # use the env JAVA_HOME for default
     [[ ! -z ${JAVA_HOME} ]] \
@@ -201,10 +212,11 @@ reset_for_env()
     # use the target JVM for SANDBOX_JAVA_HOME
     [[ -z ${SANDBOX_JAVA_HOME} ]] \
         && SANDBOX_JAVA_HOME="$(\
-            ps aux\
-            |grep ${TARGET_JVM_PID}\
-            |grep java\
-            |awk '{print $11}'\
+            lsof -p ${TARGET_JVM_PID}\
+            |grep "/bin/java"\
+            |awk '{print $9}'\
+            |xargs ls -l\
+            |awk '{if($1~/^l/){print $11}else{print $9}}'\
             |xargs ls -l\
             |awk '{if($1~/^l/){print $11}else{print $9}}'\
             |sed 's/\/bin\/java//g'\
@@ -235,13 +247,23 @@ function attach_jvm() {
     local token=`date |head|cksum|sed 's/ //g'`
 
     # attach target jvm
-    "${SANDBOX_JAVA_HOME}/bin/java" \
+    ATTACH_CMD="${SANDBOX_JAVA_HOME}/bin/java \
         ${SANDBOX_JVM_OPS} \
         -jar ${SANDBOX_LIB_DIR}/sandbox-core.jar \
         ${TARGET_JVM_PID} \
-        "${SANDBOX_LIB_DIR}/sandbox-agent.jar" \
-        "home=${SANDBOX_HOME_DIR};token=${token};server.ip=${TARGET_SERVER_IP};server.port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" \
-    || exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail."
+        \"${SANDBOX_LIB_DIR}/sandbox-agent.jar\" \
+        \"home=${SANDBOX_HOME_DIR};token=${token};server.ip=${TARGET_SERVER_IP};server.port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}\""
+
+    if [[ "${USER}" == "${TARGET_JVM_USER}" ]]; then
+        eval ${ATTACH_CMD} \
+            || exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail. Attach command: $ATTACH_CMD"
+    else
+        su - ${TARGET_JVM_USER} -c "${ATTACH_CMD}" \
+            || exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail. Attach command: $ATTACH_CMD"
+    fi
+
+    #fix for windows  shell $HOME diff with user.home
+    test -n "$USERPROFILE"  -a -z "$(cat $SANDBOX_TOKEN_FILE)"  && SANDBOX_TOKEN_FILE=$USERPROFILE/.sandbox.token
 
     # get network from attach result
     SANDBOX_SERVER_NETWORK=$(grep ${token} ${SANDBOX_TOKEN_FILE}|grep ${TARGET_NAMESPACE}|tail -1|awk -F ";" '{print $3";"$4}');
@@ -266,6 +288,9 @@ function sandbox_curl_with_exit() {
 function sandbox_debug_curl() {
     local host=$(echo "${SANDBOX_SERVER_NETWORK}"|awk -F ";" '{print $1}')
     local port=$(echo "${SANDBOX_SERVER_NETWORK}"|awk -F ";" '{print $2}')
+    if [[ "$host" = "0.0.0.0" ]] ; then
+       host="127.0.0.1";
+    fi
     curl -N -s "http://${host}:${port}/sandbox/${TARGET_NAMESPACE}/${1}" \
         || exit_on_err 1 "target JVM ${TARGET_JVM_PID} lose response."
 }

@@ -21,6 +21,7 @@ public class Advice implements Attachment {
     private final int invokeId;
     private Behavior behavior;
 
+    private final ClassLoader loader;
     private final Object[] parameterArray;
     private final Object target;
     private final AdviceAdapterListener listener;
@@ -167,6 +168,16 @@ public class Advice implements Attachment {
         }
 
         return behavior;
+    }
+
+    /**
+     * 获取触发事件的行为所在的ClassLoader
+     *
+     * @return 触发事件的行为所在的ClassLoader
+     * @since {@code sandbox-api:1.2.2}
+     */
+    public ClassLoader getLoader() {
+        return loader;
     }
 
     /**

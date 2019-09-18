@@ -10,9 +10,9 @@ public class AssertUtils {
     public static <E> void assertArrayEquals(E[] exceptArray, E[] actualArray) {
         assertEquals(
                 String.format(
-                        "except size not matched!\n\texcept:%s\n\tactual:%s",
-                        StringUtils.join(exceptArray, ","),
-                        StringUtils.join(actualArray, ",")
+                        "except size not matched!\n\tEXCEPT:\n\t\t%s\n\n\tACTUAL:\n\t\t%s",
+                        StringUtils.join(exceptArray, ",\n\t\t"),
+                        StringUtils.join(actualArray, ",\n\t\t")
                 ),
                 getLength(exceptArray),
                 getLength(actualArray)

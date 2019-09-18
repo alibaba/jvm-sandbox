@@ -16,6 +16,7 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedAdviceAda
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -219,6 +220,7 @@ public class JvmHelper {
     }
 
     public static JvmHelper createJvm() {
+        Spy.isSpyThrowException = true;
         return createJvm("default");
     }
 
