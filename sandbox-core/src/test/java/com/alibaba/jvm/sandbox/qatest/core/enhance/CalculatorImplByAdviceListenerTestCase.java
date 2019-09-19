@@ -4,10 +4,7 @@ import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingAdviceListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
-import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
 import static com.alibaba.jvm.sandbox.api.ProcessController.throwsImmediately;

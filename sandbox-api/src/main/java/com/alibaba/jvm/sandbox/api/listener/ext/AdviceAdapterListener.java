@@ -94,9 +94,7 @@ public class AdviceAdapterListener implements EventListener {
                 break;
             }
 
-            /**
-             * 这里需要感知到IMMEDIATELY，修复#117
-             */
+            // 这里需要感知到IMMEDIATELY，修复#117
             case IMMEDIATELY_THROWS:
             case IMMEDIATELY_RETURN: {
                 final InvokeEvent invokeEvent = (InvokeEvent) event;
@@ -315,7 +313,7 @@ public class AdviceAdapterListener implements EventListener {
     /**
      * 行为缓存KEY对象
      */
-    private class BehaviorCacheKey {
+    private static class BehaviorCacheKey {
         private final Class<?> clazz;
         private final String javaMethodName;
         private final String javaMethodDesc;
@@ -375,7 +373,7 @@ public class AdviceAdapterListener implements EventListener {
     /**
      * CALL目标对象
      */
-    private class CallTarget {
+    private static class CallTarget {
 
         final int callLineNum;
         final String callJavaClassName;
@@ -393,7 +391,7 @@ public class AdviceAdapterListener implements EventListener {
     /**
      * 通知内部封装，主要是要封装掉attachment
      */
-    private class WrapAdvice implements Attachment {
+    private static class WrapAdvice implements Attachment {
 
         final Advice advice;
         Object attachment;

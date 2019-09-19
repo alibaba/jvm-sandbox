@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Set;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;

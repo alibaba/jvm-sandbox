@@ -42,7 +42,7 @@ public class LogServletAccessModule implements Module, LoadCompleted {
     /**
      * HTTP接入信息
      */
-    class HttpAccess {
+    static class HttpAccess {
         final long beginTimestamp = System.currentTimeMillis();
         final String from;
         final String method;

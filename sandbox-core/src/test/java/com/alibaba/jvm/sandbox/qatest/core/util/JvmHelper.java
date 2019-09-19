@@ -157,7 +157,7 @@ public class JvmHelper {
     /**
      * 私有的ClassLoader
      */
-    class PrivateClassLoader extends ClassLoader {
+    static class PrivateClassLoader extends ClassLoader {
 
         private final Map<String, byte[]> javaClassByteArrayMap
                 = new HashMap<String, byte[]>();

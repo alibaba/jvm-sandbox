@@ -89,7 +89,7 @@ class EventProcessor {
     }
 
     @Interrupted
-    private class InterruptedEventListenerImpl implements EventListener {
+    private static class InterruptedEventListenerImpl implements EventListener {
 
         private final EventListener listener;
 
@@ -174,7 +174,7 @@ class EventProcessor {
         String toString(ThreadUnsafeGaStack<Integer> stack) {
             final StringBuilder stackSB = new StringBuilder(String.format("stack[deep=%d;current=%d;]{\n", stack.deep(), stack.getCurrent()));
             for (int index = 0; index < stack.getElementArray().length; index++) {
-                stackSB.append("\t[" + index + "] = " + stack.getElementArray()[index] + "\n");
+                stackSB.append("\t[").append(index).append("] = ").append(stack.getElementArray()[index]).append("\n");
             }
             stackSB.append("}");
             return stackSB.toString();

@@ -621,7 +621,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         }
 
         if (!hasRef) {
-            logger.info("ModuleJarClassLoader will be close: all module unloaded.", loader);
+            logger.info("ModuleJarClassLoader={} will be close: all module unloaded.", loader);
             ((ModuleJarClassLoader) loader).closeIfPossible();
         }
 

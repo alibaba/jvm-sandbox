@@ -799,7 +799,7 @@ public class EventWatchBuilder {
     /**
      * 观察进度组
      */
-    private class ProgressGroup implements Progress {
+    private static class ProgressGroup implements Progress {
 
         private final List<Progress> progresses;
 

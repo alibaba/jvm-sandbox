@@ -30,7 +30,7 @@ public class ChildClass extends ParentClass {
 
     }
 
-    class InnerClass {
+    static class InnerClass {
 
     }
 
