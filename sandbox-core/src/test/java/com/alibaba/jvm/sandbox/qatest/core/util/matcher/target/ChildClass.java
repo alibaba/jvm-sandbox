@@ -30,7 +30,7 @@ public class ChildClass extends ParentClass {
 
     }
 
-    static class InnerClass {
+    class InnerClass {
 
     }
 
@@ -96,7 +96,7 @@ public class ChildClass extends ParentClass {
 
 
     @InheritedAnnotation
-    public void methodOfChildClassWithAnnotation() throws RuntimeException {
+    public void methodOfChildClassWithAnnotation() throws IllegalStateException, RuntimeException {
 
     }
 
