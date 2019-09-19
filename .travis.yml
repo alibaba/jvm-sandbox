@@ -9,6 +9,7 @@ cache:
     - "$HOME/.m2/repository"
 
 script:
+  - mvn -v
   - mvn clean cobertura:cobertura -Dmaven.test.skip=false
 
 after_success:
