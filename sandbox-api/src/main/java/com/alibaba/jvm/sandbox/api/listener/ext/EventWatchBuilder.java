@@ -548,7 +548,7 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForBehavior withEmptyParameterTypes() {
-            withParameterTypes.add(new String[]{});
+            withParameterTypes.add();
             return this;
         }
 

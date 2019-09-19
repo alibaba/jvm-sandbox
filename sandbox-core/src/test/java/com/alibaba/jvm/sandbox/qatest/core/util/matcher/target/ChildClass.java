@@ -96,7 +96,7 @@ public class ChildClass extends ParentClass {
 
 
     @InheritedAnnotation
-    public void methodOfChildClassWithAnnotation() throws IllegalStateException, RuntimeException {
+    public void methodOfChildClassWithAnnotation() throws RuntimeException {
 
     }
 

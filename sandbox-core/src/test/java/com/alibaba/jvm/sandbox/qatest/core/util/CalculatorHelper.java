@@ -133,9 +133,7 @@ public class CalculatorHelper {
     public static boolean isSpecalMethod(Event event, String javaMethodeName){
         if (event instanceof BeforeEvent){
             BeforeEvent beforeEvent = (BeforeEvent) event;
-            if (beforeEvent.javaMethodName.equalsIgnoreCase(javaMethodeName)){
-                return true;
-            }
+            return beforeEvent.javaMethodName.equalsIgnoreCase(javaMethodeName);
         }
         return false;
     }
