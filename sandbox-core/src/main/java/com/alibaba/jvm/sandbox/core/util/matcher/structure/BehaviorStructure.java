@@ -1,6 +1,6 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
-import com.alibaba.jvm.sandbox.core.util.LazyGet;
+import com.alibaba.jvm.sandbox.api.util.LazyGet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -90,11 +90,14 @@ public class BehaviorStructure extends MemberStructure {
     private final LazyGet<String> signCodeLazyGet = new LazyGet<String>() {
         @Override
         protected String initialValue() {
-            return String.format("%s#%s(%s)",
-                    getDeclaringClassStructure().getJavaClassName(),
-                    getName(),
-                    join(takeJavaClassNames(getParameterTypeClassStructures()), ",")
-            );
+            return new StringBuilder(256)
+                    .append(getDeclaringClassStructure().getJavaClassName())
+                    .append("#")
+                    .append(getName())
+                    .append("(")
+                    .append(join(takeJavaClassNames(getParameterTypeClassStructures()), ","))
+                    .append(")")
+                    .toString();
         }
     };
 
@@ -113,12 +116,15 @@ public class BehaviorStructure extends MemberStructure {
     private final LazyGet<String> toStringLazyGet = new LazyGet<String>() {
         @Override
         protected String initialValue() {
-            return String.format("%s:[%s]:%s:%s",
-                    getReturnTypeClassStructure().getJavaClassName(),
-                    join(takeJavaClassNames(getAnnotationTypeClassStructures()), ","),
-                    getSignCode(),
-                    join(takeJavaClassNames(getExceptionTypeClassStructures()), ",")
-            );
+            return new StringBuilder(256)
+                    .append(getReturnTypeClassStructure().getJavaClassName())
+                    .append(":[")
+                    .append(join(takeJavaClassNames(getAnnotationTypeClassStructures()), ","))
+                    .append("]:")
+                    .append(getSignCode())
+                    .append(":")
+                    .append(join(takeJavaClassNames(getExceptionTypeClassStructures()), ","))
+                    .toString();
         }
     };
 
@@ -138,8 +144,7 @@ public class BehaviorStructure extends MemberStructure {
 
     @Override
     public boolean equals(Object obj) {
-        return null != obj
-                && (obj instanceof BehaviorStructure)
+        return (obj instanceof BehaviorStructure)
                 && getSignCode().equals(((BehaviorStructure) obj).getSignCode());
     }
 }

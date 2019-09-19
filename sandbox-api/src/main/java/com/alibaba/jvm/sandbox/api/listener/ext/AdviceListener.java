@@ -29,7 +29,6 @@ public class AdviceListener {
      * @throws Throwable 处理通知错误
      */
     protected void before(Advice advice) throws Throwable {
-
     }
 
     /**
@@ -48,6 +47,17 @@ public class AdviceListener {
      */
     protected void afterReturning(Advice advice) throws Throwable {
 
+    }
+
+    /**
+     * 方法调用后通知，无论是正常返回还是抛出异常都会调用
+     *
+     * @param advice 通知信息
+     * @throws Throwable 处理通知错误
+     * @see #afterReturning(Advice)
+     * @see #afterThrowing(Advice)
+     */
+    protected void after(Advice advice) throws Throwable {
     }
 
     /**
@@ -120,6 +130,28 @@ public class AdviceListener {
                                      String callJavaClassName, String callJavaMethodName, String callJavaMethodDesc,
                                      String callThrowJavaClassName) {
 
+    }
+
+    /**
+     * 目标方法调用结束之后，无论正常返回还是抛出异常
+     * <p>
+     * 在一个方法调用过程中会调用其他的方法，CALL系列的事件就是来描述这一类调用的情况。
+     * CALL系列事件必定是包含在BEFORE/RETURN/THROWS事件之间。
+     * </p>
+     *
+     * @since {@code sandbox-api:1.2.2}
+     *
+     * @param advice                 Caller的行为通知
+     * @param callLineNum            调用发生的代码行(可能为-1，取决于目标编译代码的编译策略)
+     * @param callJavaClassName      调用目标类名
+     * @param callJavaMethodName     调用目标行为名称
+     * @param callJavaMethodDesc     调用目标行为描述
+     * @param callThrowJavaClassName 调用目标异常类名，若正常返回则为 null
+     */
+    protected void afterCall(Advice advice,
+                             int callLineNum,
+                             String callJavaClassName,
+                             String callJavaMethodName, String callJavaMethodDesc, String callThrowJavaClassName) {
     }
 
     /**

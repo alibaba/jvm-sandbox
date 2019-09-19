@@ -2,6 +2,7 @@ package com.alibaba.jvm.sandbox.core.server.jetty.servlet;
 
 import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.http.Http;
+import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
@@ -29,25 +30,31 @@ import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.matching;
 
 /**
  * 用于处理模块的HTTP请求
- * Created by luanjia@taobao.com on 2017/2/7.
+ *
+ * @author luanjia@taobao.com
  */
 public class ModuleHttpServlet extends HttpServlet {
-
+    private static final String SLASH = "/";
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final CoreConfigure cfg;
     private final CoreModuleManager coreModuleManager;
 
-    public ModuleHttpServlet(final CoreModuleManager coreModuleManager) {
+    public ModuleHttpServlet(final CoreConfigure cfg,
+                             final CoreModuleManager coreModuleManager) {
+        this.cfg = cfg;
         this.coreModuleManager = coreModuleManager;
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setCharacterEncoding(cfg.getServerCharset().name());
         doMethod(req, resp, Http.Method.GET);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setCharacterEncoding(cfg.getServerCharset().name());
         doMethod(req, resp, Http.Method.POST);
     }
 
@@ -179,27 +186,37 @@ public class ModuleHttpServlet extends HttpServlet {
             if (null == commandAnnotation) {
                 continue;
             }
-            final String pathOfCmd = "/" + uniqueId + "/" + commandAnnotation.value();
+            // 兼容 value 是否以 / 开头的写法
+            String cmd = appendSlash(commandAnnotation.value());
+            final String pathOfCmd = "/" + uniqueId + cmd;
             if (StringUtils.equals(path, pathOfCmd)) {
                 return method;
             }
         }
-
         // 查找@Http注解的方法
         for (final Method method : MethodUtils.getMethodsListWithAnnotation(classOfModule, Http.class)) {
             final Http httpAnnotation = method.getAnnotation(Http.class);
             if (null == httpAnnotation) {
                 continue;
             }
-            final String pathPattern = "/" + uniqueId + httpAnnotation.value();
+            // 兼容 value 是否以 / 开头的写法
+            String cmd = appendSlash(httpAnnotation.value());
+            final String pathPattern = "/" + uniqueId + cmd;
             if (ArrayUtils.contains(httpAnnotation.method(), httpMethod)
                     && matching(path, pathPattern)) {
                 return method;
             }
         }
-
         // 找不到匹配方法，返回null
         return null;
+    }
+
+    private String appendSlash(String cmd) {
+        // 若不以 / 开头，则添加 /
+        if (!cmd.startsWith(SLASH)) {
+            cmd = SLASH + cmd;
+        }
+        return cmd;
     }
 
     private boolean isMapWithGenericParameterTypes(final Method method,

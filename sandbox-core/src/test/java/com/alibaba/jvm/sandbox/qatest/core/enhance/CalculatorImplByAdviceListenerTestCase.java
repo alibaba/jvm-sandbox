@@ -4,10 +4,7 @@ import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingAdviceListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
-import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
 import static com.alibaba.jvm.sandbox.api.ProcessController.throwsImmediately;
@@ -24,10 +21,10 @@ import static org.junit.Assert.assertTrue;
  */
 public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCase {
 
-    @BeforeClass
-    public static void initSpy() {
-        Spy.isSpyThrowException = true;
-    }
+//    @BeforeClass
+//    public static void initSpy() {
+//        Spy.isSpyThrowException = true;
+//    }
 
     @Test
     @Override
@@ -42,10 +39,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 listener = new TracingAdviceListener()
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -65,17 +63,20 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
                                 listener = new TracingAdviceListener(),
-                                CALL_BEFORE, CALL_RETURN,CALL_THROWS
+                                CALL_BEFORE, CALL_RETURN, CALL_THROWS
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -89,7 +90,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void before(Advice advice) throws Throwable {
                                         super.before(advice);
@@ -98,10 +99,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(100, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(100, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -124,7 +126,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(100, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(100, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
@@ -140,7 +142,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void before(Advice advice) throws Throwable {
                                         super.before(advice);
@@ -150,9 +152,9 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass), 10,20);
+            sum(newInstance(calculatorClass), 10, 20);
             assertTrue(false);
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
         listener.assertTracing(
@@ -170,19 +172,20 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
-                                    protected void afterReturning(Advice advice) throws Throwable{
+                                    protected void afterReturning(Advice advice) throws Throwable {
                                         super.afterReturning(advice);
                                         advice.changeParameter(0, new int[]{40, 60});
                                     }
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -196,19 +199,20 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
-                                    protected void afterReturning(Advice advice) throws Throwable{
+                                    protected void afterReturning(Advice advice) throws Throwable {
                                         super.afterReturning(advice);
                                         returnImmediately(100);
                                     }
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(100, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(100, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -222,7 +226,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void afterReturning(Advice advice) throws Throwable {
                                         super.afterReturning(advice);
@@ -232,14 +236,15 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass), 10,20);
+            sum(newInstance(calculatorClass), 10, 20);
             assertTrue(false);
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -253,9 +258,9 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
-                                    protected void afterThrowing(Advice advice) throws Throwable{
+                                    protected void afterThrowing(Advice advice) throws Throwable {
                                         super.afterThrowing(advice);
                                         advice.changeParameter(0, new int[]{40, 60});
                                     }
@@ -263,14 +268,15 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass, SUM$EXCEPTION), 10,20);
+            sum(newInstance(calculatorClass, SUM$EXCEPTION), 10, 20);
             assertTrue(false);
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -284,9 +290,9 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
-                                    protected void afterThrowing(Advice advice) throws Throwable{
+                                    protected void afterThrowing(Advice advice) throws Throwable {
                                         super.afterThrowing(advice);
                                         returnImmediately(100);
                                     }
@@ -296,7 +302,8 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
         assertEquals(100, sum(newInstance(calculatorClass, SUM$EXCEPTION), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -310,9 +317,9 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
-                                    protected void afterThrowing(Advice advice) throws Throwable{
+                                    protected void afterThrowing(Advice advice) throws Throwable {
                                         super.afterThrowing(advice);
                                         throwsImmediately(new Throwable(ERROR_EXCEPTION_MESSAGE));
                                     }
@@ -320,14 +327,15 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass, SUM$EXCEPTION), 10,20);
+            sum(newInstance(calculatorClass, SUM$EXCEPTION), 10, 20);
             assertTrue(false);
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -344,14 +352,17 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 listener = new TracingAdviceListener()
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -371,21 +382,26 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
                                 listener = new TracingAdviceListener(),
-                                CALL_BEFORE, CALL_RETURN,CALL_THROWS
+                                CALL_BEFORE, CALL_RETURN, CALL_THROWS
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -399,11 +415,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void before(Advice advice) throws Throwable {
                                         super.before(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             advice.changeParameter(0, 40);
                                             advice.changeParameter(1, 60);
                                         }
@@ -411,14 +427,17 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(100, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(100, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -432,23 +451,24 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void before(Advice advice) throws Throwable {
                                         super.before(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             returnImmediately(100);
                                         }
                                     }
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(100, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(100, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -461,11 +481,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void before(Advice advice) throws Throwable {
                                         super.before(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             throwsImmediately(new Throwable(ERROR_EXCEPTION_MESSAGE));
                                         }
                                     }
@@ -473,9 +493,9 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass), 10,20);
+            sum(newInstance(calculatorClass), 10, 20);
             assertTrue(false);
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
         listener.assertTracing(
@@ -494,11 +514,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void afterReturning(Advice advice) throws Throwable {
                                         super.afterReturning(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             advice.changeParameter(0, 40);
                                             advice.changeParameter(0, 60);
                                         }
@@ -506,7 +526,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
@@ -527,25 +547,28 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void afterReturning(Advice advice) throws Throwable {
                                         super.afterReturning(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             returnImmediately(100);
                                         }
                                     }
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(100, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(100, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -559,11 +582,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void afterReturning(Advice advice) throws Throwable {
                                         super.afterReturning(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             throwsImmediately(new Throwable(ERROR_EXCEPTION_MESSAGE));
                                         }
                                     }
@@ -571,16 +594,18 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass), 10,20);
+            sum(newInstance(calculatorClass), 10, 20);
             assertTrue(false);
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
-                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -594,11 +619,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void afterThrowing(Advice advice) throws Throwable {
                                         super.afterThrowing(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             advice.changeParameter(0, 40);
                                             advice.changeParameter(1, 60);
                                         }
@@ -607,16 +632,18 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass, ADD$EXCEPTION), 10,20);
+            sum(newInstance(calculatorClass, ADD$EXCEPTION), 10, 20);
             assertTrue(false);
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
-                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
+                "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
     }
 
@@ -629,18 +656,18 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void afterThrowing(Advice advice) throws Throwable {
                                         super.afterThrowing(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             returnImmediately(100);
                                         }
                                     }
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(100, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(100, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
@@ -660,11 +687,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_SUM_and_ADD_FILTER,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void afterThrowing(Advice advice) throws Throwable {
                                         super.afterThrowing(advice);
-                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")){
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("add")) {
                                             throwsImmediately(new Throwable(ERROR_EXCEPTION_MESSAGE));
                                         }
                                     }
@@ -672,9 +699,9 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass, ADD$EXCEPTION), 10,20);
+            sum(newInstance(calculatorClass, ADD$EXCEPTION), 10, 20);
             assertTrue(false);
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
         listener.assertTracing(
@@ -698,14 +725,17 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 listener = new TracingAdviceListener()
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(25, pow(newInstance(calculatorClass), 5,2));
+        assertEquals(25, pow(newInstance(calculatorClass), 5, 2));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE"
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE"
         );
     }
 
@@ -728,7 +758,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 CALL_BEFORE, CALL_RETURN, CALL_THROWS
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(25, pow(newInstance(calculatorClass), 5,2));
+        assertEquals(25, pow(newInstance(calculatorClass), 5, 2));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE",
                 "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
@@ -736,10 +766,15 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE"
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE"
         );
     }
 
@@ -756,10 +791,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 listener = new TracingAdviceListener()
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE"
         );
     }
 
@@ -782,10 +818,11 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 CALL_BEFORE, CALL_RETURN, CALL_THROWS
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        assertEquals(30, sum(newInstance(calculatorClass), 10,20));
+        assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE"
         );
     }
 
@@ -799,7 +836,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         Calculator.class,
                         new JvmHelper.Transformer(
                                 CALCULATOR_INIT_FILTER_WITH_TEST_CASE,
-                                listener = new TracingAdviceListener(){
+                                listener = new TracingAdviceListener() {
                                     @Override
                                     protected void before(Advice advice) throws Throwable {
                                         super.before(advice);
@@ -809,13 +846,14 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
-            sum(newInstance(calculatorClass), 10,20);
-        }catch (RuntimeException e){
+            sum(newInstance(calculatorClass), 10, 20);
+        } catch (RuntimeException e) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, e.getMessage());
         }
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE",
-                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE"
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE"
         );
     }
 }

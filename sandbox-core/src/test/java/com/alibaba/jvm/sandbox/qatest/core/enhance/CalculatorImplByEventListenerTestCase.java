@@ -6,11 +6,8 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.LineNumTracingEventL
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingEventListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
 import static com.alibaba.jvm.sandbox.api.ProcessController.throwsImmediately;
@@ -23,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCase {
 
-    @BeforeClass
-    public static void initSpy() {
-        Spy.isSpyThrowException = true;
-    }
+//    @BeforeClass
+//    public static void initSpy() {
+//        Spy.isSpyThrowException = true;
+//    }
 
     @Test
     @Override
@@ -520,7 +517,7 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
                             @Override
                             public void onEvent(Event event) throws Throwable {
                                 super.onEvent(event);
-                                if (IsSpecalMethodEnvet(event, "add")){
+                                if (isSpecialMethodEvent(event, "add")){
                                     returnImmediately(100);
                                 }
                             }
@@ -554,7 +551,7 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
                             @Override
                             public void onEvent(Event event) throws Throwable {
                                 super.onEvent(event);
-                                if (IsSpecalMethodEnvet(event, "add")){
+                                if (isSpecialMethodEvent(event, "add")){
                                     returnImmediately(100);
                                 }
                             }
@@ -588,7 +585,7 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
                             @Override
                             public void onEvent(Event event) throws Throwable {
                                 super.onEvent(event);
-                                if (IsSpecalMethodEnvet(event, "add")){
+                                if (isSpecialMethodEvent(event, "add")){
                                     throwsImmediately(new Throwable(ERROR_EXCEPTION_MESSAGE));
                                 }
                             }
@@ -625,7 +622,7 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
                             @Override
                             public void onEvent(Event event) throws Throwable {
                                 super.onEvent(event);
-                                if (IsSpecalMethodEnvet(event, "add")){
+                                if (isSpecialMethodEvent(event, "add")){
                                     ((BeforeEvent)stack.peek()).argumentArray[0] = 100;
                                 }
                             }
@@ -662,7 +659,7 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
                             @Override
                             public void onEvent(Event event) throws Throwable {
                                 super.onEvent(event);
-                                if (IsSpecalMethodEnvet(event, "add")){
+                                if (isSpecialMethodEvent(event, "add")){
                                     returnImmediately(100);
                                 }
                             }
@@ -696,7 +693,7 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
                             @Override
                             public void onEvent(Event event) throws Throwable {
                                 super.onEvent(event);
-                                if (IsSpecalMethodEnvet(event, "add")){
+                                if (isSpecialMethodEvent(event, "add")){
                                     throwsImmediately(new Throwable(ERROR_EXCEPTION_MESSAGE));
                                 }
                             }

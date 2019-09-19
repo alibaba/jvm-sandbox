@@ -90,7 +90,7 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
         return null;
     }
 
-    private class InnerWebSocket implements WebSocket {
+    private static class InnerWebSocket implements WebSocket {
 
         final CoreModule coreModule;
         final WebSocketConnectionListener listener;
