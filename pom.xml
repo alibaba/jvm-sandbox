@@ -15,6 +15,29 @@
         <sandbox.version>1.2.2</sandbox.version>
     </properties>
 
+    <profiles>
+
+        <!-- GITHUB-CI -->
+        <profile>
+            <id>github-ci</id>
+            <properties>
+                <tools-jar>${java.home}/lib/tools.jar</tools-jar>
+            </properties>
+        </profile>
+
+        <!-- 默认 -->
+        <profile>
+            <id>default</id>
+            <properties>
+                <tools-jar>${java.home}/../lib/tools.jar</tools-jar>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+
+    </profiles>
+
     <build>
         <pluginManagement>
             <plugins>

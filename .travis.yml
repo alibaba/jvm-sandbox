@@ -3,6 +3,11 @@ language: generic
 jdk:
   - openjdk6
   - oraclejdk6
+  - openjdk7
+  - oraclejdk7
+  - openjdk8
+  - oraclejdk8
+
 
 cache:
   directories:
@@ -10,7 +15,7 @@ cache:
 
 script:
   - mvn -v
-  - mvn clean cobertura:cobertura -Dmaven.test.skip=false
+  - mvn clean cobertura:cobertura -Dmaven.test.skip=false -Pgithub-ci
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
