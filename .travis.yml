@@ -15,7 +15,7 @@ cache:
 
 script:
   - mvn -v
-  - mvn clean cobertura:cobertura -Dmaven.test.skip=false -PgithubCI
+  - mvn -PgithubCI -X clean cobertura:cobertura -Dmaven.test.skip=false
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
