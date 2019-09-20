@@ -17,14 +17,6 @@
 
     <profiles>
 
-        <!-- GITHUB-CI -->
-        <profile>
-            <id>github-ci</id>
-            <properties>
-                <tools-jar>${java.home}/lib/tools.jar</tools-jar>
-            </properties>
-        </profile>
-
         <!-- 默认 -->
         <profile>
             <id>default</id>
@@ -34,6 +26,14 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+        </profile>
+
+        <!-- GITHUB-CI -->
+        <profile>
+            <id>githubCI</id>
+            <properties>
+                <tools-jar>${java.home}/lib/tools.jar</tools-jar>
+            </properties>
         </profile>
 
     </profiles>
