@@ -630,7 +630,8 @@ public class EventWatchBuilder {
 
         @Override
         public EventWatcher onWatch(final AdviceListener adviceListener, Event.Type... eventTypeArray) {
-            if (eventTypeArray == null) {
+            if (eventTypeArray == null
+                    || eventTypeArray.length == 0) {
                 return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
             }
             return build(new AdviceAdapterListener(adviceListener), null, eventTypeArray);
