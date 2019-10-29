@@ -28,14 +28,6 @@
             </activation>
         </profile>
 
-        <!-- GITHUB-CI -->
-        <profile>
-            <id>githubCI</id>
-            <properties>
-                <tools-jar>${java.home}/lib/tools.jar</tools-jar>
-            </properties>
-        </profile>
-
     </profiles>
 
     <build>
