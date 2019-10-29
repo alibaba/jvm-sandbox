@@ -10,7 +10,7 @@ jdk:
 script:
   - PATH=$(echo "$PATH" | sed -e 's/:\/usr\/local\/lib\/jvm\/openjdk11\/bin//')
   - JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
-  - mvn -PgithubCI -X clean cobertura:cobertura -Dmaven.test.skip=false
+  - mvn -PgithubCI clean cobertura:cobertura -Dmaven.test.skip=false
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
