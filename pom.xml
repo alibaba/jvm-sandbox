@@ -15,6 +15,29 @@
         <sandbox.version>1.2.2</sandbox.version>
     </properties>
 
+    <profiles>
+
+        <!-- 默认 -->
+        <profile>
+            <id>default</id>
+            <properties>
+                <tools-jar>${java.home}/../lib/tools.jar</tools-jar>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+
+        <!-- GITHUB-CI -->
+        <profile>
+            <id>githubCI</id>
+            <properties>
+                <tools-jar>${java.home}/lib/tools.jar</tools-jar>
+            </properties>
+        </profile>
+
+    </profiles>
+
     <build>
         <pluginManagement>
             <plugins>
@@ -95,7 +118,6 @@
                 </executions>
             </plugin>
 
-            <!--
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
@@ -110,7 +132,6 @@
                     </formats>
                 </configuration>
             </plugin>
-            -->
 
         </plugins>
     </build>
