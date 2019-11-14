@@ -717,6 +717,86 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
         );
     }
 
+    @Override
+    public void cal$addInStatic$around() throws Throwable{
+    }
+
+    @Override
+    public void cal$addInStatic$call() throws Throwable{
+    }
+
+    /**
+     * 类调用静态方法直接返回
+     * @throws Throwable 异常
+     */
+    @Test
+    @Override
+    public void cal$addInStatic$before$returnImmediately_at_addInStatic() throws Throwable{
+        final TracingEventListener listener;
+        final Class<?> calculatorClass = JvmHelper
+                .createJvm()
+                .defineClass(
+                        Calculator.class,
+                        CALCULATOR_SUM_and_ADD_FILTER,
+                        listener = new TracingEventListener(){
+                            @Override
+                            public void onEvent(Event event) throws Throwable {
+                                super.onEvent(event);
+                                if (isSpecialMethodEvent(event, "addInStatic")){
+                                    returnImmediately(100);
+                                }
+                            }
+                        },
+                        BEFORE,RETURN,THROWS
+                )
+                .loadClass(CALCULATOR_CLASS_NAME);
+
+        int value=(Integer) calculatorClass.getMethod("addInStatic",int.class,int.class).invoke(null,10,20);
+        assertEquals(100, value);
+        assertEquals(true, stack.isEmpty());
+        listener.assertEventTracing(
+                BEFORE,
+                RETURN
+        );
+    }
+
+    /**
+     * 类调用静态方法,静态方法抛出异常,捕获后直接返回
+     * @throws Throwable 异常
+     */
+    @Test
+    @Override
+    public void cal$addInStatic$throws$returnImmediately_at_addInStatic() throws Throwable{
+        final TracingEventListener listener;
+        final Class<?> calculatorClass = JvmHelper
+                .createJvm()
+                .defineClass(
+                        Calculator.class,
+                        CALCULATOR_SUM_and_ADD_FILTER,
+                        listener = new TracingEventListener(){
+                            @Override
+                            public void onEvent(Event event) throws Throwable {
+                                super.onEvent(event);
+                                if (isSpecialMethodEvent(event, "addInStatic")){
+                                    returnImmediately(100);
+                                }
+                            }
+                        },
+                        BEFORE,RETURN,THROWS
+                )
+                .loadClass(CALCULATOR_CLASS_NAME);
+
+        calculatorClass.getMethod("settCaseInStatic",
+                Calculator.TestCase.ADD$EXCEPTION.getClass()).invoke(null,Calculator.TestCase.ADD$EXCEPTION);
+        int value=(Integer) calculatorClass.getMethod("addInStatic",int.class,int.class).invoke(null,10,20);
+        assertEquals(100, value);
+        assertEquals(true, stack.isEmpty());
+        listener.assertEventTracing(
+                BEFORE,
+                THROWS
+        );
+    }
+
     @Test
     @Override
     public void cal$pow$around() throws Throwable {

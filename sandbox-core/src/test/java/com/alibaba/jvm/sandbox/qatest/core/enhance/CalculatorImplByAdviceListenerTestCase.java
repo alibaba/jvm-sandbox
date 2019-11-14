@@ -339,6 +339,125 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
         );
     }
 
+    /**
+     * 通过对象调用静态方法
+     * @throws Throwable 异常
+     */
+    @Test
+    @Override
+    public void cal$addInStatic$around() throws Throwable{
+        final TracingAdviceListener listener;
+        final Class<?> calculatorClass = JvmHelper
+                .createJvm()
+                .defineClass(
+                        Calculator.class,
+                        new JvmHelper.Transformer(
+                                CALCULATOR_SUM_and_ADD_FILTER,
+                                listener = new TracingAdviceListener()
+                        )
+                ).loadClass(CALCULATOR_CLASS_NAME);
+        assertEquals(30, addInStatic(newInstance(calculatorClass), 10, 20));
+        listener.assertTracing(
+                "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE",
+                        "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE",
+                        "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE"
+        );
+    }
+
+    /**
+     * 通过Class(非对象)直接调用方法
+     * @throws Throwable 异常
+     */
+    @Test
+    @Override
+    public void cal$addInStatic$call() throws Throwable{
+        final TracingAdviceListener listener;
+        final Class<?> calculatorClass = JvmHelper
+                .createJvm()
+                .defineClass(
+                        Calculator.class,
+                        new JvmHelper.Transformer(
+                                CALCULATOR_SUM_and_ADD_FILTER,
+                                listener = new TracingAdviceListener(),
+                                CALL_BEFORE, CALL_RETURN, CALL_THROWS
+                        )
+                ).loadClass(CALCULATOR_CLASS_NAME);
+        int value=(Integer) calculatorClass.getMethod("addInStatic",int.class,int.class).invoke(null,10,20);
+        assertEquals(30, value);
+        listener.assertTracing("BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE",
+                "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE",
+                "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE"
+        );
+    }
+
+    /**
+     * 通过类对象直接调用方法,直接返回
+     * @throws Throwable 异常
+     */
+    @Test
+    @Override
+    public void cal$addInStatic$before$returnImmediately_at_addInStatic() throws Throwable{
+        final TracingAdviceListener listener;
+        final Class<?> calculatorClass = JvmHelper
+                .createJvm()
+                .defineClass(
+                        Calculator.class,
+                        new JvmHelper.Transformer(
+                                CALCULATOR_SUM_and_ADD_FILTER,
+                                listener = new TracingAdviceListener() {
+                                    @Override
+                                    protected void before(Advice advice) throws Throwable {
+                                        super.before(advice);
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("addInStatic")) {
+                                            returnImmediately(100);
+                                        }
+                                    }
+                                }
+                        )
+                ).loadClass(CALCULATOR_CLASS_NAME);
+        int value=(Integer) calculatorClass.getMethod("addInStatic",int.class,int.class).invoke(null,10,20);
+        assertEquals(100, value);
+        listener.assertTracing(
+                "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE"
+        );
+    }
+
+    /**
+     * 类对象直接调用方法，截获所抛出的异常
+     * @throws Throwable 异常
+     */
+    @Test
+    @Override
+    public void cal$addInStatic$throws$returnImmediately_at_addInStatic() throws Throwable{
+        final TracingAdviceListener listener;
+        final Class<?> calculatorClass = JvmHelper
+                .createJvm()
+                .defineClass(
+                        Calculator.class,
+                        new JvmHelper.Transformer(
+                                CALCULATOR_SUM_and_ADD_FILTER,
+                                listener = new TracingAdviceListener() {
+                                    @Override
+                                    protected void afterThrowing(Advice advice) throws Throwable {
+                                        super.afterThrowing(advice);
+                                        if (advice.getBehavior().getName().equalsIgnoreCase("addInStatic")) {
+                                            returnImmediately(100);
+                                        }
+                                    }
+                                }
+                        )
+                ).loadClass(CALCULATOR_CLASS_NAME);
+        calculatorClass.getMethod("settCaseInStatic",
+                Calculator.TestCase.ADD$EXCEPTION.getClass()).invoke(null,Calculator.TestCase.ADD$EXCEPTION);
+        int value=(Integer) calculatorClass.getMethod("addInStatic",int.class,int.class).invoke(null,10,20);
+        assertEquals(100, value);
+        listener.assertTracing(
+                "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE",
+                        "THROWING|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE",
+                        "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.addInStatic(int,int)|TRUE"
+        );
+    }
+
     @Test
     @Override
     public void cal$sum_add$around() throws Throwable {
