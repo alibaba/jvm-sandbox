@@ -1,10 +1,11 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
+import com.alibaba.jvm.sandbox.api.util.LazyGet;
 import com.alibaba.jvm.sandbox.core.util.BitUtils;
-import com.alibaba.jvm.sandbox.core.util.LazyGet;
-import com.alibaba.jvm.sandbox.core.util.collection.GaLRUCache;
 import com.alibaba.jvm.sandbox.core.util.collection.Pair;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.PrimitiveClassStructure.Primitive;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.*;
@@ -236,12 +237,12 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final Access access;
 
     ClassStructureImplByAsm(final InputStream classInputStream,
-                                   final ClassLoader loader) throws IOException {
+                            final ClassLoader loader) throws IOException {
         this(IOUtils.toByteArray(classInputStream), loader);
     }
 
     ClassStructureImplByAsm(final byte[] classByteArray,
-                                   final ClassLoader loader) {
+                            final ClassLoader loader) {
         this.classReader = new ClassReader(classByteArray);
         this.loader = loader;
         this.access = fixAccess();
@@ -284,8 +285,11 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         return internalClassName + ".class";
     }
 
-    private final static GaLRUCache<Pair, ClassStructure> classStructureCache
-            = new GaLRUCache<Pair, ClassStructure>(1024);
+    private final static Cache<Pair, ClassStructure> classStructureCache
+            = CacheBuilder.newBuilder().maximumSize(1024).build();
+
+//    private final static GaLRUCache<Pair, ClassStructure> classStructureCache
+//            = new GaLRUCache<Pair, ClassStructure>(1024);
 
     // 构造一个类结构实例
     private ClassStructure newInstance(final String javaClassName) {
@@ -307,8 +311,9 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         }
 
         final Pair pair = new Pair(loader, javaClassName);
-        if (classStructureCache.containsKey(pair)) {
-            return classStructureCache.get(pair);
+        final ClassStructure existClassStructure = classStructureCache.getIfPresent(pair);
+        if (null != existClassStructure) {
+            return existClassStructure;
         } else {
 
             final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));

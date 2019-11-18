@@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 
@@ -123,7 +125,6 @@ public class AgentLauncher {
                                                        final String token,
                                                        final InetSocketAddress local) {
         final File file = new File(RESULT_FILE_PATH);
-
         if (file.exists()
                 && (!file.isFile()
                 || !file.canWrite())) {
@@ -214,17 +215,17 @@ public class AgentLauncher {
         final String coreFeatureString = toFeatureString(featureMap);
 
         try {
-
+            final String home = getSandboxHome(featureMap);
             // 将Spy注入到BootstrapClassLoader
             inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(
-                    getSandboxSpyJarPath(getSandboxHome(featureMap))
+                    getSandboxSpyJarPath(home)
                     // SANDBOX_SPY_JAR_PATH
             )));
 
             // 构造自定义的类加载器，尽量减少Sandbox对现有工程的侵蚀
             final ClassLoader sandboxClassLoader = loadOrDefineClassLoader(
                     namespace,
-                    getSandboxCoreJarPath(getSandboxHome(featureMap))
+                    getSandboxCoreJarPath(home)
                     // SANDBOX_CORE_JAR_PATH
             );
 
@@ -346,9 +347,22 @@ public class AgentLauncher {
                 : defaultValue;
     }
 
+    private static String OS = System.getProperty("os.name").toLowerCase();
+
+    private static boolean isWindows() {
+        return OS.contains("win");
+    }
+
     // 获取主目录
     private static String getSandboxHome(final Map<String, String> featureMap) {
-        return getDefault(featureMap, KEY_SANDBOX_HOME, DEFAULT_SANDBOX_HOME);
+        String home =  getDefault(featureMap, KEY_SANDBOX_HOME, DEFAULT_SANDBOX_HOME);
+        if( isWindows() ){
+            Matcher m = Pattern.compile("(?i)^[/\\\\]([a-z])[/\\\\]").matcher(home);
+            if( m.find() ){
+                home = m.replaceFirst("$1:/");
+            }            
+        }
+        return home;
     }
 
     // 获取命名空间

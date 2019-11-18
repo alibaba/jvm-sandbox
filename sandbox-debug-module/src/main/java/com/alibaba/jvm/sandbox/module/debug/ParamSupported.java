@@ -35,9 +35,7 @@ public class ParamSupported {
 
     static {
 
-        /**
-         * 转换为字符串
-         */
+        // 转换为字符串
         regConverter(new Converter<String>() {
             @Override
             public String convert(String string) {
@@ -45,9 +43,7 @@ public class ParamSupported {
             }
         }, String.class);
 
-        /**
-         * 转换为Long
-         */
+        // 转换为Long
         regConverter(new Converter<Long>() {
             @Override
             public Long convert(String string) {
@@ -55,9 +51,7 @@ public class ParamSupported {
             }
         }, long.class, Long.class);
 
-        /**
-         * 转换为Double
-         */
+        // 转换为Double
         regConverter(new Converter<Double>() {
             @Override
             public Double convert(String string) {
@@ -65,9 +59,7 @@ public class ParamSupported {
             }
         }, double.class, Double.class);
 
-        /**
-         * 转换为Integer
-         */
+        // 转换为Integer
         regConverter(new Converter<Integer>() {
             @Override
             public Integer convert(String string) {

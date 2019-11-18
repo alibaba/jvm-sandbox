@@ -130,7 +130,7 @@ public class RoutingURLClassLoader extends URLClassLoader {
                         return true;
                     }
                 } catch (Throwable cause) {
-                    logger.warn("routing {} failed, regex-express=.", javaClassName, regexExpress, cause);
+                    logger.warn("routing {} failed, regex-express={}.", javaClassName, regexExpress, cause);
                 }
             }
             return false;

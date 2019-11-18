@@ -322,7 +322,7 @@ public class FeatureCodec {
         }
 
         addToArrayList(segmentArrayList, new String(segmentCharArray, 0, segmentCharArrayIndex));
-        return segmentArrayList.toArray(new String[segmentArrayList.size()]);
+        return segmentArrayList.toArray(new String[0]);
     }
 
     /**

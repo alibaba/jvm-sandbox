@@ -72,7 +72,7 @@ public class AsmCodeLock implements CodeLock, Opcodes {
 
     /*
      * 重置索引
-     * 一般在代码序列判断失败时，则会对索引进行重置，冲头开始匹配特征序列
+     * 一般在代码序列判断失败时，则会对索引进行重置，从头开始匹配特征序列
      */
     private void reset() {
         index = 0;

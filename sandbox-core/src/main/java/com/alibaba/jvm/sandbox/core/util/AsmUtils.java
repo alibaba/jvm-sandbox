@@ -27,6 +27,13 @@ public class AsmUtils {
     private static String getCommonSuperClassImplByAsm(String type1, String type2, ClassLoader targetClassLoader) {
         InputStream inputStreamOfType1 = null, inputStreamOfType2 = null;
         try {
+            //targetClassLoader 为null，说明是BootStrapClassLoader，不能显式引用，故使用系统类加载器间接引用
+            if(null == targetClassLoader){
+                targetClassLoader = ClassLoader.getSystemClassLoader();
+            }
+            if(null == targetClassLoader){
+                return "java/lang/Object";
+            }
             inputStreamOfType1 = targetClassLoader.getResourceAsStream(type1 + ".class");
             if (null == inputStreamOfType1) {
                 return "java/lang/Object";

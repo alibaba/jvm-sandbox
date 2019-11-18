@@ -1,9 +1,11 @@
-package com.alibaba.jvm.sandbox.core.util;
+package com.alibaba.jvm.sandbox.api.util;
 
 /**
  * 懒加载
  *
  * @param <T> 懒加载类型
+ * @author luanjia@taobao.com
+ * @since {@code sandbox-api:1.2.2}
  */
 public abstract class LazyGet<T> {
 
@@ -24,9 +26,15 @@ public abstract class LazyGet<T> {
             isInit = true;
             return object;
         } catch (Throwable throwable) {
-            throw new UnCaughtException(throwable);
+            throw new LazyGetUnCaughtException(throwable);
         }
 
+    }
+
+    private static class LazyGetUnCaughtException extends RuntimeException {
+        LazyGetUnCaughtException(Throwable cause) {
+            super(cause);
+        }
     }
 
 }

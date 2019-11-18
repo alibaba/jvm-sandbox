@@ -11,6 +11,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -26,6 +27,7 @@ public class CoreConfigure {
     private static final String KEY_LAUNCH_MODE = "mode";
     private static final String KEY_SERVER_IP = "server.ip";
     private static final String KEY_SERVER_PORT = "server.port";
+    private static final String KEY_SERVER_CHARSET = "server.charset";
 
     private static final String KEY_SYSTEM_MODULE_LIB_PATH = "system_module";
     private static final String KEY_USER_MODULE_LIB_PATH = "user_module";
@@ -37,7 +39,7 @@ public class CoreConfigure {
     private static final String KEY_UNSAFE_ENABLE = "unsafe.enable";
 
     // 受保护key数组，在保护key范围之内，如果前端已经传递过参数了，只能认前端，后端无法修改
-    private static final String[] PROTECT_KEY_ARRAY = {KEY_NAMESPACE, KEY_SANDBOX_HOME, KEY_LAUNCH_MODE, KEY_SERVER_IP, KEY_SERVER_PORT};
+    private static final String[] PROTECT_KEY_ARRAY = {KEY_NAMESPACE, KEY_SANDBOX_HOME, KEY_LAUNCH_MODE, KEY_SERVER_IP, KEY_SERVER_PORT, KEY_SERVER_CHARSET};
 
     // 用户配置和系统默认配置都可以，需要进行合并的key，例如user_module
     private static final String[] MULTI_KEY_ARRAY = {KEY_USER_MODULE_LIB_PATH};
@@ -58,11 +60,9 @@ public class CoreConfigure {
 
     // 从配置文件中合并配置到CoreConfigure中
     private static CoreConfigure mergePropertiesFile(final CoreConfigure cfg, final String propertiesFilePath) {
-
-//        cfg.featureMap.putAll(propertiesToStringMap(fetchProperties(propertiesFilePath)));
-        Map<String , String> propertiesMap = propertiesToStringMap(fetchProperties(propertiesFilePath));
-        for (String key : MULTI_KEY_ARRAY){
-            if (cfg.featureMap.containsKey(key) && propertiesMap.containsKey(key)){
+        Map<String, String> propertiesMap = propertiesToStringMap(cfg, fetchProperties(propertiesFilePath));
+        for (String key : MULTI_KEY_ARRAY) {
+            if (cfg.featureMap.containsKey(key) && propertiesMap.containsKey(key)) {
                 propertiesMap.put(key, cfg.featureMap.get(key) + ";" + propertiesMap.get(key));
             }
         }
@@ -86,12 +86,12 @@ public class CoreConfigure {
     }
 
     // 配置转map
-    private static Map<String, String> propertiesToStringMap(final Properties properties) {
+    private static Map<String, String> propertiesToStringMap(CoreConfigure cfg, final Properties properties) {
         final Map<String, String> map = new HashMap<String, String>();
         for (String key : properties.stringPropertyNames()) {
 
-            // 过滤掉受保护的key
-            if (ArrayUtils.contains(PROTECT_KEY_ARRAY, key)) {
+            //如果受保护的key已经由入参指定，则过滤掉受保护的key,防止入参被覆盖
+            if (cfg.featureMap.containsKey(key) && ArrayUtils.contains(PROTECT_KEY_ARRAY, key)) {
                 continue;
             }
 
@@ -167,10 +167,10 @@ public class CoreConfigure {
         final Collection<File> foundModuleJarFiles = new LinkedHashSet<File>();
         for (final String path : getUserModuleLibPaths()) {
             final File fileOfPath = new File(path);
-            if(fileOfPath.isDirectory()) {
+            if (fileOfPath.isDirectory()) {
                 foundModuleJarFiles.addAll(FileUtils.listFiles(new File(path), new String[]{"jar"}, false));
             } else {
-                if(StringUtils.endsWithIgnoreCase(fileOfPath.getPath(), ".jar")) {
+                if (StringUtils.endsWithIgnoreCase(fileOfPath.getPath(), ".jar")) {
                     foundModuleJarFiles.add(fileOfPath);
                 }
             }
@@ -289,6 +289,19 @@ public class CoreConfigure {
      */
     public String getProviderLibPath() {
         return featureMap.get(KEY_PROVIDER_LIB_PATH);
+    }
+
+    /**
+     * 获取服务器编码
+     *
+     * @return 服务器编码
+     */
+    public Charset getServerCharset() {
+        try {
+            return Charset.forName(featureMap.get(KEY_SERVER_CHARSET));
+        } catch (Exception cause) {
+            return Charset.defaultCharset();
+        }
     }
 
 }

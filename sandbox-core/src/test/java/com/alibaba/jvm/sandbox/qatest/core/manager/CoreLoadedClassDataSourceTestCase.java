@@ -45,7 +45,7 @@ public class CoreLoadedClassDataSourceTestCase {
         void methodOfWorker();
     }
 
-    private class InnerWorker implements Worker {
+    private static class InnerWorker implements Worker {
 
         @Override
         public void methodOfHuman() {
@@ -188,7 +188,7 @@ public class CoreLoadedClassDataSourceTestCase {
     }
 
 
-    class NameRegexWithSubClassesExtFilter extends NameRegexFilter implements ExtFilter {
+    static class NameRegexWithSubClassesExtFilter extends NameRegexFilter implements ExtFilter {
 
         /**
          * 构造名称正则表达式过滤器

@@ -15,6 +15,11 @@ public class TestIssues133 {
         Assert.assertEquals("javax/servlet/ServletResponse", getCommonSuperClass("javax/servlet/ServletResponse", "javax/servlet/http/HttpServletResponse", loader));
         Assert.assertEquals("javax/servlet/ServletResponse", getCommonSuperClass("javax/servlet/http/HttpServletResponse", "javax/servlet/ServletResponse", loader));
         Assert.assertEquals("java/lang/Object", getCommonSuperClass("java/lang/Throwable", "java/io/FileInputStream", loader));
+        Assert.assertEquals("java/lang/Exception", getCommonSuperClass("java/io/IOException", "java/lang/Exception", null));
+        Assert.assertEquals("java/lang/Exception", getCommonSuperClass("java/io/IOException", "javax/servlet/ServletException", null));
+        Assert.assertEquals("java/lang/Object", getCommonSuperClass("java/lang/Throwable", "java/io/FileInputStream", null));
+        Assert.assertEquals("javax/servlet/ServletResponse", getCommonSuperClass("javax/servlet/ServletResponse", "javax/servlet/http/HttpServletResponse", null));
+        Assert.assertEquals("javax/servlet/ServletResponse", getCommonSuperClass("javax/servlet/http/HttpServletResponse", "javax/servlet/ServletResponse", null));
     }
 
 }

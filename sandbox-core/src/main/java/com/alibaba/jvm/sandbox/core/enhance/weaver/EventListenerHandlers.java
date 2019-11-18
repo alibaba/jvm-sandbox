@@ -303,16 +303,16 @@ public class EventListenerHandlers {
                                    final Object[] argumentArray) throws Throwable {
 
         // 获取事件处理器
-        final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
+        final EventProcessor processor = mappingOfEventProcessor.get(listenerId);
 
         // 如果尚未注册,则直接返回,不做任何处理
-        if (null == wrap) {
+        if (null == processor) {
             logger.debug("listener={} is not activated, ignore processing before-event.", listenerId);
             return newInstanceForNone();
         }
 
         // 获取调用跟踪信息
-        final EventProcessor.Process process = wrap.processRef.get();
+        final EventProcessor.Process process = processor.processRef.get();
 
         // 调用ID
         final int invokeId = invokeIdSequencer.getAndIncrement();
@@ -339,7 +339,7 @@ public class EventListenerHandlers {
                 argumentArray
         );
         try {
-            return handleEvent(listenerId, processId, invokeId, event, wrap);
+            return handleEvent(listenerId, processId, invokeId, event, processor);
         } finally {
             process.getEventFactory().returnEvent(event);
         }
