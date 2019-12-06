@@ -74,14 +74,14 @@ public class ExtFilterMatcher implements Matcher {
     public MatchingResult matching(final ClassStructure classStructure) {
         final MatchingResult result = new MatchingResult();
 
-        // 1. 匹配ClassStructure
-        if (!matchingClassStructure(classStructure)) {
+        // 0. 如果不开启加载Bootstrap的类，遇到就过滤掉
+        if (!extFilter.isIncludeBootstrap()
+                && classStructure.getClassLoader() == null) {
             return result;
         }
 
-        // 如果不开启加载Bootstrap的类，遇到就过滤掉
-        if (!extFilter.isIncludeBootstrap()
-                && classStructure.getClassLoader() == null) {
+        // 1. 匹配ClassStructure
+        if (!matchingClassStructure(classStructure)) {
             return result;
         }
 
