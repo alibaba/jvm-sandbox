@@ -7,7 +7,7 @@ import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
 import com.alibaba.jvm.sandbox.core.classloader.ModuleJarClassLoader;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.ProviderManager;
@@ -420,7 +420,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 激活所有监听器
         for (final SandboxClassFileTransformer sandboxClassFileTransformer : coreModule.getSandboxClassFileTransformers()) {
-            EventListenerHandlers.getSingleton().active(
+            EventListenerHandler.getSingleton().active(
                     sandboxClassFileTransformer.getListenerId(),
                     sandboxClassFileTransformer.getEventListener(),
                     sandboxClassFileTransformer.getEventTypeArray()
@@ -465,7 +465,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 冻结所有监听器
         for (final SandboxClassFileTransformer sandboxClassFileTransformer : coreModule.getSandboxClassFileTransformers()) {
-            EventListenerHandlers.getSingleton()
+            EventListenerHandler.getSingleton()
                     .frozen(sandboxClassFileTransformer.getListenerId());
         }
 

@@ -5,7 +5,7 @@ import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
@@ -92,7 +92,7 @@ public class JvmHelper {
                     .matching(ClassStructureFactory.createClassStructure(byteCodes, loader));
 
             final int listenerId = ObjectIDs.instance.identity(listener);
-            EventListenerHandlers.getSingleton().active(
+            EventListenerHandler.getSingleton().active(
                     listenerId,
                     listener,
                     eventTypes
