@@ -13,6 +13,7 @@ import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.ProviderManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.ModuleLibLoader.ModuleJarLoadCallback;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +68,9 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 初始化模块目录
         this.moduleLibDirArray = mergeFileArray(
-                new File[]{new File(cfg.getSystemModuleLibPath())},
+                StringUtils.isBlank(cfg.getSystemModuleLibPath())
+                        ? new File[0]
+                        : new File[]{new File(cfg.getSystemModuleLibPath())},
                 cfg.getUserModuleLibFilesWithCache()
         );
     }
