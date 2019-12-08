@@ -16,7 +16,12 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
+import static com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder.PatternType.REGEX;
 import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory.createClassStructure;
 import static com.alibaba.jvm.sandbox.qatest.core.util.QaClassUtils.toByteArray;
 
@@ -97,6 +102,57 @@ public class TestIssues217 {
 
         Assert.assertFalse(matcher.matching(createClassStructure(TestIssues217.class)).isMatched());
         Assert.assertFalse(matcher.matching(createClassStructure(toByteArray(TestIssues217.class), getClass().getClassLoader())).isMatched());
+
+    }
+
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface TestAAnnotation {
+
+    }
+
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface TestBAnnotation {
+
+    }
+
+    @TestAAnnotation
+    @TestBAnnotation
+    class TestAB {
+
+    }
+
+    @TestAAnnotation
+    class TestA {
+
+    }
+
+    @TestBAnnotation
+    class TestB {
+
+    }
+
+    @Test
+    public void matching__TestA_or_TestB__Annotation() {
+
+        final GetMatcherModuleEventWatcher watcher = new GetMatcherModuleEventWatcher();
+
+        new EventWatchBuilder(watcher, REGEX)
+                .onAnyClass()
+                .hasAnnotationTypes(".*Test(A|B)Annotation")
+                .onAnyBehavior()
+                .onWatch(new EventListener() {
+                    @Override
+                    public void onEvent(Event event) throws Throwable {
+
+                    }
+                });
+
+        final Matcher matcher = watcher.getMatcher();
+        Assert.assertTrue(matcher.matching(createClassStructure(TestA.class)).isMatched());
+        Assert.assertTrue(matcher.matching(createClassStructure(TestB.class)).isMatched());
+        Assert.assertTrue(matcher.matching(createClassStructure(TestAB.class)).isMatched());
 
     }
 
