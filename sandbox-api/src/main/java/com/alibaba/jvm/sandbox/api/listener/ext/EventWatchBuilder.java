@@ -181,6 +181,15 @@ public class EventWatchBuilder {
 
         IBuildingForWatching onWatching();
 
+        /**
+         * 兼容老版本BUGFIX
+         *
+         * @param adviceListener advice监听器
+         * @return this
+         */
+        @Deprecated
+        EventWatcher onWatch(AdviceListener adviceListener);
+
         EventWatcher onWatch(AdviceListener adviceListener, Event.Type... eventTypeArray);
 
         EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray);
@@ -626,6 +635,11 @@ public class EventWatchBuilder {
         @Override
         public IBuildingForWatching onWatching() {
             return new BuildingForWatching();
+        }
+
+        @Override
+        public EventWatcher onWatch(AdviceListener adviceListener) {
+            return onWatch(adviceListener, null);
         }
 
         @Override
