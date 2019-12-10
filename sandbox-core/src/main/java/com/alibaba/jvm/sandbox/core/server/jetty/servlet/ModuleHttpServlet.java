@@ -18,6 +18,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -106,16 +108,23 @@ public class ModuleHttpServlet extends HttpServlet {
         }
 
         // 生成方法调用参数
-        final Object[] parameterObjectArray = generateParameterObjectArray(method, req, resp);
+        final Object[] parameterObjectArray = generateParameterObjectArray(coreModule, method, req, resp);
 
-        final PrintWriter writer = coreModule.append(new ReleaseResource<PrintWriter>(resp.getWriter()) {
-
+        final OutputStream output = coreModule.append(new ReleaseResource<OutputStream>(resp.getOutputStream()) {
             @Override
             public void release() {
                 IOUtils.closeQuietly(get());
             }
-
         });
+
+//        final PrintWriter writer = coreModule.append(new ReleaseResource<PrintWriter>(resp.getWriter()) {
+//
+//            @Override
+//            public void release() {
+//                IOUtils.closeQuietly(get());
+//            }
+//
+//        });
 
 
         final boolean isAccessible = method.isAccessible();
@@ -144,7 +153,7 @@ public class ModuleHttpServlet extends HttpServlet {
         } finally {
             Thread.currentThread().setContextClassLoader(oriThreadContextClassLoader);
             method.setAccessible(isAccessible);
-            coreModule.release(writer);
+            coreModule.release(output);
         }
 
     }
@@ -238,12 +247,14 @@ public class ModuleHttpServlet extends HttpServlet {
      * 生成方法请求参数数组
      * 主要用于填充HttpServletRequest和HttpServletResponse
      *
+     * @param module 核心模块
      * @param method 模块Java方法
      * @param req    HttpServletRequest
      * @param resp   HttpServletResponse
      * @return 请求方法参数列表
      */
-    private Object[] generateParameterObjectArray(final Method method,
+    private Object[] generateParameterObjectArray(final CoreModule module,
+                                                  final Method method,
                                                   final HttpServletRequest req,
                                                   final HttpServletResponse resp) throws IOException {
 
@@ -291,7 +302,17 @@ public class ModuleHttpServlet extends HttpServlet {
 
             // PrintWriter
             else if (PrintWriter.class.isAssignableFrom(parameterType)) {
-                parameterObjectArray[index] = resp.getWriter();
+                parameterObjectArray[index] = module.append(new ReleaseResource<PrintWriter>(new PrintWriter(new OutputStreamWriter(resp.getOutputStream(), cfg.getServerCharset()))) {
+                    @Override
+                    public void release() {
+                        IOUtils.closeQuietly(get());
+                    }
+                });
+            }
+
+            // OutputStream
+            else if(OutputStream.class.isAssignableFrom(parameterType)) {
+                parameterObjectArray[index] = resp.getOutputStream();
             }
 
 
