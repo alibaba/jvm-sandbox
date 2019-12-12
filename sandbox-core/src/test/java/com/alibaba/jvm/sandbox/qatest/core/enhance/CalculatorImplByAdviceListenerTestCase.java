@@ -69,12 +69,12 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
         assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
@@ -388,18 +388,18 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
         assertEquals(30, sum(newInstance(calculatorClass), 10, 20));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
-                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
-                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
                 "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)|FALSE",
-                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
-                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|96|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE|98|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.add(int,int)",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE",
                 "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.sum(int[])|TRUE"
         );
@@ -761,18 +761,18 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
         assertEquals(25, pow(newInstance(calculatorClass), 5, 2));
         listener.assertTracing(
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE",
-                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
+                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|117|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
-                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
+                "CALL-BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|117|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
-                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
-                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
+                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|117|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE|117|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
                 "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|FALSE",
-                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
-                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|115|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
+                "CALL-RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|117|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
+                "CALL-AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE|117|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE",
                 "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.pow(int,int)|TRUE"
         );

@@ -1,6 +1,6 @@
 package com.alibaba.jvm.sandbox.core;
 
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultLoadedClassDataSource;
@@ -19,7 +19,7 @@ public class JvmSandbox {
 
     public JvmSandbox(final CoreConfigure cfg,
                       final Instrumentation inst) {
-        EventListenerHandlers.getSingleton();
+        EventListenerHandler.getSingleton();
         this.cfg = cfg;
         this.coreModuleManager = new DefaultCoreModuleManager(
                 cfg,

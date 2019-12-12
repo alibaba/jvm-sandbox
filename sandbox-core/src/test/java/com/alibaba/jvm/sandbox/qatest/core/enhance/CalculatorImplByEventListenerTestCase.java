@@ -65,14 +65,14 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
 
         assertEquals(30, sum(newInstance(calculatorClass), 10,20));
         listener.assertLIneTracing(
-                91,
-                94,
-                95,
+                93,
                 96,
-                95,
-                96,
-                95,
-                98
+                97,
+                98,
+                97,
+                98,
+                97,
+                100
         );
     }
 
@@ -370,18 +370,18 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
 
         assertEquals(30, sum(newInstance(calculatorClass), 10,20));
         listener.assertLIneTracing(
-                91,
-                94,
-                95,
+                93,
                 96,
-                78,
-                81,
-                95,
-                96,
-                78,
-                81,
-                95,
-                98
+                97,
+                98,
+                80,
+                83,
+                97,
+                98,
+                80,
+                83,
+                97,
+                100
         );
     }
 
@@ -758,13 +758,13 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
 
         assertEquals(25, pow(newInstance(calculatorClass), 5,2));
         listener.assertLIneTracing(
-                109,
-                115,
-                109,
-                115,
-                109,
-                110,
-                113
+                111,
+                117,
+                111,
+                117,
+                111,
+                112,
+                115
         );
     }
 
@@ -830,10 +830,10 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
 
         assertEquals(30, sum(newInstance(calculatorClass), 10,20));
         listener.assertLIneTracing(
-                64,
-                65,
-                68,
-                57
+                66,
+                67,
+                70,
+                59
         );
     }
 

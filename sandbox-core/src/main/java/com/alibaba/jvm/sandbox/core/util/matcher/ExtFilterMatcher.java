@@ -5,16 +5,17 @@ import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
-import com.alibaba.jvm.sandbox.core.util.matcher.structure.Access;
-import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
-import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
+import com.alibaba.jvm.sandbox.core.util.matcher.structure.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import static com.alibaba.jvm.sandbox.api.filter.AccessFlags.*;
+import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 
 /**
  * 过滤器实现的匹配器
@@ -72,20 +73,46 @@ public class ExtFilterMatcher implements Matcher {
 
     @Override
     public MatchingResult matching(final ClassStructure classStructure) {
-        final MatchingResult result = new MatchingResult();
 
-        // 1. 匹配ClassStructure
-        if (!matchingClassStructure(classStructure)) {
-            return result;
+        try {
+            return _matching(classStructure);
+        } catch (NoClassDefFoundError error) {
+
+            // 根据 #203 ClassStructureImplByJDK会存在类加载异步的问题
+            // 所以这里对JDK实现的ClassStructure抛出NoClassDefFoundError的时候做一个兼容
+            // 转换为ASM实现然后进行match
+            if (classStructure instanceof ClassStructureImplByJDK
+                    && classStructure.getClassLoader() != null) {
+                final String javaClassResourceName = toInternalClassName(classStructure.getJavaClassName()).concat(".class");
+                InputStream is = null;
+                try {
+                    is = classStructure.getClassLoader().getResourceAsStream(javaClassResourceName);
+                    _matching(ClassStructureFactory.createClassStructure(is, classStructure.getClassLoader()));
+                } finally {
+                    IOUtils.closeQuietly(is);
+                }
+            }
+
+            // 其他情况就直接抛出error
+            throw error;
         }
 
+    }
+
+    private MatchingResult _matching(final ClassStructure classStructure) {
+        final MatchingResult result = new MatchingResult();
         // 如果不开启加载Bootstrap的类，遇到就过滤掉
         if (!extFilter.isIncludeBootstrap()
                 && classStructure.getClassLoader() == null) {
             return result;
         }
 
-        // 2. 匹配BehaviorStructure
+        // 匹配ClassStructure
+        if (!matchingClassStructure(classStructure)) {
+            return result;
+        }
+
+        // 匹配BehaviorStructure
         for (final BehaviorStructure behaviorStructure : classStructure.getBehaviorStructures()) {
             if (extFilter.doMethodFilter(
                     toFilterAccess(behaviorStructure.getAccess()),
@@ -97,9 +124,9 @@ public class ExtFilterMatcher implements Matcher {
                 result.getBehaviorStructures().add(behaviorStructure);
             }
         }
-
         return result;
     }
+
 
     /**
      * 转换为{@link AccessFlags}的Access体系

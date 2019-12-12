@@ -81,7 +81,7 @@ public class JettyCoreServer implements CoreServer {
 
             // destroy http server
             logger.info("{} is destroying", this);
-            while (!httpServer.isStopped());
+            while (!httpServer.isStopped()) ;
             httpServer.destroy();
 
         } catch (Throwable cause) {
@@ -221,7 +221,14 @@ public class JettyCoreServer implements CoreServer {
     public void destroy() {
 
         // 关闭JVM-SANDBOX
-        jvmSandbox.destroy();
+        /*
+         * BUGFIX:
+         * jvmSandbox对象在一定情况下可能为空，导致这种情况的可能是destroy()调用发生在bind()方法调用之前
+         * 所以这里做了一个判空处理，临时性解决这个问题。真正需要深究的是为什么destroy()竟然能在bind()之前被调用
+         */
+        if (null != jvmSandbox) {
+            jvmSandbox.destroy();
+        }
 
         // 关闭HTTP服务器
         if (isBind()) {

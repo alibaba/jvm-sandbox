@@ -181,6 +181,15 @@ public class EventWatchBuilder {
 
         IBuildingForWatching onWatching();
 
+        /**
+         * <p>兼容老版本BUGFIX</p>
+         * 在1.2.0的版本中没有考虑好老版本的API向下兼容性问题，这里做一个修复 #236
+         *
+         * @param adviceListener advice监听器
+         * @return this
+         */
+        EventWatcher onWatch(AdviceListener adviceListener);
+
         EventWatcher onWatch(AdviceListener adviceListener, Event.Type... eventTypeArray);
 
         EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray);
@@ -629,6 +638,11 @@ public class EventWatchBuilder {
         }
 
         @Override
+        public EventWatcher onWatch(AdviceListener adviceListener) {
+            return onWatch(adviceListener, EMPTY);
+        }
+
+        @Override
         public EventWatcher onWatch(final AdviceListener adviceListener, Event.Type... eventTypeArray) {
             if (eventTypeArray == null
                     || eventTypeArray.length == 0) {
@@ -681,7 +695,7 @@ public class EventWatchBuilder {
             return build(
                     new AdviceAdapterListener(adviceListener),
                     toProgressGroup(progresses),
-                    eventTypeSet.toArray(new Event.Type[0])
+                    eventTypeSet.toArray(EMPTY)
             );
         }
 
@@ -816,14 +830,14 @@ public class EventWatchBuilder {
         }
 
         @Override
-        public void progressOnSuccess(Class clazz, int index) {
+        public void progressOnSuccess(Class<?> clazz, int index) {
             for (final Progress progress : progresses) {
                 progress.progressOnSuccess(clazz, index);
             }
         }
 
         @Override
-        public void progressOnFailed(Class clazz, int index, Throwable cause) {
+        public void progressOnFailed(Class<?> clazz, int index, Throwable cause) {
             for (final Progress progress : progresses) {
                 progress.progressOnFailed(clazz, index, cause);
             }
