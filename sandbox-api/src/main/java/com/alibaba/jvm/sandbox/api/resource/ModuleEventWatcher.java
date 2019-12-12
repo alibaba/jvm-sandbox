@@ -156,7 +156,7 @@ public interface ModuleEventWatcher {
          * @param clazz 当前进行行变的类
          * @param index 当前形变类的序号,从0开始
          */
-        void progressOnSuccess(Class clazz, int index);
+        void progressOnSuccess(Class<?> clazz, int index);
 
         /**
          * 进度报告(失败)
@@ -165,7 +165,7 @@ public interface ModuleEventWatcher {
          * @param index 当前形变类的序号,从0开始
          * @param cause 失败异常
          */
-        void progressOnFailed(Class clazz, int index, Throwable cause);
+        void progressOnFailed(Class<?> clazz, int index, Throwable cause);
 
         /**
          * 进度结束
