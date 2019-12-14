@@ -3,6 +3,8 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.LoadedClassLoaderListener;
+import com.alibaba.jvm.sandbox.core.util.SandboxClassUtils;
+import com.alibaba.jvm.sandbox.core.util.SandboxStringUtils;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.UnsupportedMatcher;
@@ -14,6 +16,8 @@ import java.lang.instrument.Instrumentation;
 import java.util.*;
 
 import static com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory.make;
+import static com.alibaba.jvm.sandbox.core.util.SandboxClassUtils.isComeFromSandboxFamily;
+import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 
 /**
  * 已加载类数据源默认实现
@@ -83,6 +87,12 @@ public class DefaultLoadedClassDataSource implements CoreLoadedClassDataSource {
         final Iterator<Class<?>> itForLoaded = iteratorForLoadedClasses();
         while (itForLoaded.hasNext()) {
             final Class<?> clazz = itForLoaded.next();
+
+            // #242 的建议，过滤掉sandbox家族的类
+            if (isComeFromSandboxFamily(toInternalClassName(clazz.getName()), clazz.getClassLoader())) {
+                continue;
+            }
+
             // 过滤掉对于JVM认为不可修改的类
             if (isRemoveUnsupported
                     && !inst.isModifiableClass(clazz)) {

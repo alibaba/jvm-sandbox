@@ -5,6 +5,7 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.classloader.ModuleJarClassLoader;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
+import com.alibaba.jvm.sandbox.core.util.SandboxClassUtils;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.UnsupportedMatcher;
@@ -73,19 +74,9 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
 
         try {
 
-            // 这里过滤掉Sandbox所需要的类，防止ClassCircularityError的发生
-            if (null != internalClassName
-                    && internalClassName.startsWith("com/alibaba/jvm/sandbox/")) {
-                return null;
-            }
-
-            // 这里过滤掉来自SandboxClassLoader的类，防止ClassCircularityError的发生
-            if (loader == SandboxClassFileTransformer.class.getClassLoader()) {
-                return null;
-            }
-
-            // 过滤掉来自ModuleJarClassLoader加载的类
-            if (loader instanceof ModuleJarClassLoader) {
+            // 这里过滤掉Sandbox所需要的类|来自SandboxClassLoader所加载的类|来自ModuleJarClassLoader加载的类
+            // 防止ClassCircularityError的发生
+            if (SandboxClassUtils.isComeFromSandboxFamily(internalClassName, loader)) {
                 return null;
             }
 
