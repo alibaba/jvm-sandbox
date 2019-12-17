@@ -150,137 +150,143 @@ public class EventListenerHandler implements SpyHandler {
                 process.markIgnoreProcessId(processId);
             }
 
-            switch (state) {
+            try {
+                switch (state) {
 
-                // 立即返回对象
-                case RETURN_IMMEDIATELY: {
+                    // 立即返回对象
+                    case RETURN_IMMEDIATELY: {
 
-                    // 如果在BeforeEvent处理过程中发生ProcessControl行为，将会造成堆栈错位
-                    // 所以这里需要将错位的堆栈进行补齐
-                    if (event instanceof BeforeEvent) {
-                        process.popInvokeId();
+                        // 如果在BeforeEvent处理过程中发生ProcessControl行为，将会造成堆栈错位
+                        // 所以这里需要将错位的堆栈进行补齐
+                        if (event instanceof BeforeEvent) {
+                            process.popInvokeId();
+                        }
+
+                        // 如果已经禁止后续返回任何事件了，则不进行后续的操作
+                        if (pce.isIgnoreProcessEvent()) {
+                            logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-return-event, isIgnored.",
+                                    event.type,
+                                    processId,
+                                    invokeId,
+                                    listenerId
+                            );
+                            return Spy.Ret.newInstanceForReturn(pce.getRespond());
+                        }
+
+                        // 如果没有注册监听ImmediatelyEvent事件，则不进行后续的操作
+                        if (!contains(processor.eventTypes, IMMEDIATELY_RETURN)) {
+                            logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-return-event, not contains.",
+                                    event.type,
+                                    processId,
+                                    invokeId,
+                                    listenerId
+                            );
+                            return Spy.Ret.newInstanceForReturn(pce.getRespond());
+                        }
+
+                        // 这里需要补偿ImmediatelyEvent
+                        final ImmediatelyReturnEvent immediatelyReturnEvent
+                                = process
+                                .getEventFactory()
+                                .makeImmediatelyReturnEvent(processId, invokeId, pce.getRespond());
+
+                        final Spy.Ret ret;
+                        try {
+                            ret = handleEvent(
+                                    listenerId,
+                                    processId,
+                                    invokeId,
+                                    immediatelyReturnEvent,
+                                    processor
+                            );
+                        } finally {
+                            process.getEventFactory().returnEvent(immediatelyReturnEvent);
+                        }
+
+                        if (ret.state == Spy.Ret.RET_STATE_NONE) {
+                            return Spy.Ret.newInstanceForReturn(pce.getRespond());
+                        } else {
+                            // 如果不是,则返回最新的处理结果
+                            return ret;
+                        }
+
                     }
 
-                    // 如果已经禁止后续返回任何事件了，则不进行后续的操作
-                    if (pce.isIgnoreProcessEvent()) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-return-event, isIgnored.",
-                                event.type,
-                                processId,
-                                invokeId,
-                                listenerId
-                        );
-                        return Spy.Ret.newInstanceForReturn(pce.getRespond());
+                    // 立即抛出异常
+                    case THROWS_IMMEDIATELY: {
+
+                        final Throwable throwable = (Throwable) pce.getRespond();
+
+                        // 如果在BeforeEvent处理过程中发生ProcessControl行为，将会造成堆栈错位
+                        // 所以这里需要将错位的堆栈进行补齐
+                        if (event instanceof BeforeEvent) {
+                            process.popInvokeId();
+                        }
+
+                        // 如果已经禁止后续返回任何事件了，则不进行后续的操作
+                        if (pce.isIgnoreProcessEvent()) {
+                            logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-throws-event, isIgnored.",
+                                    event.type,
+                                    processId,
+                                    invokeId,
+                                    listenerId
+                            );
+                            return Spy.Ret.newInstanceForThrows(throwable);
+                        }
+
+                        // 如果没有注册监听ImmediatelyEvent事件，则不进行后续的操作
+                        if (!contains(processor.eventTypes, IMMEDIATELY_THROWS)) {
+                            logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-throws-event, not contains.",
+                                    event.type,
+                                    processId,
+                                    invokeId,
+                                    listenerId
+                            );
+                            return Spy.Ret.newInstanceForThrows(throwable);
+                        }
+
+                        // 如果已经禁止后续返回任何事件了，则不进行后续的操作
+                        if (pce.isIgnoreProcessEvent()) {
+                            return Spy.Ret.newInstanceForThrows(throwable);
+                        }
+
+                        final ImmediatelyThrowsEvent immediatelyThrowsEvent
+                                = process
+                                .getEventFactory()
+                                .makeImmediatelyThrowsEvent(processId, invokeId, throwable);
+
+
+                        final Spy.Ret ret;
+                        try {
+                            ret = handleEvent(
+                                    listenerId,
+                                    processId,
+                                    invokeId,
+                                    immediatelyThrowsEvent,
+                                    processor
+                            );
+                        } finally {
+                            process.getEventFactory().returnEvent(immediatelyThrowsEvent);
+                        }
+
+                        if (ret.state == Spy.Ret.RET_STATE_NONE) {
+                            return Spy.Ret.newInstanceForThrows(throwable);
+                        } else {
+                            // 如果不是,则返回最新的处理结果
+                            return ret;
+                        }
+
                     }
 
-                    // 如果没有注册监听ImmediatelyEvent事件，则不进行后续的操作
-                    if (!contains(processor.eventTypes, IMMEDIATELY_RETURN)) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-return-event, not contains.",
-                                event.type,
-                                processId,
-                                invokeId,
-                                listenerId
-                        );
-                        return Spy.Ret.newInstanceForReturn(pce.getRespond());
+                    // 什么都不操作，立即返回
+                    case NONE_IMMEDIATELY:
+                    default: {
+                        return newInstanceForNone();
                     }
-
-                    // 这里需要补偿ImmediatelyEvent
-                    final ImmediatelyReturnEvent immediatelyReturnEvent
-                            = process
-                            .getEventFactory()
-                            .makeImmediatelyReturnEvent(processId, invokeId, pce.getRespond());
-
-                    final Spy.Ret ret;
-                    try {
-                        ret = handleEvent(
-                                listenerId,
-                                processId,
-                                invokeId,
-                                immediatelyReturnEvent,
-                                processor
-                        );
-                    } finally {
-                        process.getEventFactory().returnEvent(immediatelyReturnEvent);
-                    }
-
-                    if (ret.state == Spy.Ret.RET_STATE_NONE) {
-                        return Spy.Ret.newInstanceForReturn(pce.getRespond());
-                    } else {
-                        // 如果不是,则返回最新的处理结果
-                        return ret;
-                    }
-
                 }
-
-                // 立即抛出异常
-                case THROWS_IMMEDIATELY: {
-
-                    final Throwable throwable = (Throwable) pce.getRespond();
-
-                    // 如果在BeforeEvent处理过程中发生ProcessControl行为，将会造成堆栈错位
-                    // 所以这里需要将错位的堆栈进行补齐
-                    if (event instanceof BeforeEvent) {
-                        process.popInvokeId();
-                    }
-
-                    // 如果已经禁止后续返回任何事件了，则不进行后续的操作
-                    if (pce.isIgnoreProcessEvent()) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-throws-event, isIgnored.",
-                                event.type,
-                                processId,
-                                invokeId,
-                                listenerId
-                        );
-                        return Spy.Ret.newInstanceForThrows(throwable);
-                    }
-
-                    // 如果没有注册监听ImmediatelyEvent事件，则不进行后续的操作
-                    if (!contains(processor.eventTypes, IMMEDIATELY_THROWS)) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-throws-event, not contains.",
-                                event.type,
-                                processId,
-                                invokeId,
-                                listenerId
-                        );
-                        return Spy.Ret.newInstanceForThrows(throwable);
-                    }
-
-                    // 如果已经禁止后续返回任何事件了，则不进行后续的操作
-                    if (pce.isIgnoreProcessEvent()) {
-                        return Spy.Ret.newInstanceForThrows(throwable);
-                    }
-
-                    final ImmediatelyThrowsEvent immediatelyThrowsEvent
-                            = process
-                            .getEventFactory()
-                            .makeImmediatelyThrowsEvent(processId, invokeId, throwable);
-
-
-                    final Spy.Ret ret;
-                    try {
-                        ret = handleEvent(
-                                listenerId,
-                                processId,
-                                invokeId,
-                                immediatelyThrowsEvent,
-                                processor
-                        );
-                    } finally {
-                        process.getEventFactory().returnEvent(immediatelyThrowsEvent);
-                    }
-
-                    if (ret.state == Spy.Ret.RET_STATE_NONE) {
-                        return Spy.Ret.newInstanceForThrows(throwable);
-                    } else {
-                        // 如果不是,则返回最新的处理结果
-                        return ret;
-                    }
-
-                }
-
-                // 什么都不操作，立即返回
-                case NONE_IMMEDIATELY:
-                default: {
-                    return newInstanceForNone();
+            } finally {
+                if(process.isEmptyStack()){
+                    processor.clean();
                 }
             }
 
