@@ -391,6 +391,19 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         logger.info("force unloading all loaded modules:{}", loadedModuleBOMap.keySet());
 
+        //先冻结所有模块
+        for (final CoreModule coreModule : new ArrayList<CoreModule>(loadedModuleBOMap.values())) {
+            try {
+                frozen(coreModule, true);
+            } catch (ModuleException cause) {
+                // 强制卸载不可能出错，这里不对外继续抛出任何异常
+                logger.warn("force unloading module occur error! module={};", coreModule.getUniqueId(), cause);
+            }
+        }
+
+        //释放所有用户线程中的本地变量
+        EventListenerHandler.getSingleton().clean();
+
         // 强制卸载所有模块
         for (final CoreModule coreModule : new ArrayList<CoreModule>(loadedModuleBOMap.values())) {
             try {
