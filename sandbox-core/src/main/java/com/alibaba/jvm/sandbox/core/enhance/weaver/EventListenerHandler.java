@@ -395,7 +395,7 @@ public class EventListenerHandler implements SpyHandler {
         }
 
         if(wrap.isFrozen()){
-            logger.debug("listener={} is frozen, ignore processing before-event.", listenerId);
+            logger.debug("listener={} is frozen, ignore processing return-event|throws-event.", listenerId);
             return newInstanceForNone();
         }
 
@@ -450,7 +450,7 @@ public class EventListenerHandler implements SpyHandler {
         }
 
         if(wrap.isFrozen()){
-            logger.debug("listener={} is frozen, ignore processing before-event.", listenerId);
+            logger.debug("listener={} is frozen, ignore processing call-before-event.", listenerId);
             return;
         }
 
@@ -492,7 +492,7 @@ public class EventListenerHandler implements SpyHandler {
         }
 
         if(wrap.isFrozen()){
-            logger.debug("listener={} is frozen, ignore processing before-event.", listenerId);
+            logger.debug("listener={} is frozen, ignore processing call-return-event.", listenerId);
             return;
         }
 
@@ -528,7 +528,7 @@ public class EventListenerHandler implements SpyHandler {
         }
 
         if(wrap.isFrozen()){
-            logger.debug("listener={} is frozen, ignore processing before-event.", listenerId);
+            logger.debug("listener={} is frozen, ignore processing call-throws-event.", listenerId);
             return;
         }
 
@@ -564,7 +564,7 @@ public class EventListenerHandler implements SpyHandler {
         }
 
         if(wrap.isFrozen()){
-            logger.debug("listener={} is frozen, ignore processing before-event.", listenerId);
+            logger.debug("listener={} is frozen, ignore processing line-event.", listenerId);
             return;
         }
 
