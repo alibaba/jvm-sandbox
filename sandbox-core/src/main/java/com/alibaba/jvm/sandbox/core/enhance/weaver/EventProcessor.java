@@ -115,7 +115,6 @@ class EventProcessor {
     final EventListener listener;
     final Event.Type[] eventTypes;
     int status;
-    boolean cleanAfterFrozen = false;
     Set<Thread> currentThreadSet;
     final ThreadLocal<Process> processRef = new ThreadLocal<Process>() {
         @Override
