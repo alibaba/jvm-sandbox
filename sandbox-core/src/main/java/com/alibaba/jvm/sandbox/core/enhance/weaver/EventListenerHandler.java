@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.com.alibaba.jvm.sandbox.spy.SpyHandler;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -64,11 +65,13 @@ public class EventListenerHandler implements SpyHandler {
      * @param listenerId 事件处理器ID
      */
     public void frozen(int listenerId) {
-        final EventProcessor processor = mappingOfEventProcessor.remove(listenerId);
+        final EventProcessor processor = mappingOfEventProcessor.get(listenerId);
         if (null == processor) {
             logger.debug("ignore frozen listener={}, because not found.", listenerId);
             return;
         }
+
+        processor.frozen();
 
         logger.info("frozen listener[id={};target={};]",
                 listenerId,
@@ -76,6 +79,19 @@ public class EventListenerHandler implements SpyHandler {
         );
 
         // processor.clean();
+    }
+
+    /**
+     * 做一些必要的清理工作
+     */
+    public void clean(){
+        for(Entry<Integer/*LISTENER_ID*/, EventProcessor> entry : mappingOfEventProcessor.entrySet()){
+            EventProcessor processor = entry.getValue();
+            if(processor.isFrozen()){
+                processor.cleanThreadLocal();
+            }
+        }
+        this.mappingOfEventProcessor.clear();
     }
 
     /**
@@ -316,6 +332,11 @@ public class EventListenerHandler implements SpyHandler {
             return newInstanceForNone();
         }
 
+        if(processor.isFrozen()){
+            logger.debug("listener={} is frozen, ignore processing before-event.", listenerId);
+            return newInstanceForNone();
+        }
+
         // 获取调用跟踪信息
         final EventProcessor.Process process = processor.processRef.get();
 
@@ -373,6 +394,11 @@ public class EventListenerHandler implements SpyHandler {
             return newInstanceForNone();
         }
 
+        if(wrap.isFrozen()){
+            logger.debug("listener={} is frozen, ignore processing return-event|throws-event.", listenerId);
+            return newInstanceForNone();
+        }
+
         final EventProcessor.Process process = wrap.processRef.get();
 
         // 如果当前调用过程信息堆栈是空的,说明
@@ -423,6 +449,11 @@ public class EventListenerHandler implements SpyHandler {
             return;
         }
 
+        if(wrap.isFrozen()){
+            logger.debug("listener={} is frozen, ignore processing call-before-event.", listenerId);
+            return;
+        }
+
         final EventProcessor.Process process = wrap.processRef.get();
 
         // 如果当前调用过程信息堆栈是空的,有两种情况
@@ -460,6 +491,11 @@ public class EventListenerHandler implements SpyHandler {
             return;
         }
 
+        if(wrap.isFrozen()){
+            logger.debug("listener={} is frozen, ignore processing call-return-event.", listenerId);
+            return;
+        }
+
         final EventProcessor.Process process = wrap.processRef.get();
         if (process.isEmptyStack()) {
             return;
@@ -491,6 +527,11 @@ public class EventListenerHandler implements SpyHandler {
             return;
         }
 
+        if(wrap.isFrozen()){
+            logger.debug("listener={} is frozen, ignore processing call-throws-event.", listenerId);
+            return;
+        }
+
         final EventProcessor.Process process = wrap.processRef.get();
         if (process.isEmptyStack()) {
             return;
@@ -519,6 +560,11 @@ public class EventListenerHandler implements SpyHandler {
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing line-event.", listenerId);
+            return;
+        }
+
+        if(wrap.isFrozen()){
+            logger.debug("listener={} is frozen, ignore processing line-event.", listenerId);
             return;
         }
 
