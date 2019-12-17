@@ -40,8 +40,12 @@ class EventProcessor {
         private Integer ignoreProcessId = null;
 
         void pushInvokeId(int invokeId) {
+            if (stack.isEmpty()) {
+                //第一次进入
+                EventProcessor.this.setcurrentThread();
+            }
             stack.push(invokeId);
-            EventProcessor.this.setcurrentThread();
+
             logger.debug("push process-stack, invoke-id={};deep={};listener={};",
                     invokeId,
                     stack.deep(),
