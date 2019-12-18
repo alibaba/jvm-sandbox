@@ -11,6 +11,7 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceAdapterListener;
 import com.alibaba.jvm.sandbox.core.enhance.annotation.Interrupted;
+import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.collection.GaStack;
 import com.alibaba.jvm.sandbox.core.util.collection.ThreadUnsafeGaStack;
 
@@ -204,25 +205,14 @@ class EventProcessor {
             Set<Thread> threads = threadSet.keySet();
             for(Thread thread : threads){
                 //反射调用 ThreadLocal.ThreadLocalMap.remove(ThreadLocal)
-                Field f = Thread.class.getDeclaredField("threadLocals");
-                f.setAccessible(true);
-                Object o = f.get(thread);
+                Object o = SandboxReflectUtils.unCaughtGetClassDeclaredJavaFieldValue(Thread.class,"threadLocals",thread);
                 if(null != o){
-                    Method method = null;
-                    try {
-                        method = o.getClass().getDeclaredMethod("remove",ThreadLocal.class);
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    }
-                    method.setAccessible(true);
-                    method.invoke(o, this.processRef);
+                    Method method = SandboxReflectUtils.unCaughtGetClassDeclaredJavaMethod(o.getClass(),"remove",ThreadLocal.class);
+                    SandboxReflectUtils.unCaughtInvokeMethod(method,o,this.processRef);
                     //AdviceAdapterListener中的opStackRef也需要释放
                     if(this.listener instanceof AdviceAdapterListener){
-                        AdviceAdapterListener advice = (AdviceAdapterListener)this.listener;
-                        Field opStackRefField = AdviceAdapterListener.class.getDeclaredField("opStackRef");
-                        opStackRefField.setAccessible(true);
-                        Object opStackRef = opStackRefField.get(advice);
-                        method.invoke(o,opStackRef);
+                        Object opStackRef = SandboxReflectUtils.unCaughtGetClassDeclaredJavaFieldValue(AdviceAdapterListener.class,"opStackRef",this.listener);
+                        SandboxReflectUtils.unCaughtInvokeMethod(method,o,opStackRef);
                     }
                 }
             }
