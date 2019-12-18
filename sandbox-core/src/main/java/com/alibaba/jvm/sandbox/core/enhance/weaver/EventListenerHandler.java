@@ -82,6 +82,24 @@ public class EventListenerHandler implements SpyHandler {
     }
 
     /**
+     * 移除事件处理器
+     *
+     * @param listenerId 事件处理器ID
+     */
+    public void remove(int listenerId) {
+        final EventProcessor processor = mappingOfEventProcessor.remove(listenerId);
+        if (null == processor) {
+            logger.debug("ignore remove listener={}, because not found.", listenerId);
+            return;
+        }
+
+        logger.info("remove listener[id={};target={};]",
+            listenerId,
+            processor.listener
+        );
+    }
+
+    /**
      * 做一些必要的清理工作
      */
     public void clean(){
@@ -617,6 +635,4 @@ public class EventListenerHandler implements SpyHandler {
     public static EventListenerHandler getSingleton() {
         return singleton;
     }
-
-
 }

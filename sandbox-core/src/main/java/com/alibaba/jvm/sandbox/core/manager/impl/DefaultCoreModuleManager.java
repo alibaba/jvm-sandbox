@@ -371,6 +371,12 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
             }
         }
 
+        // 移除所有监听器
+        for (final SandboxClassFileTransformer sandboxClassFileTransformer : coreModule.getSandboxClassFileTransformers()) {
+            EventListenerHandler.getSingleton()
+                .remove(sandboxClassFileTransformer.getListenerId());
+        }
+
         // 从模块注册表中删除
         loadedModuleBOMap.remove(coreModule.getUniqueId());
 
