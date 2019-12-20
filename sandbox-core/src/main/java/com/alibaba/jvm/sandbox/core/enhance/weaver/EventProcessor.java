@@ -149,10 +149,8 @@ class EventProcessor {
      *  将当前线程加入集合
      */
     public void setcurrentThread(){
-        if(null != this.currentThreadSet){
             Thread t = Thread.currentThread();
             this.currentThreadSet.put(t,t);
-        }
     }
 
     /**
