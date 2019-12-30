@@ -28,6 +28,18 @@ public class Spy {
      */
     public static volatile boolean isSpyThrowException = false;
 
+    public static volatile boolean suspendSupports = true;
+
+    /**
+     * A thread-local flag which represents whether the spying is suspended
+     * for this thread.
+     */
+    public static final ThreadLocal<Boolean> SUSPEND = new ThreadLocal<Boolean>() {
+        protected Boolean initialValue() {
+            return false;
+        }
+    };
+
     private static final Class<Spy.Ret> SPY_RET_CLASS = Spy.Ret.class;
 
     private static final Map<String, MethodHook> namespaceMethodHookMap
@@ -124,6 +136,12 @@ public class Spy {
                                              final String desc,
                                              final String namespace,
                                              final int listenerId) throws Throwable {
+
+        // check if suspend
+        if (shouldSuspend()) {
+            return;
+        }
+
         try {
             final MethodHook hook = namespaceMethodHookMap.get(namespace);
             if (null != hook) {
@@ -136,6 +154,12 @@ public class Spy {
 
     public static void spyMethodOnCallReturn(final String namespace,
                                              final int listenerId) throws Throwable {
+
+        // check if suspend
+        if (shouldSuspend()) {
+            return;
+        }
+
         try {
             final MethodHook hook = namespaceMethodHookMap.get(namespace);
             if (null != hook) {
@@ -149,6 +173,12 @@ public class Spy {
     public static void spyMethodOnCallThrows(final String throwException,
                                              final String namespace,
                                              final int listenerId) throws Throwable {
+
+        // check if suspend
+        if (shouldSuspend()) {
+            return;
+        }
+
         try {
             final MethodHook hook = namespaceMethodHookMap.get(namespace);
             if (null != hook) {
@@ -162,6 +192,12 @@ public class Spy {
     public static void spyMethodOnLine(final int lineNumber,
                                        final String namespace,
                                        final int listenerId) throws Throwable {
+
+        // check if suspend
+        if (shouldSuspend()) {
+            return;
+        }
+
         try {
             final MethodHook hook = namespaceMethodHookMap.get(namespace);
             if (null != hook) {
@@ -180,6 +216,12 @@ public class Spy {
                                         final String javaMethodName,
                                         final String javaMethodDesc,
                                         final Object target) throws Throwable {
+
+        // check if suspend
+        if (shouldSuspend()) {
+            return Ret.RET_NONE;
+        }
+
         final Thread thread = Thread.currentThread();
         if (selfCallBarrier.isEnter(thread)) {
             return Ret.RET_NONE;
@@ -203,6 +245,12 @@ public class Spy {
     public static Ret spyMethodOnReturn(final Object object,
                                         final String namespace,
                                         final int listenerId) throws Throwable {
+
+        // check if suspend
+        if (shouldSuspend()) {
+            return Ret.RET_NONE;
+        }
+
         final Thread thread = Thread.currentThread();
         if (selfCallBarrier.isEnter(thread)) {
             return Ret.RET_NONE;
@@ -225,6 +273,12 @@ public class Spy {
     public static Ret spyMethodOnThrows(final Throwable throwable,
                                         final String namespace,
                                         final int listenerId) throws Throwable {
+
+        // check if suspend
+        if (shouldSuspend()) {
+            return Ret.RET_NONE;
+        }
+
         final Thread thread = Thread.currentThread();
         if (selfCallBarrier.isEnter(thread)) {
             return Ret.RET_NONE;
@@ -242,6 +296,10 @@ public class Spy {
         } finally {
             selfCallBarrier.exit(thread, node);
         }
+    }
+
+    private static boolean shouldSuspend() {
+        return suspendSupports & SUSPEND.get();
     }
 
     /**

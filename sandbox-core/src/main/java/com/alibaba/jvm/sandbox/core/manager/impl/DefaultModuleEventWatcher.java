@@ -16,6 +16,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.lang.instrument.Instrumentation;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -166,8 +167,30 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         return watch(toOrGroupMatcher(condition.getOrFilterArray()), listener, progress, eventType);
     }
 
-    // 这里是用matcher重制过后的watch
     private int watch(final Matcher matcher,
+                      final EventListener listener,
+                      final Progress progress,
+                      final Event.Type... eventType) {
+
+        Boolean beforeSuspended = Spy.SUSPEND.get();
+
+        try {
+
+            // suspend spying when watching
+            Spy.SUSPEND.set(true);
+
+            return doWatch(matcher, listener, progress, eventType);
+
+        } finally {
+
+            Spy.SUSPEND.set(beforeSuspended);
+
+        }
+
+    }
+
+    // 这里是用matcher重制过后的watch
+    private int doWatch(final Matcher matcher,
                       final EventListener listener,
                       final Progress progress,
                       final Event.Type... eventType) {
@@ -220,6 +243,27 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
 
     @Override
     public void delete(final int watcherId,
+                       final Progress progress) {
+
+        Boolean beforeSuspended = Spy.SUSPEND.get();
+
+        try {
+
+            // suspend spying when deleting
+            Spy.SUSPEND.set(true);
+
+            doDelete(watcherId, progress);
+
+        } finally {
+
+            Spy.SUSPEND.set(beforeSuspended);
+
+        }
+
+    }
+
+
+    private void doDelete(final int watcherId,
                        final Progress progress) {
 
         final Set<Matcher> waitingRemoveMatcherSet = new LinkedHashSet<Matcher>();

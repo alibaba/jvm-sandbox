@@ -12,6 +12,7 @@ import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
 import java.util.Set;
@@ -71,7 +72,12 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                             final ProtectionDomain protectionDomain,
                             final byte[] srcByteCodeArray) {
 
+        Boolean beforeSuspended = Spy.SUSPEND.get();
+
         try {
+
+            // suspend spying when transform
+            Spy.SUSPEND.set(true);
 
             // 这里过滤掉Sandbox所需要的类，防止ClassCircularityError的发生
             if (null != internalClassName
@@ -106,7 +112,12 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                     cause
             );
             return null;
+        } finally {
+
+            Spy.SUSPEND.set(beforeSuspended);
+
         }
+
     }
 
     private byte[] _transform(final ClassLoader loader,
