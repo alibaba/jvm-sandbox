@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.com.alibaba.jvm.sandbox.spy.Spy;
+import java.com.alibaba.jvm.sandbox.spy.SpyHandler;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,7 +28,7 @@ import static org.apache.commons.lang3.StringUtils.join;
  *
  * @author luanjia@taobao.com
  */
-public class EventListenerHandlers {
+public class EventListenerHandler implements SpyHandler {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -294,25 +295,29 @@ public class EventListenerHandlers {
         return newInstanceForNone();
     }
 
-    private Spy.Ret handleOnBefore(final int listenerId,
-                                   final int targetClassLoaderObjectID,
-                                   final String javaClassName,
-                                   final String javaMethodName,
-                                   final String javaMethodDesc,
-                                   final Object target,
-                                   final Object[] argumentArray) throws Throwable {
+    /*
+     * 判断堆栈是否错位
+     */
+    private boolean checkProcessStack(final int processId,
+                                      final int invokeId,
+                                      final boolean isEmptyStack) {
+        return (processId == invokeId && !isEmptyStack)
+                || (processId != invokeId && isEmptyStack);
+    }
 
+    @Override
+    public Spy.Ret handleOnBefore(int listenerId, int targetClassLoaderObjectID, Object[] argumentArray, String javaClassName, String javaMethodName, String javaMethodDesc, Object target) throws Throwable {
         // 获取事件处理器
-        final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
+        final EventProcessor processor = mappingOfEventProcessor.get(listenerId);
 
         // 如果尚未注册,则直接返回,不做任何处理
-        if (null == wrap) {
+        if (null == processor) {
             logger.debug("listener={} is not activated, ignore processing before-event.", listenerId);
             return newInstanceForNone();
         }
 
         // 获取调用跟踪信息
-        final EventProcessor.Process process = wrap.processRef.get();
+        final EventProcessor.Process process = processor.processRef.get();
 
         // 调用ID
         final int invokeId = invokeIdSequencer.getAndIncrement();
@@ -339,21 +344,22 @@ public class EventListenerHandlers {
                 argumentArray
         );
         try {
-            return handleEvent(listenerId, processId, invokeId, event, wrap);
+            return handleEvent(listenerId, processId, invokeId, event, processor);
         } finally {
             process.getEventFactory().returnEvent(event);
         }
     }
 
-    /*
-     * 判断堆栈是否错位
-     */
-    private boolean checkProcessStack(final int processId,
-                                      final int invokeId,
-                                      final boolean isEmptyStack) {
-        return (processId == invokeId && !isEmptyStack)
-                || (processId != invokeId && isEmptyStack);
+    @Override
+    public Spy.Ret handleOnThrows(int listenerId, Throwable throwable) throws Throwable {
+        return handleOnEnd(listenerId, throwable, false);
     }
+
+    @Override
+    public Spy.Ret handleOnReturn(int listenerId, Object object) throws Throwable {
+        return handleOnEnd(listenerId, object, true);
+    }
+
 
     private Spy.Ret handleOnEnd(final int listenerId,
                                 final Object object,
@@ -408,44 +414,9 @@ public class EventListenerHandlers {
 
     }
 
-    private void handleOnLine(final int listenerId,
-                              final int lineNumber) throws Throwable {
-        final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
-        if (null == wrap) {
-            logger.debug("listener={} is not activated, ignore processing line-event.", listenerId);
-            return;
-        }
 
-        final EventProcessor.Process process = wrap.processRef.get();
-
-        // 如果当前调用过程信息堆栈是空的,说明BEFORE/LINE错位
-        // 处理方式是直接返回,不做任何事件的处理和代码流程的改变
-        if (process.isEmptyStack()) {
-            return;
-        }
-
-        final int processId = process.getProcessId();
-        final int invokeId = process.getInvokeId();
-
-        // 如果事件处理流被忽略，则直接返回，不产生后续事件
-        if (process.touchIsIgnoreProcess(processId)) {
-            return;
-        }
-
-        final Event event = process.getEventFactory().makeLineEvent(processId, invokeId, lineNumber);
-        try {
-            handleEvent(listenerId, processId, invokeId, event, wrap);
-        } finally {
-            process.getEventFactory().returnEvent(event);
-        }
-
-    }
-
-    private void handleOnCallBefore(final int listenerId,
-                                    final int lineNumber,
-                                    final String owner,
-                                    final String name,
-                                    final String desc) throws Throwable {
+    @Override
+    public void handleOnCallBefore(int listenerId, int lineNumber, String owner, String name, String desc) throws Throwable {
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-before-event.", listenerId);
@@ -479,11 +450,10 @@ public class EventListenerHandlers {
         } finally {
             process.getEventFactory().returnEvent(event);
         }
-
     }
 
-    private void handleOnCallReturn(final int listenerId) throws Throwable {
-
+    @Override
+    public void handleOnCallReturn(int listenerId) throws Throwable {
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-return-event.", listenerId);
@@ -511,11 +481,10 @@ public class EventListenerHandlers {
         } finally {
             process.getEventFactory().returnEvent(event);
         }
-
     }
 
-    private void handleOnCallThrows(final int listenerId,
-                                    final String throwException) throws Throwable {
+    @Override
+    public void handleOnCallThrows(int listenerId, String throwException) throws Throwable {
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-throws-event.", listenerId);
@@ -545,66 +514,36 @@ public class EventListenerHandlers {
         }
     }
 
+    @Override
+    public void handleOnLine(int listenerId, int lineNumber) throws Throwable {
+        final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
+        if (null == wrap) {
+            logger.debug("listener={} is not activated, ignore processing line-event.", listenerId);
+            return;
+        }
 
-    // ----------------------------------- 从这里开始就是提供给Spy的static方法 -----------------------------------
+        final EventProcessor.Process process = wrap.processRef.get();
 
-    private static EventListenerHandlers singleton = new EventListenerHandlers();
+        // 如果当前调用过程信息堆栈是空的,说明BEFORE/LINE错位
+        // 处理方式是直接返回,不做任何事件的处理和代码流程的改变
+        if (process.isEmptyStack()) {
+            return;
+        }
 
-    public static EventListenerHandlers getSingleton() {
-        return singleton;
-    }
+        final int processId = process.getProcessId();
+        final int invokeId = process.getInvokeId();
 
-    public static Object onBefore(final int listenerId,
-                                  final int targetClassLoaderObjectID,
-                                  final Class<?> spyRetClassInTargetClassLoader,
-                                  final String javaClassName,
-                                  final String javaMethodName,
-                                  final String javaMethodDesc,
-                                  final Object target,
-                                  final Object[] argumentArray) throws Throwable {
-        return singleton.handleOnBefore(
-                listenerId,
-                targetClassLoaderObjectID,
-                javaClassName,
-                javaMethodName,
-                javaMethodDesc,
-                target,
-                argumentArray
-        );
-    }
+        // 如果事件处理流被忽略，则直接返回，不产生后续事件
+        if (process.touchIsIgnoreProcess(processId)) {
+            return;
+        }
 
-    public static Object onReturn(final int listenerId,
-                                  final Class<?> spyRetClassInTargetClassLoader,
-                                  final Object object) throws Throwable {
-        return singleton.handleOnEnd(listenerId, object, true);
-    }
-
-    public static Object onThrows(final int listenerId,
-                                  final Class<?> spyRetClassInTargetClassLoader,
-                                  final Throwable throwable) throws Throwable {
-        return singleton.handleOnEnd(listenerId, throwable, false);
-    }
-
-    public static void onLine(final int listenerId,
-                              final int lineNumber) throws Throwable {
-        singleton.handleOnLine(listenerId, lineNumber);
-    }
-
-    public static void onCallBefore(final int listenerId,
-                                    final int lineNumber,
-                                    final String owner,
-                                    final String name,
-                                    final String desc) throws Throwable {
-        singleton.handleOnCallBefore(listenerId, lineNumber, owner, name, desc);
-    }
-
-    public static void onCallReturn(final int listenerId) throws Throwable {
-        singleton.handleOnCallReturn(listenerId);
-    }
-
-    public static void onCallThrows(final int listenerId,
-                                    final String throwException) throws Throwable {
-        singleton.handleOnCallThrows(listenerId, throwException);
+        final Event event = process.getEventFactory().makeLineEvent(processId, invokeId, lineNumber);
+        try {
+            handleEvent(listenerId, processId, invokeId, event, wrap);
+        } finally {
+            process.getEventFactory().returnEvent(event);
+        }
     }
 
     // ---- 自检查
@@ -617,5 +556,15 @@ public class EventListenerHandlers {
             processor.check();
         }
     }
+
+
+    // ----------------------------------- 单例模式 -----------------------------------
+
+    private static EventListenerHandler singleton = new EventListenerHandler();
+
+    public static EventListenerHandler getSingleton() {
+        return singleton;
+    }
+
 
 }

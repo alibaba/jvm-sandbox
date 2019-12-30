@@ -121,6 +121,11 @@ class DefaultConfigInfo implements ConfigInfo {
     }
 
     @Override
+    public String getServerCharset() {
+        return cfg.getServerCharset().name();
+    }
+
+    @Override
     public String getVersion() {
         final InputStream is = getClass().getResourceAsStream("/com/alibaba/jvm/sandbox/version");
         try {

@@ -13,3 +13,18 @@ sandbox-agent/target/
 sandbox-debug-module/target/
 sandbox-mgr-module/target/
 sandbox-mgr-provider/target/
+sandbox-module-starter/target/
+target/
+!sandbox-core/src/test/java/com/alibaba/jvm/sandbox/qatest/core/enhance/target
+
+## for eclipse and vscode
+.classpath
+.project
+.settings
+.factorypath
+
+## for vim
+*.swp
+*.swo
+*.swn
+

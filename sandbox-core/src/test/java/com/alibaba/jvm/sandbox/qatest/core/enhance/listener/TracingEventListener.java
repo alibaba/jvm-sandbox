@@ -1,7 +1,7 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance.listener;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public class TracingEventListener extends InterruptedEventListener {
 
     // 检查内核事件处理器是否正确
     private void assertEventProcessor() {
-        EventListenerHandlers
+        EventListenerHandler
                 .getSingleton()
                 .checkEventProcessor(ObjectIDs.instance.identity(this));
     }

@@ -5,6 +5,8 @@ import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.Test
 /**
  * 计算器类（靶机类：所有方法拦截都基于这个类进行）
  */
+@InheritedComputer
+@Computer
 public class Calculator {
 
     public static final String ERROR_EXCEPTION_MESSAGE = "THIS IS A TEST CAME FROM CALCULATOR!";

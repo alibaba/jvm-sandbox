@@ -41,7 +41,7 @@ public class LogExceptionModule implements Module, LoadCompleted {
                     @Override
                     public void onEvent(Event event) throws Throwable {
                         final BeforeEvent bEvent = (BeforeEvent) event;
-                        exLogger.info("occur an exception: {}",
+                        exLogger.info("{} occur an exception: {}",
                                 getJavaClassName(bEvent.target.getClass()),
                                 bEvent.target
                         );

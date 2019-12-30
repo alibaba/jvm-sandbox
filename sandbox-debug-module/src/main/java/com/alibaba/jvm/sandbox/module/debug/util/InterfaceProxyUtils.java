@@ -15,7 +15,7 @@ import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassNameArray;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.apache.commons.lang3.ArrayUtils.getLength;
+import static java.util.Arrays.deepEquals;
 
 public class InterfaceProxyUtils {
 
@@ -46,20 +46,6 @@ public class InterfaceProxyUtils {
                     : proxyMethod.name();
         }
 
-        boolean isEquals(final String[] srcStringArray,
-                         final String[] dstStringArray) {
-            final int length;
-            if ((length = getLength(srcStringArray)) != getLength(dstStringArray)) {
-                return false;
-            }
-            for (int index = 0; index < length; index++) {
-                if (!StringUtils.equals(srcStringArray[index], dstStringArray[index])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         /**
          * 比较interfaceMethod和targetMethod两个方法是否接近
          *
@@ -69,8 +55,7 @@ public class InterfaceProxyUtils {
          */
         boolean isCloseTo(final Method interfaceMethod, final Method targetMethod) {
             return StringUtils.equals(getInterfaceMethodName(interfaceMethod), targetMethod.getName())
-                    && isEquals(getJavaClassNameArray(interfaceMethod.getParameterTypes()), getJavaClassNameArray(targetMethod.getParameterTypes()));
-
+                    && deepEquals(getJavaClassNameArray(interfaceMethod.getParameterTypes()), getJavaClassNameArray(targetMethod.getParameterTypes()));
         }
 
         Method getTargetMethod(final Method interfaceMethod, final Object target) throws NoSuchMethodException {

@@ -59,6 +59,7 @@ public class DebugWatchModule extends ParamSupported implements Module {
         final EventWatcher watcher = new EventWatchBuilder(moduleEventWatcher)
                 .onClass(cnPattern)
                 .includeSubClasses()
+                .includeBootstrap()
                 .onBehavior(mnPattern)
                 .onWatching()
                 .withProgress(new ProgressPrinter(printer))
@@ -144,7 +145,7 @@ public class DebugWatchModule extends ParamSupported implements Module {
         THROWS
     }
 
-    class Bind extends HashMap<String, Object> {
+    static class Bind extends HashMap<String, Object> {
         Bind bind(final String name,
                   final Object value) {
             put(name, value);

@@ -2,9 +2,11 @@ package com.alibaba.jvm.sandbox.core.server.jetty.servlet;
 
 import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.http.Http;
+import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,38 +18,45 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.matching;
 
 /**
  * 用于处理模块的HTTP请求
- * Created by luanjia@taobao.com on 2017/2/7.
+ *
+ * @author luanjia@taobao.com
  */
 public class ModuleHttpServlet extends HttpServlet {
-
+    private static final String SLASH = "/";
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final CoreConfigure cfg;
     private final CoreModuleManager coreModuleManager;
 
-    public ModuleHttpServlet(final CoreModuleManager coreModuleManager) {
+    public ModuleHttpServlet(final CoreConfigure cfg,
+                             final CoreModuleManager coreModuleManager) {
+        this.cfg = cfg;
         this.coreModuleManager = coreModuleManager;
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setCharacterEncoding(cfg.getServerCharset().name());
         doMethod(req, resp, Http.Method.GET);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setCharacterEncoding(cfg.getServerCharset().name());
         doMethod(req, resp, Http.Method.POST);
     }
 
@@ -61,7 +70,7 @@ public class ModuleHttpServlet extends HttpServlet {
         // 获取模块ID
         final String uniqueId = parseUniqueId(path);
         if (StringUtils.isBlank(uniqueId)) {
-            logger.warn("http request value={} was not found.", path);
+            logger.warn("path={} is not matched any module.", path);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -69,7 +78,7 @@ public class ModuleHttpServlet extends HttpServlet {
         // 获取模块
         final CoreModule coreModule = coreModuleManager.get(uniqueId);
         if (null == coreModule) {
-            logger.warn("module[id={}] was not existed, value={};", uniqueId, path);
+            logger.warn("path={} is matched module {}, but not existed.", path, uniqueId);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -82,34 +91,39 @@ public class ModuleHttpServlet extends HttpServlet {
                 coreModule.getModule().getClass()
         );
         if (null == method) {
-            logger.warn("module[id={};class={};] request method not found, value={};",
-                    uniqueId,
-                    coreModule.getModule().getClass().getName(),
-                    path
+            logger.warn("path={} is not matched any method in module {}",
+                    path,
+                    uniqueId
             );
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         } else {
-            logger.debug("found method[class={};method={};] in module[id={};class={};]",
-                    method.getDeclaringClass().getName(),
-                    method.getName(),
-                    uniqueId,
-                    coreModule.getModule().getClass().getName()
-            );
+            logger.debug("path={} is matched method {} in module {}", path, method.getName(), uniqueId);
         }
 
-        // 生成方法调用参数
-        final Object[] parameterObjectArray = generateParameterObjectArray(method, req, resp);
-
-        final PrintWriter writer = coreModule.append(new ReleaseResource<PrintWriter>(resp.getWriter()) {
-
+        // 自动释放I/O资源
+        final List<Closeable> autoCloseResources = coreModule.append(new ReleaseResource<List<Closeable>>(new ArrayList<Closeable>()) {
             @Override
             public void release() {
-                IOUtils.closeQuietly(get());
+                final List<Closeable> closeables = get();
+                if (CollectionUtils.isEmpty(closeables)) {
+                    return;
+                }
+                for (final Closeable closeable : get()) {
+                    if (closeable instanceof Flushable) {
+                        try {
+                            ((Flushable) closeable).flush();
+                        } catch (Exception cause) {
+                            logger.warn("path={} flush I/O occur error!", path, cause);
+                        }
+                    }
+                    IOUtils.closeQuietly(closeable);
+                }
             }
-
         });
 
+        // 生成方法调用参数
+        final Object[] parameterObjectArray = generateParameterObjectArray(autoCloseResources, method, req, resp);
 
         final boolean isAccessible = method.isAccessible();
         final ClassLoader oriThreadContextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -117,15 +131,12 @@ public class ModuleHttpServlet extends HttpServlet {
             method.setAccessible(true);
             Thread.currentThread().setContextClassLoader(coreModule.getLoader());
             method.invoke(coreModule.getModule(), parameterObjectArray);
-            logger.debug("http request value={} invoke module[id={};] {}#{} success.",
-                    path, uniqueId, coreModule.getModule().getClass().getName(), method.getName());
+            logger.debug("path={} invoke module {} method {} success.", path, uniqueId, method.getName());
         } catch (IllegalAccessException iae) {
-            logger.warn("http request value={} invoke module[id={};] {}#{} occur access denied.",
-                    path, uniqueId, coreModule.getModule().getClass().getName(), method.getName(), iae);
+            logger.warn("path={} invoke module {} method {} occur access denied.", path, uniqueId, method.getName(), iae);
             throw new ServletException(iae);
         } catch (InvocationTargetException ite) {
-            logger.warn("http request value={} invoke module[id={};] {}#{} failed.",
-                    path, uniqueId, coreModule.getModule().getClass().getName(), method.getName(), ite.getTargetException());
+            logger.warn("path={} invoke module {} method {} occur error.", path, uniqueId, method.getName(), ite.getTargetException());
             final Throwable targetCause = ite.getTargetException();
             if (targetCause instanceof ServletException) {
                 throw (ServletException) targetCause;
@@ -137,7 +148,7 @@ public class ModuleHttpServlet extends HttpServlet {
         } finally {
             Thread.currentThread().setContextClassLoader(oriThreadContextClassLoader);
             method.setAccessible(isAccessible);
-            coreModule.release(writer);
+            coreModule.release(autoCloseResources);
         }
 
     }
@@ -179,27 +190,37 @@ public class ModuleHttpServlet extends HttpServlet {
             if (null == commandAnnotation) {
                 continue;
             }
-            final String pathOfCmd = "/" + uniqueId + "/" + commandAnnotation.value();
+            // 兼容 value 是否以 / 开头的写法
+            String cmd = appendSlash(commandAnnotation.value());
+            final String pathOfCmd = "/" + uniqueId + cmd;
             if (StringUtils.equals(path, pathOfCmd)) {
                 return method;
             }
         }
-
         // 查找@Http注解的方法
         for (final Method method : MethodUtils.getMethodsListWithAnnotation(classOfModule, Http.class)) {
             final Http httpAnnotation = method.getAnnotation(Http.class);
             if (null == httpAnnotation) {
                 continue;
             }
-            final String pathPattern = "/" + uniqueId + httpAnnotation.value();
+            // 兼容 value 是否以 / 开头的写法
+            String cmd = appendSlash(httpAnnotation.value());
+            final String pathPattern = "/" + uniqueId + cmd;
             if (ArrayUtils.contains(httpAnnotation.method(), httpMethod)
                     && matching(path, pathPattern)) {
                 return method;
             }
         }
-
         // 找不到匹配方法，返回null
         return null;
+    }
+
+    private String appendSlash(String cmd) {
+        // 若不以 / 开头，则添加 /
+        if (!cmd.startsWith(SLASH)) {
+            cmd = SLASH + cmd;
+        }
+        return cmd;
     }
 
     private boolean isMapWithGenericParameterTypes(final Method method,
@@ -221,12 +242,14 @@ public class ModuleHttpServlet extends HttpServlet {
      * 生成方法请求参数数组
      * 主要用于填充HttpServletRequest和HttpServletResponse
      *
-     * @param method 模块Java方法
-     * @param req    HttpServletRequest
-     * @param resp   HttpServletResponse
+     * @param autoCloseResources 自动关闭资源
+     * @param method             模块Java方法
+     * @param req                HttpServletRequest
+     * @param resp               HttpServletResponse
      * @return 请求方法参数列表
      */
-    private Object[] generateParameterObjectArray(final Method method,
+    private Object[] generateParameterObjectArray(final List<Closeable> autoCloseResources,
+                                                  final Method method,
                                                   final HttpServletRequest req,
                                                   final HttpServletResponse resp) throws IOException {
 
@@ -241,17 +264,15 @@ public class ModuleHttpServlet extends HttpServlet {
             // HttpServletRequest
             if (HttpServletRequest.class.isAssignableFrom(parameterType)) {
                 parameterObjectArray[index] = req;
-                continue;
             }
 
             // HttpServletResponse
-            if (HttpServletResponse.class.isAssignableFrom(parameterType)) {
+            else if (HttpServletResponse.class.isAssignableFrom(parameterType)) {
                 parameterObjectArray[index] = resp;
-                continue;
             }
 
             // ParameterMap<String,String[]>
-            if (Map.class.isAssignableFrom(parameterType)
+            else if (Map.class.isAssignableFrom(parameterType)
                     && isMapWithGenericParameterTypes(method, index, String.class, String[].class)) {
                 parameterObjectArray[index] = req.getParameterMap();
             }
@@ -274,7 +295,16 @@ public class ModuleHttpServlet extends HttpServlet {
 
             // PrintWriter
             else if (PrintWriter.class.isAssignableFrom(parameterType)) {
-                parameterObjectArray[index] = resp.getWriter();
+                final PrintWriter writer = resp.getWriter();
+                autoCloseResources.add(writer);
+                parameterObjectArray[index] = writer;
+            }
+
+            // OutputStream
+            else if (OutputStream.class.isAssignableFrom(parameterType)) {
+                final OutputStream output = resp.getOutputStream();
+                autoCloseResources.add(output);
+                parameterObjectArray[index] = output;
             }
 
 

@@ -181,7 +181,16 @@ public class EventWatchBuilder {
 
         IBuildingForWatching onWatching();
 
+        /**
+         * <p>兼容老版本BUGFIX</p>
+         * 在1.2.0的版本中没有考虑好老版本的API向下兼容性问题，这里做一个修复 #236
+         *
+         * @param adviceListener advice监听器
+         * @return this
+         */
         EventWatcher onWatch(AdviceListener adviceListener);
+
+        EventWatcher onWatch(AdviceListener adviceListener, Event.Type... eventTypeArray);
 
         EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray);
 
@@ -548,7 +557,7 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForBehavior withEmptyParameterTypes() {
-            withParameterTypes.add(new String[]{});
+            withParameterTypes.add();
             return this;
         }
 
@@ -629,8 +638,17 @@ public class EventWatchBuilder {
         }
 
         @Override
-        public EventWatcher onWatch(final AdviceListener adviceListener) {
-            return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
+        public EventWatcher onWatch(AdviceListener adviceListener) {
+            return onWatch(adviceListener, EMPTY);
+        }
+
+        @Override
+        public EventWatcher onWatch(final AdviceListener adviceListener, Event.Type... eventTypeArray) {
+            if (eventTypeArray == null
+                    || eventTypeArray.length == 0) {
+                return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
+            }
+            return build(new AdviceAdapterListener(adviceListener), null, eventTypeArray);
         }
 
         @Override
@@ -677,7 +695,7 @@ public class EventWatchBuilder {
             return build(
                     new AdviceAdapterListener(adviceListener),
                     toProgressGroup(progresses),
-                    eventTypeSet.toArray(new Event.Type[0])
+                    eventTypeSet.toArray(EMPTY)
             );
         }
 
@@ -796,7 +814,7 @@ public class EventWatchBuilder {
     /**
      * 观察进度组
      */
-    private class ProgressGroup implements Progress {
+    private static class ProgressGroup implements Progress {
 
         private final List<Progress> progresses;
 
@@ -812,14 +830,14 @@ public class EventWatchBuilder {
         }
 
         @Override
-        public void progressOnSuccess(Class clazz, int index) {
+        public void progressOnSuccess(Class<?> clazz, int index) {
             for (final Progress progress : progresses) {
                 progress.progressOnSuccess(clazz, index);
             }
         }
 
         @Override
-        public void progressOnFailed(Class clazz, int index, Throwable cause) {
+        public void progressOnFailed(Class<?> clazz, int index, Throwable cause) {
             for (final Progress progress : progresses) {
                 progress.progressOnFailed(clazz, index, cause);
             }

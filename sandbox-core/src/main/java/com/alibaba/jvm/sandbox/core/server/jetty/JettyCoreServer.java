@@ -81,7 +81,7 @@ public class JettyCoreServer implements CoreServer {
 
             // destroy http server
             logger.info("{} is destroying", this);
-            while (!httpServer.isStopped());
+            while (!httpServer.isStopped()) ;
             httpServer.destroy();
 
         } catch (Throwable cause) {
@@ -142,7 +142,7 @@ public class JettyCoreServer implements CoreServer {
         final String pathSpec = "/module/http/*";
         logger.info("initializing http-handler. path={}", contextPath + pathSpec);
         context.addServlet(
-                new ServletHolder(new ModuleHttpServlet(jvmSandbox.getCoreModuleManager())),
+                new ServletHolder(new ModuleHttpServlet(cfg, jvmSandbox.getCoreModuleManager())),
                 pathSpec
         );
 
@@ -166,10 +166,11 @@ public class JettyCoreServer implements CoreServer {
         }
 
         httpServer = new Server(new InetSocketAddress(serverIp, serverPort));
-        if (httpServer.getThreadPool() instanceof QueuedThreadPool) {
-            final QueuedThreadPool qtp = (QueuedThreadPool) httpServer.getThreadPool();
-            qtp.setName("sandbox-jetty-qtp-" + qtp.hashCode());
-        }
+        QueuedThreadPool qtp = new QueuedThreadPool();
+        // jetty线程设置为daemon，防止应用启动失败进程无法正常退出
+        qtp.setDaemon(true);
+        qtp.setName("sandbox-jetty-qtp-" + qtp.hashCode());
+        httpServer.setThreadPool(qtp);
     }
 
     @Override
@@ -220,7 +221,14 @@ public class JettyCoreServer implements CoreServer {
     public void destroy() {
 
         // 关闭JVM-SANDBOX
-        jvmSandbox.destroy();
+        /*
+         * BUGFIX:
+         * jvmSandbox对象在一定情况下可能为空，导致这种情况的可能是destroy()调用发生在bind()方法调用之前
+         * 所以这里做了一个判空处理，临时性解决这个问题。真正需要深究的是为什么destroy()竟然能在bind()之前被调用
+         */
+        if (null != jvmSandbox) {
+            jvmSandbox.destroy();
+        }
 
         // 关闭HTTP服务器
         if (isBind()) {

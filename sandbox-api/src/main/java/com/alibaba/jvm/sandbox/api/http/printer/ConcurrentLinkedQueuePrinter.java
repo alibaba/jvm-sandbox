@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.lang.Math.min;
+
 /**
  * 高性能文本输出
  * 高性能背后的代价就是相对比较高的CPU开销
@@ -110,15 +112,13 @@ public class ConcurrentLinkedQueuePrinter implements Printer {
             return delayTimeMs;
         } else {
             final long newDelayTime = delayTimeMs + delayStepTimeMs;
-            delayTimeMs = newDelayTime < delayMaxTimeMs
-                    ? newDelayTime
-                    : delayMaxTimeMs;
+            delayTimeMs = min(newDelayTime, delayMaxTimeMs);
             return delayTimeMs;
         }
     }
 
-    private long resetDelayTimeMs() {
-        return delayTimeMs = delayStepTimeMs;
+    private void resetDelayTimeMs() {
+        delayTimeMs = delayStepTimeMs;
     }
 
     private void delay() throws InterruptedException {
@@ -157,7 +157,6 @@ public class ConcurrentLinkedQueuePrinter implements Printer {
                 : 0;
 
         try {
-            int heartBeat = 0;
             while (!writer.checkError()
                     && !isBrokenRef.get()
                     && !Thread.currentThread().isInterrupted()) {
@@ -169,10 +168,6 @@ public class ConcurrentLinkedQueuePrinter implements Printer {
 
                 if (writeQueue.isEmpty()) {
                     delay();
-                    if (heartBeat++ > 20) {
-                        heartBeat = 0;
-                        writer.write(0x0);
-                    }
                 } else {
                     flush();
                     resetDelayTimeMs();

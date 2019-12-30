@@ -5,7 +5,7 @@ import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
@@ -16,6 +16,7 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedAdviceAda
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,7 +92,7 @@ public class JvmHelper {
                     .matching(ClassStructureFactory.createClassStructure(byteCodes, loader));
 
             final int listenerId = ObjectIDs.instance.identity(listener);
-            EventListenerHandlers.getSingleton().active(
+            EventListenerHandler.getSingleton().active(
                     listenerId,
                     listener,
                     eventTypes
@@ -156,7 +157,7 @@ public class JvmHelper {
     /**
      * 私有的ClassLoader
      */
-    class PrivateClassLoader extends ClassLoader {
+    static class PrivateClassLoader extends ClassLoader {
 
         private final Map<String, byte[]> javaClassByteArrayMap
                 = new HashMap<String, byte[]>();
@@ -219,6 +220,7 @@ public class JvmHelper {
     }
 
     public static JvmHelper createJvm() {
+        Spy.isSpyThrowException = true;
         return createJvm("default");
     }
 

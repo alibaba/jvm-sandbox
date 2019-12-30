@@ -90,7 +90,7 @@ public class CalculatorHelper {
         public boolean doMethodFilter(int access, String javaMethodName, String[] parameterTypeJavaClassNameArray, String[] throwsTypeJavaClassNameArray, String[] annotationTypeJavaClassNameArray) {
             if (javaMethodName.equalsIgnoreCase("<init>"))
                 return (parameterTypeJavaClassNameArray.length == 1
-                        &&parameterTypeJavaClassNameArray[0].equalsIgnoreCase("com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase"));
+                        && parameterTypeJavaClassNameArray[0].equalsIgnoreCase("com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase"));
             return false;
         }
     };
@@ -100,13 +100,14 @@ public class CalculatorHelper {
 
     /**
      * 判断是否是指定方法的Return||Throws事件
-     * @param event
-     * @param javaMethodeName
+     *
+     * @param event          事件
+     * @param javaMethodName 触发事件的方法名
      * @return
      */
-    public static boolean IsSpecalMethodEnvet(Event event, String javaMethodeName){
+    public static boolean isSpecialMethodEvent(Event event, String javaMethodName) {
 
-        if (event instanceof BeforeEvent){
+        if (event instanceof BeforeEvent) {
             BeforeEvent beforeEvent = new BeforeEvent(
                     ((BeforeEvent) event).processId,
                     ((BeforeEvent) event).invokeId,
@@ -118,24 +119,22 @@ public class CalculatorHelper {
                     ((BeforeEvent) event).argumentArray);
             stack.push(beforeEvent);
         }
-        if (event instanceof ReturnEvent){
+        if (event instanceof ReturnEvent) {
             Event eventEnd = stack.pop();
-            return isSpecalMethod(eventEnd, javaMethodeName);
+            return isSpecialMethod(eventEnd, javaMethodName);
         }
 
-        if (event instanceof ThrowsEvent){
+        if (event instanceof ThrowsEvent) {
             Event eventEnd = stack.pop();
-            return isSpecalMethod(eventEnd, javaMethodeName);
+            return isSpecialMethod(eventEnd, javaMethodName);
         }
         return false;
     }
 
-    public static boolean isSpecalMethod(Event event, String javaMethodeName){
-        if (event instanceof BeforeEvent){
+    public static boolean isSpecialMethod(Event event, String javaMethodName) {
+        if (event instanceof BeforeEvent) {
             BeforeEvent beforeEvent = (BeforeEvent) event;
-            if (beforeEvent.javaMethodName.equalsIgnoreCase(javaMethodeName)){
-                return true;
-            }
+            return beforeEvent.javaMethodName.equalsIgnoreCase(javaMethodName);
         }
         return false;
     }

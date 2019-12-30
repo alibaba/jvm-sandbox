@@ -6,7 +6,7 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.core.CoreModule;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
@@ -207,7 +207,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
             // 激活增强类
             if (coreModule.isActivated()) {
                 final int listenerId = sandClassFileTransformer.getListenerId();
-                EventListenerHandlers.getSingleton()
+                EventListenerHandler.getSingleton()
                         .active(listenerId, listener, eventType);
             }
 
@@ -232,7 +232,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
             if (watcherId == sandboxClassFileTransformer.getWatchId()) {
 
                 // 冻结所有关联代码增强
-                EventListenerHandlers.getSingleton()
+                EventListenerHandler.getSingleton()
                         .frozen(sandboxClassFileTransformer.getListenerId());
 
                 // 在JVM中移除掉命中的ClassFileTransformer

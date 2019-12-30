@@ -3,7 +3,7 @@ package com.alibaba.jvm.sandbox.qatest.core.enhance.listener;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import org.objectweb.asm.Type;
 
@@ -129,6 +129,18 @@ public class TracingAdviceListener extends AdviceListener {
     }
 
     @Override
+    protected void after(Advice advice) throws Throwable {
+        tracing.add(generateTracing(
+                "AFTER",
+                getJavaClassName(advice.getBehavior().getDeclaringClass()),
+                advice.getBehavior().getName(),
+                getJavaClassNameArray(advice.getBehavior().getParameterTypes()),
+                advice.isProcessTop()
+        ));
+        super.after(advice);
+    }
+
+    @Override
     protected void afterThrowing(Advice advice) throws Throwable {
         tracing.add(generateTracing(
                 "THROWING",
@@ -170,6 +182,22 @@ public class TracingAdviceListener extends AdviceListener {
                 toJavaClassNameArray(Type.getMethodType(callJavaMethodDesc).getArgumentTypes())
         ));
         super.afterCallReturning(advice, callLineNum, callJavaClassName, callJavaMethodName, callJavaMethodDesc);
+    }
+
+    @Override
+    protected void afterCall(Advice advice, int callLineNum, String callJavaClassName, String callJavaMethodName, String callJavaMethodDesc, String callThrowJavaClassName) {
+        tracing.add(generateTracing(
+                "CALL-AFTER",
+                getJavaClassName(advice.getBehavior().getDeclaringClass()),
+                advice.getBehavior().getName(),
+                getJavaClassNameArray(advice.getBehavior().getParameterTypes()),
+                advice.isProcessTop(),
+                callLineNum,
+                callJavaClassName,
+                callJavaMethodName,
+                toJavaClassNameArray(Type.getMethodType(callJavaMethodDesc).getArgumentTypes())
+        ));
+        super.afterCall(advice, callLineNum, callJavaClassName, callJavaMethodName, callJavaMethodDesc, callThrowJavaClassName);
     }
 
     @Override
@@ -228,7 +256,7 @@ public class TracingAdviceListener extends AdviceListener {
 
     // 检查内核事件处理器是否正确
     private void assertEventProcessor() {
-        EventListenerHandlers
+        EventListenerHandler
                 .getSingleton()
                 .checkEventProcessor(ObjectIDs.instance.identity(eventListener));
     }
