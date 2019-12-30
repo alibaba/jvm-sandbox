@@ -283,14 +283,26 @@ public class EventWatchBuilder {
     public enum PatternType {
 
         /**
+         * 精确完全匹配
+         */
+        PRECISE("**"),
+
+        /**
          * 通配符表达式
          */
-        WILDCARD,
+        WILDCARD(".*"),
 
         /**
          * 正则表达式
          */
-        REGEX
+        REGEX("*");
+
+        private String anyClassPattern;
+
+        PatternType(String anyClassPattern) {
+            this.anyClassPattern = anyClassPattern;
+        }
+
     }
 
     private final ModuleEventWatcher moduleEventWatcher;
@@ -331,6 +343,8 @@ public class EventWatchBuilder {
                                            final String pattern,
                                            final PatternType patternType) {
         switch (patternType) {
+            case PRECISE:
+                return (string == pattern) || (string != null && string.equals(pattern));
             case WILDCARD:
                 return GaStringUtils.matching(string, pattern);
             case REGEX:
@@ -367,13 +381,7 @@ public class EventWatchBuilder {
      * @return IBuildingForClass
      */
     public IBuildingForClass onAnyClass() {
-        switch (patternType) {
-            case REGEX:
-                return onClass(".*");
-            case WILDCARD:
-            default:
-                return onClass("*");
-        }
+        return onClass(patternType.anyClassPattern);
     }
 
     /**
@@ -391,6 +399,7 @@ public class EventWatchBuilder {
             case REGEX: {
                 return onClass(quote(getJavaClassName(clazz)));
             }
+            case PRECISE:
             case WILDCARD:
             default:
                 return onClass(getJavaClassName(clazz));
@@ -487,6 +496,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return hasInterfaceTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return hasInterfaceTypes(getJavaClassNameArray(classes));
@@ -498,6 +508,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return hasAnnotationTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return hasAnnotationTypes(getJavaClassNameArray(classes));
@@ -511,13 +522,7 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForBehavior onAnyBehavior() {
-            switch (patternType) {
-                case REGEX:
-                    return onBehavior(".*");
-                case WILDCARD:
-                default:
-                    return onBehavior("*");
-            }
+            return onBehavior(patternType.anyClassPattern);
         }
 
     }
@@ -563,6 +568,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return withParameterTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return withParameterTypes(getJavaClassNameArray(classes));
@@ -580,6 +586,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return hasExceptionTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return hasExceptionTypes(getJavaClassNameArray(classes));
@@ -597,6 +604,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return hasAnnotationTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return hasAnnotationTypes(getJavaClassNameArray(classes));
