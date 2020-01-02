@@ -209,7 +209,7 @@ public class EventListenerHandler implements SpyHandler {
                          * Fix https://github.com/alibaba/jvm-sandbox/issues/253
                          * 在BeforeEvent中触发THROWS_IMMEDIATELY不会被同级的handleOnThrows感知
                          * 但是在其他情况下，THROWS_IMMEDIATELY会被同级的handleOnThrows处理，导致栈错位（连续两次handleOnEnd），
-                         * 同时THROWS_IMMEDIATELY无法被上级调用handleOnThrows感知，这里通过包装为
+                         * 栈错位可能导致THROWS_IMMEDIATELY无法被上级调用handleOnThrows感知，或者影响其他依赖调用栈的操作，这里通过包装为
                          * ImmediatelyThrowException，在同级的handleOnThrows处理时，直接在入口处向上抛出真正异常。
                          */
                         throwable = new ImmediatelyThrowException(throwable);
