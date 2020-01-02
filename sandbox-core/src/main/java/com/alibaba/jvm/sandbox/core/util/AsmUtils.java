@@ -18,12 +18,36 @@ public class AsmUtils {
     /**
      * just the same
      * {@code org.objectweb.asm.ClassWriter#getCommonSuperClass(String, String)}
+     *
+     * @param type1
+     *         ClassName 1
+     *
+     * @param type2
+     *         ClassName 2
+     *
+     * @param loader
+     *         类加载器
+     *
+     * @return  共同的父类
+     *
      */
     public static String getCommonSuperClass(String type1, String type2, ClassLoader loader) {
         return getCommonSuperClassImplByAsm(type1, type2, loader);
     }
 
-    // implements by ASM
+    /**
+     *
+     * @param type1
+     *         ClassName 1
+     *
+     * @param type2
+     *         ClassName 2
+     *
+     * @param targetClassLoader
+     *         类加载器
+     *
+     * @return  共同的父类
+     */
     private static String getCommonSuperClassImplByAsm(String type1, String type2, ClassLoader targetClassLoader) {
         InputStream inputStreamOfType1 = null, inputStreamOfType2 = null;
         try {

@@ -12,11 +12,13 @@ public class SandboxClassUtils {
 
     /**
      * 是否是SANDBOX家族所管理的类
-     * <p>
+     *
      * SANDBOX家族所管理的类包括：
-     * <li>{@code com.alibaba.jvm.sandbox.}开头的类名</li>
-     * <li>被{@code com.alibaba.jvm.sandbox.}开头的ClassLoader所加载的类</li>
-     * </p>
+     * <ul>
+     *  <li>{@code com.alibaba.jvm.sandbox.}开头的类名</li>
+     *  <li>被{@code com.alibaba.jvm.sandbox.}开头的ClassLoader所加载的类</li>
+     * </ul>
+     *
      *
      * @param internalClassName 类资源名
      * @param loader            加载类的ClassLoader
