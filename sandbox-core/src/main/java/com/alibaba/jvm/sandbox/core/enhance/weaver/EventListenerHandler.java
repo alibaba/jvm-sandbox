@@ -198,12 +198,21 @@ public class EventListenerHandler implements SpyHandler {
                 // 立即抛出异常
                 case THROWS_IMMEDIATELY: {
 
-                    final Throwable throwable = (Throwable) pce.getRespond();
+                    Throwable throwable = (Throwable) pce.getRespond();
 
                     // 如果在BeforeEvent处理过程中发生ProcessControl行为，将会造成堆栈错位
                     // 所以这里需要将错位的堆栈进行补齐
                     if (event instanceof BeforeEvent) {
                         process.popInvokeId();
+                    }else{
+                        /**
+                         * Fix https://github.com/alibaba/jvm-sandbox/issues/253
+                         * 在BeforeEvent中触发THROWS_IMMEDIATELY不会被同级的handleOnThrows感知
+                         * 但是在其他情况下，THROWS_IMMEDIATELY会被同级的handleOnThrows处理，导致栈错位（连续两次handleOnEnd），
+                         * 同时THROWS_IMMEDIATELY无法被上级调用handleOnThrows感知，这里通过包装为
+                         * ImmediatelyThrowException，在同级的handleOnThrows处理时，直接在入口处向上抛出真正异常。
+                         */
+                        throwable = new ImmediatelyThrowException(throwable);
                     }
 
                     // 如果已经禁止后续返回任何事件了，则不进行后续的操作
@@ -352,6 +361,11 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public Spy.Ret handleOnThrows(int listenerId, Throwable throwable) throws Throwable {
+        //handleOnThrows 处理内部ImmediatelyThrowException的异常时,转换为向上抛出真正的异常
+        if(throwable instanceof ImmediatelyThrowException){
+            ImmediatelyThrowException exception = (ImmediatelyThrowException)throwable;
+            return Spy.Ret.newInstanceForThrows(exception.getTarget());
+        }
         return handleOnEnd(listenerId, throwable, false);
     }
 
