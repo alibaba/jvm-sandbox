@@ -198,12 +198,14 @@ public class EventListenerHandler implements SpyHandler {
                 // 立即抛出异常
                 case THROWS_IMMEDIATELY: {
 
-                    final Throwable throwable = (Throwable) pce.getRespond();
+                    Throwable throwable = (Throwable) pce.getRespond();
 
                     // 如果在BeforeEvent处理过程中发生ProcessControl行为，将会造成堆栈错位
                     // 所以这里需要将错位的堆栈进行补齐
                     if (event instanceof BeforeEvent) {
                         process.popInvokeId();
+                    }else{
+                        throwable = new ImmediatelyThrowException(throwable);
                     }
 
                     // 如果已经禁止后续返回任何事件了，则不进行后续的操作
@@ -352,6 +354,10 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public Spy.Ret handleOnThrows(int listenerId, Throwable throwable) throws Throwable {
+        if(throwable instanceof ImmediatelyThrowException){
+            ImmediatelyThrowException exception = (ImmediatelyThrowException)throwable;
+            return Spy.Ret.newInstanceForThrows(exception.getTarget());
+        }
         return handleOnEnd(listenerId, throwable, false);
     }
 
