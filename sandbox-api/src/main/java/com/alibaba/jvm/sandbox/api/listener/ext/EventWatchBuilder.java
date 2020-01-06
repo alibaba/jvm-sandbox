@@ -182,15 +182,12 @@ public class EventWatchBuilder {
         IBuildingForWatching onWatching();
 
         /**
-         * <p>兼容老版本BUGFIX</p>
-         * 在1.2.0的版本中没有考虑好老版本的API向下兼容性问题，这里做一个修复 #236
+         *  使用adviceListener不能随意指定Event.Type
          *
          * @param adviceListener advice监听器
          * @return this
          */
         EventWatcher onWatch(AdviceListener adviceListener);
-
-        EventWatcher onWatch(AdviceListener adviceListener, Event.Type... eventTypeArray);
 
         EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray);
 
@@ -638,17 +635,8 @@ public class EventWatchBuilder {
         }
 
         @Override
-        public EventWatcher onWatch(AdviceListener adviceListener) {
-            return onWatch(adviceListener, EMPTY);
-        }
-
-        @Override
-        public EventWatcher onWatch(final AdviceListener adviceListener, Event.Type... eventTypeArray) {
-            if (eventTypeArray == null
-                    || eventTypeArray.length == 0) {
-                return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
-            }
-            return build(new AdviceAdapterListener(adviceListener), null, eventTypeArray);
+        public EventWatcher onWatch(final AdviceListener adviceListener) {
+            return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
         }
 
         @Override
