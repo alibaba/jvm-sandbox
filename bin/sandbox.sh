@@ -71,7 +71,7 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
          Prints loaded module list
 
 
-    -F : flush
+    -F : force flush
          Force flush the sandbox\`s user module library.
 
          flush reload user module library\`s module jar file.
@@ -83,7 +83,7 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
             - ${SANDBOX_HOME_DIR}/sandbox-module/
 
 
-    -f : force flush
+    -f : soft flush
          Soft flush the sandbox\`s user module library.
 
          flush user module library\`s module which module jar file was changed.

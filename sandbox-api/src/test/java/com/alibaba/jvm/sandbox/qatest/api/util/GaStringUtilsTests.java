@@ -1,5 +1,6 @@
-package com.alibaba.jvm.sandbox.api.util;
+package com.alibaba.jvm.sandbox.qatest.api.util;
 
+import com.alibaba.jvm.sandbox.api.util.GaStringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
