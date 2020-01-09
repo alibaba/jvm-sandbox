@@ -5,6 +5,7 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.util.BehaviorDescriptor;
 import com.alibaba.jvm.sandbox.api.util.CacheGet;
 import com.alibaba.jvm.sandbox.api.util.GaStringUtils;
+import com.alibaba.jvm.sandbox.api.util.LazyGet;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -57,11 +58,22 @@ public class AdviceAdapterListener implements EventListener {
                 final Advice advice = new Advice(
                         bEvent.processId,
                         bEvent.invokeId,
-                        toBehavior(
-                                toClass(loader, bEvent.javaClassName),
-                                bEvent.javaMethodName,
-                                bEvent.javaMethodDesc
-                        ),
+                        new LazyGet<Behavior>() {
+
+                            private final ClassLoader _loader = loader;
+                            private final String _javaClassName = bEvent.javaClassName;
+                            private final String _javaMethodName = bEvent.javaMethodName;
+                            private final String _javaMethodDesc = bEvent.javaMethodDesc;
+
+                            @Override
+                            protected Behavior initialValue() throws Throwable {
+                                return toBehavior(
+                                        toClass(_loader, _javaClassName),
+                                        _javaMethodName,
+                                        _javaMethodDesc
+                                );
+                            }
+                        },
                         loader,
                         bEvent.argumentArray,
                         bEvent.target
