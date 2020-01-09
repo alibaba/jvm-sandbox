@@ -102,7 +102,7 @@ public class EventListenerHandler implements SpyHandler {
                 // 调用事件处理
                 listener.onEvent(event);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("on-event: event|{}|{}|{}@listener|{}",
+                    logger.debug("on-event: event|{}|{}|{}|{}",
                             event.type,
                             processId,
                             invokeId,
@@ -119,7 +119,7 @@ public class EventListenerHandler implements SpyHandler {
             final EventProcessor.Process process = processor.processRef.get();
 
             final ProcessControlException.State state = pce.getState();
-            logger.debug("on-event: event|{}|{}|{};listener|{}, process-changed: {}. isIgnoreProcessEvent={};",
+            logger.debug("on-event: event|{}|{}|{}|{}, process-changed: {}. isIgnoreProcessEvent={};",
                     event.type,
                     processId,
                     invokeId,
@@ -147,7 +147,7 @@ public class EventListenerHandler implements SpyHandler {
 
                     // 如果已经禁止后续返回任何事件了，则不进行后续的操作
                     if (pce.isIgnoreProcessEvent()) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-return-event, isIgnored.",
+                        logger.debug("on-event: event|{}|{}|{}|{}, ignore immediately-return-event, isIgnored.",
                                 event.type,
                                 processId,
                                 invokeId,
@@ -158,7 +158,7 @@ public class EventListenerHandler implements SpyHandler {
 
                     // 如果没有注册监听ImmediatelyEvent事件，则不进行后续的操作
                     if (!contains(processor.eventTypes, IMMEDIATELY_RETURN)) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-return-event, not contains.",
+                        logger.debug("on-event: event|{}|{}|{}|{}, ignore immediately-return-event, not contains.",
                                 event.type,
                                 processId,
                                 invokeId,
@@ -208,7 +208,7 @@ public class EventListenerHandler implements SpyHandler {
 
                     // 如果已经禁止后续返回任何事件了，则不进行后续的操作
                     if (pce.isIgnoreProcessEvent()) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-throws-event, isIgnored.",
+                        logger.debug("on-event: event|{}|{}|{}|{}, ignore immediately-throws-event, isIgnored.",
                                 event.type,
                                 processId,
                                 invokeId,
@@ -219,7 +219,7 @@ public class EventListenerHandler implements SpyHandler {
 
                     // 如果没有注册监听ImmediatelyEvent事件，则不进行后续的操作
                     if (!contains(processor.eventTypes, IMMEDIATELY_THROWS)) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-throws-event, not contains.",
+                        logger.debug("on-event: event|{}|{}|{}|{}, ignore immediately-throws-event, not contains.",
                                 event.type,
                                 processId,
                                 invokeId,
@@ -281,7 +281,7 @@ public class EventListenerHandler implements SpyHandler {
 
             // 普通事件处理器则可以打个日志后,直接放行
             else {
-                logger.warn("on-event: event|{}|{}|{};listener|{} occur an error.",
+                logger.warn("on-event: event|{}|{}|{}|{} occur an error.",
                         event.type,
                         processId,
                         invokeId,
