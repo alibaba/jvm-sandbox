@@ -8,6 +8,8 @@ import com.alibaba.jvm.sandbox.core.util.collection.ThreadUnsafeGaStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.isInterruptEventHandler;
 
 /**
@@ -30,25 +32,48 @@ class EventProcessor {
         private final GaStack<Integer> stack
                 = new ThreadUnsafeGaStack<Integer>();
 
-        // 需要忽略的过程ID
-        private Integer ignoreProcessId = null;
+        // 需要忽略整个调用过程
+        private boolean isIgnoreProcess = false;
 
+        // 是否来自ImmediatelyThrowsException所抛出的异常
+        private boolean isExceptionFromImmediately = false;
+
+        /**
+         * 压入调用ID
+         *
+         * @param invokeId 调用ID
+         */
         void pushInvokeId(int invokeId) {
             stack.push(invokeId);
-            logger.debug("push process-stack, invoke-id={};deep={};listener={};",
-                    invokeId,
-                    stack.deep(),
-                    listenerId
-            );
+            if (logger.isDebugEnabled()) {
+                logger.debug("push process-stack, process-id={};invoke-id={};deep={};listener={};",
+                        stack.peekLast(),
+                        invokeId,
+                        stack.deep(),
+                        listenerId
+                );
+            }
         }
 
+        /**
+         * 弹出调用ID
+         *
+         * @return 调用ID
+         */
         int popInvokeId() {
-            final int invokeId = stack.pop();
-            logger.debug("pop process-stack, invoke-id={};deep={};listener={};",
-                    invokeId,
-                    stack.deep(),
-                    listenerId
-            );
+            final int invokeId;
+            if (logger.isDebugEnabled()) {
+                final int processId = stack.peekLast();
+                invokeId = stack.pop();
+                logger.debug("pop process-stack, process-id={};invoke-id={};deep={};listener={};",
+                        processId,
+                        invokeId,
+                        stack.deep(),
+                        listenerId
+                );
+            } else {
+                invokeId = stack.pop();
+            }
             if (stack.isEmpty()) {
                 processRef.remove();
                 logger.debug("clean TLS: event-processor, listener={};", listenerId);
@@ -56,32 +81,76 @@ class EventProcessor {
             return invokeId;
         }
 
+        /**
+         * 获取调用ID
+         *
+         * @return 调用ID
+         */
         int getInvokeId() {
             return stack.peek();
         }
 
+        /**
+         * 获取调用过程ID
+         *
+         * @return 调用过程ID
+         */
         int getProcessId() {
             return stack.peekLast();
         }
 
+        /**
+         * 是否空堆栈
+         *
+         * @return TRUE:是；FALSE：否
+         */
         boolean isEmptyStack() {
             return stack.isEmpty();
         }
 
-        boolean touchIsIgnoreProcess(int processId) {
-            if (null != ignoreProcessId
-                    && ignoreProcessId == processId) {
+        /**
+         * 当前调用过程是否需要被忽略
+         *
+         * @return TRUE：需要忽略；FALSE：不需要忽略
+         */
+        boolean isIgnoreProcess() {
+            return isIgnoreProcess;
+        }
+
+        /**
+         * 标记调用过程需要被忽略
+         */
+        void markIgnoreProcess() {
+            isIgnoreProcess = true;
+        }
+
+        /**
+         * 判断当前异常是否来自于ImmediatelyThrowsException，
+         * 如果当前的异常来自于ImmediatelyThrowsException，则会清空当前标志位
+         *
+         * @return TRUE:来自于；FALSE：不来自于
+         */
+        boolean rollingIsExceptionFromImmediately() {
+            if (isExceptionFromImmediately) {
+                isExceptionFromImmediately = false;
                 return true;
-            } else {
-                ignoreProcessId = null;
-                return false;
             }
+            return false;
         }
 
-        void markIgnoreProcessId(int processId) {
-            ignoreProcessId = processId;
+        /**
+         * 标记当前调用异常来自于ImmediatelyThrowsException
+         */
+        void markExceptionFromImmediately() {
+            isExceptionFromImmediately = true;
         }
 
+
+        /**
+         * 获取事件工厂
+         *
+         * @return 事件工厂
+         */
         SingleEventFactory getEventFactory() {
             return eventFactory;
         }
@@ -164,8 +233,8 @@ class EventProcessor {
                 }
             }
 
-            if (null != process.ignoreProcessId) {
-                throw new IllegalStateException(String.format("process ignoreProcessId is not null!, processId=%d", process.ignoreProcessId));
+            if (process.isIgnoreProcess) {
+                throw new IllegalStateException(String.format("process isIgnoreProcess is not false!"));
             }
 
 
