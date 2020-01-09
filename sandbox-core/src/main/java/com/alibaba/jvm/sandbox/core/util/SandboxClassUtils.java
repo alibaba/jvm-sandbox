@@ -1,7 +1,5 @@
 package com.alibaba.jvm.sandbox.core.util;
 
-import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
-
 /**
  * Sandbox的类操作工具类
  */

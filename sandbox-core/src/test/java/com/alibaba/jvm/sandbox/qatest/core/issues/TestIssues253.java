@@ -11,12 +11,10 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.Stack;
 
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
 import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
-import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.sum;
 import static org.junit.Assert.assertEquals;
 
 public class TestIssues253 {

@@ -5,7 +5,6 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.util.BehaviorDescriptor;
 import com.alibaba.jvm.sandbox.api.util.CacheGet;
 import com.alibaba.jvm.sandbox.api.util.GaStringUtils;
-import com.alibaba.jvm.sandbox.api.util.LazyGet;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;

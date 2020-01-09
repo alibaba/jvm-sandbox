@@ -8,8 +8,6 @@ import com.alibaba.jvm.sandbox.core.util.collection.ThreadUnsafeGaStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.isInterruptEventHandler;
 
 /**

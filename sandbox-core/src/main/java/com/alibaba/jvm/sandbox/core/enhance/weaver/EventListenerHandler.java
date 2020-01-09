@@ -1,7 +1,9 @@
 package com.alibaba.jvm.sandbox.core.enhance.weaver;
 
 import com.alibaba.jvm.sandbox.api.ProcessControlException;
-import com.alibaba.jvm.sandbox.api.event.*;
+import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
+import com.alibaba.jvm.sandbox.api.event.Event;
+import com.alibaba.jvm.sandbox.api.event.InvokeEvent;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import org.slf4j.Logger;
@@ -20,7 +22,6 @@ import static java.com.alibaba.jvm.sandbox.spy.Spy.Ret.newInstanceForNone;
 import static java.com.alibaba.jvm.sandbox.spy.Spy.Ret.newInstanceForThrows;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 import static org.apache.commons.lang3.StringUtils.join;
-import static org.apache.commons.lang3.StringUtils.swapCase;
 
 /**
  * 事件处理

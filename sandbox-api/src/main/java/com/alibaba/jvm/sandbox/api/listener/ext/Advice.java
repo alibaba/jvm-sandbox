@@ -2,7 +2,6 @@ package com.alibaba.jvm.sandbox.api.listener.ext;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.event.InvokeEvent;
-import com.alibaba.jvm.sandbox.api.util.LazyGet;
 
 import java.util.ArrayList;
 import java.util.HashSet;
