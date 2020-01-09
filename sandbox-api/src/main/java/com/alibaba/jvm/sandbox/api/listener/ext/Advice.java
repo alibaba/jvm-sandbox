@@ -21,7 +21,7 @@ public class Advice implements Attachment {
     private final int invokeId;
 
     private final ClassLoader loader;
-    private final LazyGet<Behavior> behaviorLazyGet;
+    private final Behavior behavior;
     private final Object[] parameterArray;
     private final Object target;
 
@@ -38,22 +38,22 @@ public class Advice implements Attachment {
     /**
      * 构造通知
      *
-     * @param processId       {@link InvokeEvent#processId}
-     * @param invokeId        {@link InvokeEvent#invokeId}
-     * @param behaviorLazyGet 触发事件的行为(懒加载)
-     * @param loader          触发事件的行为所在ClassLoader
-     * @param parameterArray  触发事件的行为入参
-     * @param target          触发事件所归属的对象实例
+     * @param processId      {@link InvokeEvent#processId}
+     * @param invokeId       {@link InvokeEvent#invokeId}
+     * @param behavior       触发事件的行为
+     * @param loader         触发事件的行为所在ClassLoader
+     * @param parameterArray 触发事件的行为入参
+     * @param target         触发事件所归属的对象实例
      */
     Advice(final int processId,
            final int invokeId,
-           final LazyGet<Behavior> behaviorLazyGet,
+           final Behavior behavior,
            final ClassLoader loader,
            final Object[] parameterArray,
            final Object target) {
         this.processId = processId;
         this.invokeId = invokeId;
-        this.behaviorLazyGet = behaviorLazyGet;
+        this.behavior = behavior;
         this.loader = loader;
         this.parameterArray = parameterArray;
         this.target = target;
@@ -141,7 +141,7 @@ public class Advice implements Attachment {
      * @return 触发事件的行为
      */
     public Behavior getBehavior() {
-        return behaviorLazyGet.get();
+        return behavior;
     }
 
     /**
