@@ -155,7 +155,7 @@ public class EventListenerHandler implements SpyHandler {
 
                     // 如果是在BEFORE中立即返回，则后续不会再有RETURN事件产生
                     // 这里需要主动对齐堆栈
-                    if(event.type == Event.Type.BEFORE) {
+                    if (event.type == Event.Type.BEFORE) {
                         process.popInvokeId();
                     }
 
@@ -181,7 +181,7 @@ public class EventListenerHandler implements SpyHandler {
 
                         // 如果是在BEFORE中立即抛出，则后续不会再有THROWS事件产生
                         // 这里需要主动对齐堆栈
-                        if(event.type == Event.Type.BEFORE) {
+                        if (event.type == Event.Type.BEFORE) {
                             process.popInvokeId();
                         }
 
@@ -246,17 +246,24 @@ public class EventListenerHandler implements SpyHandler {
         final InvokeEvent iEvent = (InvokeEvent) event;
         final Event compensateEvent;
 
+        // 补偿立即返回事件
         if (pce.getState() == ProcessControlException.State.RETURN_IMMEDIATELY
                 && contains(processor.eventTypes, IMMEDIATELY_RETURN)) {
             compensateEvent = process
                     .getEventFactory()
                     .makeImmediatelyReturnEvent(iEvent.processId, iEvent.invokeId, pce.getRespond());
-        } else if (pce.getState() == ProcessControlException.State.THROWS_IMMEDIATELY
+        }
+
+        // 补偿立即抛出事件
+        else if (pce.getState() == ProcessControlException.State.THROWS_IMMEDIATELY
                 && contains(processor.eventTypes, IMMEDIATELY_THROWS)) {
             compensateEvent = process
                     .getEventFactory()
                     .makeImmediatelyThrowsEvent(iEvent.processId, iEvent.invokeId, (Throwable) pce.getRespond());
-        } else {
+        }
+
+        // 异常情况不补偿
+        else {
             return;
         }
 
