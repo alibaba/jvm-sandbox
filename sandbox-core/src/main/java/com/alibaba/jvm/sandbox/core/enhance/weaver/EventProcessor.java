@@ -30,7 +30,7 @@ class EventProcessor {
         private final GaStack<Integer> stack
                 = new ThreadUnsafeGaStack<Integer>();
 
-        // 需要忽略整个调用过程
+        // 是否需要忽略整个调用过程
         private boolean isIgnoreProcess = false;
 
         // 是否来自ImmediatelyThrowsException所抛出的异常
@@ -142,7 +142,6 @@ class EventProcessor {
         void markExceptionFromImmediately() {
             isExceptionFromImmediately = true;
         }
-
 
         /**
          * 获取事件工厂

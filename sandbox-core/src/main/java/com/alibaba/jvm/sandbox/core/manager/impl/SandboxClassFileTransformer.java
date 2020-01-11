@@ -5,6 +5,7 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxClassUtils;
+import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.UnsupportedMatcher;
@@ -71,6 +72,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                             final ProtectionDomain protectionDomain,
                             final byte[] srcByteCodeArray) {
 
+        SandboxProtector.instance.enterProtecting();
         try {
 
             // 这里过滤掉Sandbox所需要的类|来自SandboxClassLoader所加载的类|来自ModuleJarClassLoader加载的类
@@ -96,6 +98,8 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                     cause
             );
             return null;
+        } finally {
+            SandboxProtector.instance.exitProtecting();
         }
     }
 

@@ -6,6 +6,7 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.event.InvokeEvent;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
+import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -303,6 +304,12 @@ public class EventListenerHandler implements SpyHandler {
     @Override
     public Spy.Ret handleOnBefore(int listenerId, int targetClassLoaderObjectID, Object[] argumentArray, String javaClassName, String javaMethodName, String javaMethodDesc, Object target) throws Throwable {
 
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing before-event", listenerId);
+            return newInstanceForNone();
+        }
+
         // 获取事件处理器
         final EventProcessor processor = mappingOfEventProcessor.get(listenerId);
 
@@ -360,6 +367,12 @@ public class EventListenerHandler implements SpyHandler {
     private Spy.Ret handleOnEnd(final int listenerId,
                                 final Object object,
                                 final boolean isReturn) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing {}-event", listenerId, isReturn ? "return" : "throws");
+            return newInstanceForNone();
+        }
 
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
 
@@ -420,6 +433,12 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public void handleOnCallBefore(int listenerId, int lineNumber, String owner, String name, String desc) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing call-before-event", listenerId);
+        }
+
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-before-event.", listenerId);
@@ -457,6 +476,12 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public void handleOnCallReturn(int listenerId) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing call-return-event", listenerId);
+        }
+
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-return-event.", listenerId);
@@ -488,6 +513,12 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public void handleOnCallThrows(int listenerId, String throwException) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing call-throws-event", listenerId);
+        }
+
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-throws-event.", listenerId);
@@ -519,6 +550,12 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public void handleOnLine(int listenerId, int lineNumber) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing call-line-event", listenerId);
+        }
+
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing line-event.", listenerId);

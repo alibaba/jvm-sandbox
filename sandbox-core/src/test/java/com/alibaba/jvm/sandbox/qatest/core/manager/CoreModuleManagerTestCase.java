@@ -8,6 +8,7 @@ import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreModuleManager;
 import com.alibaba.jvm.sandbox.core.util.FeatureCodec;
+import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import com.alibaba.jvm.sandbox.qatest.core.mock.EmptyCoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.qatest.core.mock.EmptyInstrumentation;
 import com.alibaba.jvm.sandbox.qatest.core.mock.EmptyProviderManager;
@@ -146,12 +147,12 @@ public class CoreModuleManagerTestCase {
     }
 
     private CoreModuleManager buildingCoreModuleManager(final File... moduleJarFiles) throws ModuleException {
-        return new DefaultCoreModuleManager(
+        return SandboxProtector.instance.protectProxy(CoreModuleManager.class, new DefaultCoreModuleManager(
                 buildingCoreConfigureWithUserModuleLib(moduleJarFiles),
                 new EmptyInstrumentation(),
                 new EmptyCoreLoadedClassDataSource(),
                 new EmptyProviderManager()
-        ).reset();
+        )).reset();
     }
 
     private void assertTracingLifeCycle(final CoreModuleManager coreModuleManager,
