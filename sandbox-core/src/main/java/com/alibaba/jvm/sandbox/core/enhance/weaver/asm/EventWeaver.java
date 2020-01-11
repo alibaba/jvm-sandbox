@@ -192,6 +192,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 codeLockForTracing.lock(new CodeLock.Block() {
                     @Override
                     public void code() {
+                        mark(beginLabel);
                         loadArgArray();
                         dup();
                         push(namespace);
@@ -207,7 +208,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                         pop();
                         processControl();
                         isMethodEnter = true;
-                        mark(beginLabel);
                     }
                 });
             }

@@ -40,7 +40,7 @@ public class CalculatorHelper {
     public static final Filter CALCULATOR_SUM_and_ADD_FILTER
             = new NameRegexFilter(
             "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.Calculator$",
-            "^(sum|add)$"
+            "^(sum|add|addInStatic)$"
     );
 
     /**
@@ -174,12 +174,39 @@ public class CalculatorHelper {
      * @throws Throwable 调用失败
      */
     public static int pow(final Object calculatorObject, int num, int n) throws Throwable {
+        return invokeMethod("pow",calculatorObject,num,n);
+    }
+
+    /**
+     * 调用addInStatic()方法
+     *
+     * @param calculatorObject addInStatic();
+     * @param a 参数
+     * @param b 参数
+     * @return a+b
+     * @throws Throwable 调用失败
+     */
+    public static int addInStatic(final Object calculatorObject, int a, int b) throws Throwable {
+        return invokeMethod("addInStatic",calculatorObject,a,b);
+    }
+
+    /**
+     * 执行体方法
+     *
+     * @param methodName 方法名称
+     * @param calculatorObject cal对象
+     * @param param1 参数1
+     * @param param2 参数2
+     * @return 返回值
+     * @throws Throwable 调用失败
+     */
+    private static int invokeMethod(String methodName,final Object calculatorObject, int param1, int param2) throws Throwable {
         try {
             return unCaughtInvokeMethod(
-                    unCaughtGetClassDeclaredJavaMethod(calculatorObject.getClass(), "pow", int.class, int.class),
+                    unCaughtGetClassDeclaredJavaMethod(calculatorObject.getClass(), methodName, int.class, int.class),
                     calculatorObject,
-                    num,
-                    n
+                    param1,
+                    param2
             );
         } catch (Throwable cause) {
             if (cause instanceof UnCaughtException

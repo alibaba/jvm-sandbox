@@ -59,12 +59,18 @@ public class AdviceAdapterListener implements EventListener {
                         bEvent.processId,
                         bEvent.invokeId,
                         new LazyGet<Behavior>() {
+
+                            private final ClassLoader _loader = loader;
+                            private final String _javaClassName = bEvent.javaClassName;
+                            private final String _javaMethodName = bEvent.javaMethodName;
+                            private final String _javaMethodDesc = bEvent.javaMethodDesc;
+
                             @Override
                             protected Behavior initialValue() throws Throwable {
                                 return toBehavior(
-                                        toClass(loader, bEvent.javaClassName),
-                                        bEvent.javaMethodName,
-                                        bEvent.javaMethodDesc
+                                        toClass(_loader, _javaClassName),
+                                        _javaMethodName,
+                                        _javaMethodDesc
                                 );
                             }
                         },

@@ -95,6 +95,38 @@ public interface ICalculatorTestCase {
      */
     void cal$sum$throws$throwsImmediately() throws Throwable;
 
+    // ------ addInStatic() -------
+
+    /**
+     *  通过类对象调用静态方法
+     *  cal.addInStatic()：环绕
+     *
+     * @throws Throwable 用例抛出异常
+     */
+    void cal$addInStatic$around() throws Throwable;
+
+    /**
+     *  通过类直接调用静态方法
+     *  cal.addInStatic()：方法调用跟踪
+     *
+     * @throws Throwable 用例抛出异常
+     */
+    void cal$addInStatic$call() throws Throwable;
+
+    /**
+     * 通过类直接调用静态方法
+     * cal.addInStatic()：方法执行之前立即返回
+     *
+     * @throws Throwable 用例抛出异常
+     */
+    void cal$addInStatic$before$returnImmediately_at_addInStatic() throws Throwable;
+
+    /**
+     * cal.addInStatic()：抛出异常之前立即返回
+     *
+     * @throws Throwable 用例抛出异常
+     */
+    void cal$addInStatic$throws$returnImmediately_at_addInStatic() throws Throwable;
 
     // ------- sum()_add() --------
 
