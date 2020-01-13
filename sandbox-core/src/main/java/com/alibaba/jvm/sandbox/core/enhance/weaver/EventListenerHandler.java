@@ -437,6 +437,7 @@ public class EventListenerHandler implements SpyHandler {
         // 在守护区内产生的事件不需要响应
         if (SandboxProtector.instance.isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing call-before-event", listenerId);
+            return;
         }
 
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
@@ -480,6 +481,7 @@ public class EventListenerHandler implements SpyHandler {
         // 在守护区内产生的事件不需要响应
         if (SandboxProtector.instance.isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing call-return-event", listenerId);
+            return;
         }
 
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
@@ -517,6 +519,7 @@ public class EventListenerHandler implements SpyHandler {
         // 在守护区内产生的事件不需要响应
         if (SandboxProtector.instance.isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing call-throws-event", listenerId);
+            return;
         }
 
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
@@ -554,6 +557,7 @@ public class EventListenerHandler implements SpyHandler {
         // 在守护区内产生的事件不需要响应
         if (SandboxProtector.instance.isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing call-line-event", listenerId);
+            return;
         }
 
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
