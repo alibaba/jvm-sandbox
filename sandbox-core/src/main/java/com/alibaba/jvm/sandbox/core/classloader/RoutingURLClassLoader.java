@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 
+import com.alibaba.jvm.sandbox.core.classloader.BussinessClassLoaderHolder.DelegateBizClassLoader;
+
 /**
  * 可路由的URLClassLoader
  *
@@ -92,6 +94,14 @@ public class RoutingURLClassLoader extends URLClassLoader {
                     }
                     return aClass;
                 } catch (Exception cause) {
+                    DelegateBizClassLoader delegateBizClassLoader = BussinessClassLoaderHolder.getBussinessClassLoader();
+                    try {
+                        if(null != delegateBizClassLoader){
+                            return delegateBizClassLoader.loadClass(javaClassName,resolve);
+                        }
+                    } catch (Exception e) {
+                        //忽略异常，继续往下加载
+                    }
                     return RoutingURLClassLoader.super.loadClass(javaClassName, resolve);
                 }
             }
