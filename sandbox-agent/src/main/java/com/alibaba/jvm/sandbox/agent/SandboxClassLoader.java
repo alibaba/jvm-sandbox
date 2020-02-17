@@ -3,6 +3,7 @@ package com.alibaba.jvm.sandbox.agent;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -16,8 +17,42 @@ import java.util.jar.JarFile;
  */
 class SandboxClassLoader extends URLClassLoader {
 
+    private static  final String REGISTER_METHOD = "registerAsParallelCapable";
+
+    private static  final String CLASS_LOADING_LOCK_METHOD = "getClassLoadingLock";
+
+    private static Method loadingLockMethod;
+
+    private static boolean isUpper = true;
+
     private final String toString;
+
     private final String path;
+
+    {
+        //在JDK 1.7及以上版本中启用并发加载机制，避免在一些特殊场景发生死锁
+        final Class<ClassLoader> clazz = ClassLoader.class;
+        Method method;
+        try {
+            method = clazz.getDeclaredMethod(REGISTER_METHOD);
+            method.setAccessible(true);
+            method.invoke(null);
+        }catch (NoSuchMethodException e){
+            isUpper = false;
+        }catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        if (isUpper){
+            try {
+                loadingLockMethod = clazz.getDeclaredMethod(CLASS_LOADING_LOCK_METHOD,String.class);
+                loadingLockMethod.setAccessible(true);
+            }catch (Exception e){
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        }
+    }
 
     SandboxClassLoader(final String namespace,
                        final String sandboxCoreJarFilePath) throws MalformedURLException {
@@ -47,26 +82,40 @@ class SandboxClassLoader extends URLClassLoader {
     }
 
     @Override
-    protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        final Class<?> loadedClass = findLoadedClass(name);
-        if (loadedClass != null) {
-            return loadedClass;
-        }
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        synchronized (getClassLoadingLock(name)) {
+            final Class<?> loadedClass = findLoadedClass(name);
+            if (loadedClass != null) {
+                return loadedClass;
+            }
 
 //        // 优先从parent（SystemClassLoader）里加载系统类，避免抛出ClassNotFoundException
 //        if(name != null && (name.startsWith("sun.") || name.startsWith("java."))) {
 //            return super.loadClass(name, resolve);
 //        }
 
-        try {
-            Class<?> aClass = findClass(name);
-            if (resolve) {
-                resolveClass(aClass);
+            try {
+                Class<?> aClass = findClass(name);
+                if (resolve) {
+                    resolveClass(aClass);
+                }
+                return aClass;
+            } catch (Exception e) {
+                return super.loadClass(name, resolve);
             }
-            return aClass;
-        } catch (Exception e) {
-            return super.loadClass(name, resolve);
         }
+    }
+
+    protected Object getClassLoadingLock(String className){
+        Object lock = this;
+        if (isUpper && loadingLockMethod != null){
+            try {
+                lock = loadingLockMethod.invoke(this,className);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return  lock;
     }
 
     @Override
