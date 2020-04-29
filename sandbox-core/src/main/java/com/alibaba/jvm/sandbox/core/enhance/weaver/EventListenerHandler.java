@@ -368,7 +368,7 @@ public class EventListenerHandler implements SpyHandler {
     @Override
     public Spy.Ret handleOnReturn(int listenerId, Object object) throws Throwable {
         try{
-            return handleOnEnd(listenerId, object, false);
+            return handleOnEnd(listenerId, object, true);
         }finally {
             BusinessClassLoaderHolder.removeBussinessClassLoader();
         }
