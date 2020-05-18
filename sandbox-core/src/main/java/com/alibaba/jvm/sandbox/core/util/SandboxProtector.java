@@ -8,6 +8,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
+
 /**
  * Sandbox守护者
  * <p>
@@ -17,6 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author oldmanpushcart@gamil.com
  */
 public class SandboxProtector {
+
+    private static final String SANDBOX_FAMILY_CLASS_RES_PREFIX = "com/alibaba/jvm/sandbox/";
+    private static final String SANDBOX_FAMILY_CLASS_RES_QATEST_PREFIX = "com/alibaba/jvm/sandbox/qatest";
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -81,7 +86,7 @@ public class SandboxProtector {
      * @return 被保护的目标接口实现
      */
     public <T> T protectProxy(final Class<T> protectTargetInterface,
-                              final T protectTarget) {
+        final T protectTarget) {
         return (T) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{protectTargetInterface}, new InvocationHandler() {
 
             @Override
@@ -94,9 +99,9 @@ public class SandboxProtector {
                     assert enterReferenceCount == exitReferenceCount;
                     if (enterReferenceCount != exitReferenceCount) {
                         logger.warn("thread:{} exit protecting with error!, expect:{} actual:{}",
-                                Thread.currentThread(),
-                                enterReferenceCount,
-                                exitReferenceCount
+                            Thread.currentThread(),
+                            enterReferenceCount,
+                            exitReferenceCount
                         );
                     }
                 }
@@ -111,4 +116,51 @@ public class SandboxProtector {
      */
     public static final SandboxProtector instance = new SandboxProtector();
 
+    /**
+     * 是否是SANDBOX家族所管理的类
+     * <p>
+     * SANDBOX家族所管理的类包括：
+     * 1. {@code com.alibaba.jvm.sandbox.}开头的类名
+     * 2. 被{@code com.alibaba.jvm.sandbox.}开头的ClassLoader所加载的类
+     * </p>
+     *
+     * @param internalClassName 类资源名
+     * @param loader            加载类的ClassLoader
+     * @return true:属于SANDBOX家族;false:不属于
+     */
+    public boolean isComeFromSandboxFamily(final String internalClassName, final ClassLoader loader) {
+
+        // 类名是com.alibaba.jvm.sandbox开头
+        if (null != internalClassName
+            && isSandboxPrefix(internalClassName)) {
+            return true;
+        }
+
+        // 类被com.alibaba.jvm.sandbox开头的ClassLoader所加载
+        if (null != loader
+            // fix issue #267
+            && isSandboxPrefix(toInternalClassName(loader.getClass().getName()))) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    /**
+     * 是否是sandbox自身的类
+     * <p>
+     * 需要注意internalClassName的格式形如: com/alibaba/jvm/sandbox
+     *
+     * @param internalClassName 类资源名
+     * @return true / false
+     */
+    private boolean isSandboxPrefix(String internalClassName) {
+        return internalClassName.startsWith(SANDBOX_FAMILY_CLASS_RES_PREFIX)
+            && !isQaTestPrefix(internalClassName);
+    }
+
+    private  boolean isQaTestPrefix(String internalClassName) {
+        return internalClassName.startsWith(SANDBOX_FAMILY_CLASS_RES_QATEST_PREFIX);
+    }
 }
