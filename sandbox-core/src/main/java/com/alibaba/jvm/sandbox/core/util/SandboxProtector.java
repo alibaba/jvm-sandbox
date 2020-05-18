@@ -13,7 +13,8 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalCla
 /**
  * Sandbox守护者
  * <p>
- * 用来保护sandbox的操作所产生的事件不被响应
+ * <li>用来保护sandbox的操作所产生的事件不被响应</li>
+ * <li>用来保护sandbox家族类不被自己所增强</li>
  * </p>
  *
  * @author oldmanpushcart@gamil.com
