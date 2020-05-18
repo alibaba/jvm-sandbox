@@ -14,7 +14,6 @@ import java.lang.instrument.Instrumentation;
 import java.util.*;
 
 import static com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory.make;
-import static com.alibaba.jvm.sandbox.core.util.SandboxClassUtils.isComeFromSandboxFamily;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 
 /**
@@ -89,7 +88,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
                 final Class<?> clazz = itForLoaded.next();
 
                 // #242 的建议，过滤掉sandbox家族的类
-                if (isComeFromSandboxFamily(toInternalClassName(clazz.getName()), clazz.getClassLoader())) {
+                if (SandboxProtector.instance.isComeFromSandboxFamily(toInternalClassName(clazz.getName()), clazz.getClassLoader())) {
                     continue;
                 }
 
