@@ -9,6 +9,9 @@ public class BusinessClassLoaderHolder {
     private static final ThreadLocal<DelegateBizClassLoader> holder = new ThreadLocal<DelegateBizClassLoader>();
 
     public static void setBussinessClassLoader(ClassLoader classLoader){
+        if(null == classLoader){
+            return;
+        }
         DelegateBizClassLoader delegateBizClassLoader = new DelegateBizClassLoader(classLoader);
         holder.set(delegateBizClassLoader);
     }
