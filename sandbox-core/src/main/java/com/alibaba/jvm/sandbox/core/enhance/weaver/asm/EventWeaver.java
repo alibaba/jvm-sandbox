@@ -271,12 +271,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 }
             }
 
-            /**
-             * 加载异常
-             */
-            private void loadThrow() {
-                dup();
-            }
 
             @Override
             public void visitMaxs(int maxStack, int maxLocals) {
@@ -286,11 +280,14 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 codeLockForTracing.lock(new CodeLock.Block() {
                     @Override
                     public void code() {
-                        loadThrow();
+                        int index = newLocal(Type.getType(Throwable.class));
+                        storeLocal(index);
+                        loadLocal(index);
                         push(namespace);
                         push(listenerId);
                         invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnThrows);
                         processControl();
+                        loadLocal(index);
                     }
                 });
 
