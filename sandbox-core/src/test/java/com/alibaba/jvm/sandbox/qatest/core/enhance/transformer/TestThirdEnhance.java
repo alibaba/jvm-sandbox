@@ -25,14 +25,14 @@ import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
 import static org.objectweb.asm.Opcodes.ASM7;
 
 /**
- * 测试第三方transformer冲突情况
+ * 测试第三方增强冲突情况
  *
  * @author zhuangpeng
  * @since 2020/6/11
  */
 public class TestThirdEnhance{
 
-    private static final boolean isDumpClass = true;
+    private static final boolean isDumpClass = false;
 
     final Set<String/*BehaviorStructure#getSignCode()*/> signCodes;
 
