@@ -3,9 +3,12 @@ package com.alibaba.jvm.sandbox.qatest.core.enhance;
 import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.LineNumTracingEventListener;
+import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingAdviceListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingEventListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
+import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper.ThirdTransformer;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -970,6 +973,27 @@ public class CalculatorImplByEventListenerTestCase implements ICalculatorTestCas
         listener.assertEventTracing(
                 BEFORE,
                 RETURN
+        );
+    }
+
+    @Test
+    @Override
+    public void cal$report$multiEnhance() throws Throwable {
+        final TracingEventListener listener;
+        final Class<?> calculatorClass = JvmHelper
+            .createJvm()
+            .defineClass(
+                Calculator.class,
+                new JvmHelper.Transformer(
+                    CALCULATOR_REPORT_FILTER,
+                    listener = new TracingEventListener(),
+                    BEFORE, RETURN, THROWS
+                ),new JvmHelper.ThirdTransformer(CALCULATOR_REPORT_FILTER,null)
+            ).loadClass(CALCULATOR_CLASS_NAME);
+        report(newInstance(calculatorClass), "test");
+        listener.assertEventTracing(
+            BEFORE,
+            RETURN
         );
     }
 }

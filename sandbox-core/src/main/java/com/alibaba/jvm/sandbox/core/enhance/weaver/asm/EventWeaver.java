@@ -271,7 +271,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 }
             }
 
-
             @Override
             public void visitMaxs(int maxStack, int maxLocals) {
                 mark(endLabel);
@@ -280,7 +279,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 codeLockForTracing.lock(new CodeLock.Block() {
                     @Override
                     public void code() {
-                        int index = newLocal(Type.getType(Throwable.class));
+                        int index = newLocal(ASM_TYPE_THROWABLE);
                         storeLocal(index);
                         loadLocal(index);
                         push(namespace);

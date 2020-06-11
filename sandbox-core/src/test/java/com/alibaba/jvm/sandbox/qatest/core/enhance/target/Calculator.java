@@ -147,4 +147,8 @@ public class Calculator {
         tCaseInStatic=tCase;
     }
 
+    public void report(String parma){
+
+    }
+
 }

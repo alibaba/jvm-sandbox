@@ -4,6 +4,8 @@ import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingAdviceListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
+import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper.ThirdTransformer;
+
 import org.junit.Test;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
@@ -973,6 +975,27 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE",
                 "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE",
                 "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.<init>(com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator$TestCase)|TRUE"
+        );
+    }
+
+    @Test
+    @Override
+    public void cal$report$multiEnhance() throws Throwable {
+        final TracingAdviceListener listener;
+        final Class<?> calculatorClass = JvmHelper
+            .createJvm()
+            .defineClass(
+                Calculator.class,
+                new JvmHelper.Transformer(
+                    CALCULATOR_REPORT_FILTER,
+                    listener = new TracingAdviceListener()
+                ),new ThirdTransformer(CALCULATOR_REPORT_FILTER,null)
+            ).loadClass(CALCULATOR_CLASS_NAME);
+        report(newInstance(calculatorClass), "test");
+        listener.assertTracing(
+            "BEFORE|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.report(java.lang.String)|TRUE",
+            "RETURN|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.report(java.lang.String)|TRUE",
+            "AFTER|com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.report(java.lang.String)|TRUE"
         );
     }
 }
