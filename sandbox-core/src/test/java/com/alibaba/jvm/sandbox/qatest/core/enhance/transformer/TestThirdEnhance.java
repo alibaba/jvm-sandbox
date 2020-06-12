@@ -8,13 +8,13 @@ import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.AsmMethods;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.AsmTypes;
 import com.alibaba.jvm.sandbox.core.util.AsmUtils;
 
-import jdk.internal.org.objectweb.asm.Type;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
