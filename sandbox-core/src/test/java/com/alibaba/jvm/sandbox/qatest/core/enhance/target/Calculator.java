@@ -147,7 +147,10 @@ public class Calculator {
         tCaseInStatic=tCase;
     }
 
-    public void report(String parma){
+    /**
+     * 空方法
+     */
+    public void report(String param){
 
     }
 
