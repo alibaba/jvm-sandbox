@@ -47,21 +47,6 @@ public class SandboxReflectUtils {
         }
     }
 
-    public static void unCaughtInvokeVoidMethod(final Method method,
-        final Object target,
-        final Object... parameterArray) {
-        final boolean isAccessible = method.isAccessible();
-        try {
-            method.setAccessible(true);
-            method.invoke(target, parameterArray);
-        } catch (Throwable e) {
-            throw new UnCaughtException(e);
-        } finally {
-            method.setAccessible(isAccessible);
-        }
-    }
-
-
     public static Field unCaughtGetClassDeclaredJavaField(final Class<?> clazz,
                                                           final String name) {
         try {
