@@ -51,7 +51,7 @@
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
+            <version>3.2.2</version>
         </dependency>
 
         <!-- DEBUG工程独有依赖模块，所以单独配置并指定了版本 -->
