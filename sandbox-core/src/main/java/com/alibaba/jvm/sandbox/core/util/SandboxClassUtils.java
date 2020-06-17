@@ -30,7 +30,8 @@ public class SandboxClassUtils {
 
         // 类被com.alibaba.jvm.sandbox开头的ClassLoader所加载
         if (null != loader
-                && isSandboxPrefix(loader.getClass().getName())) {
+                // fix issue #267
+                && isSandboxPrefix(normalizeClass(loader.getClass().getName()))) {
             return true;
         }
 
@@ -38,6 +39,28 @@ public class SandboxClassUtils {
 
     }
 
+    /**
+     * 标准化类名
+     * <p>
+     * 入参：com.alibaba.jvm.sandbox
+     * 返回：com/alibaba/jvm/sandbox
+     * </p>
+     *
+     * @param className 类名
+     * @return 标准化类名
+     */
+    private static String normalizeClass(String className) {
+        return className.replace(".", "/");
+    }
+
+    /**
+     * 是否是sandbox自身的类
+     * <p>
+     * 需要注意internalClassName的格式形如: com/alibaba/jvm/sandbox
+     *
+     * @param internalClassName 类资源名
+     * @return true / false
+     */
     private static boolean isSandboxPrefix(String internalClassName) {
         return internalClassName.startsWith(SANDBOX_FAMILY_CLASS_RES_PREFIX)
                 && !isQaTestPrefix(internalClassName);

@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.qatest.core.util;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
+import com.alibaba.jvm.sandbox.api.event.Event.Type;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
@@ -13,6 +14,8 @@ import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedAdviceAdapterListener;
+import com.alibaba.jvm.sandbox.qatest.core.enhance.transformer.TestThirdEnhance;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,10 +67,30 @@ public class JvmHelper {
         classLoader.defineClass(javaClassName, byteCodeArray);
         return this;
     }
+    
+    public static class ThirdTransformer extends Transformer{
+
+        public ThirdTransformer(Filter filter, EventListener listener) {
+            super(filter, listener, null);
+        }
+
+        @Override
+        public byte[] transform(String namespace, ClassLoader loader, byte[] byteCodes) {
+            final MatchingResult matchingResult = new ExtFilterMatcher(make(filter))
+                .matching(ClassStructureFactory.createClassStructure(byteCodes, loader));
+
+            if (matchingResult.isMatched()) {
+                return new TestThirdEnhance(matchingResult.getBehaviorSignCodes()).transform(loader,byteCodes);
+            } else {
+                return byteCodes;
+            }
+
+        }
+    }
 
     public static class Transformer {
 
-        private final Filter filter;
+        protected final Filter filter;
         private final EventListener listener;
         private final Event.Type[] eventTypes;
 
@@ -154,6 +177,8 @@ public class JvmHelper {
         }
         return this;
     }
+
+
 
     public Class<?> loadClass(String javaClassName) throws ClassNotFoundException {
         return classLoader.loadClass(javaClassName);
