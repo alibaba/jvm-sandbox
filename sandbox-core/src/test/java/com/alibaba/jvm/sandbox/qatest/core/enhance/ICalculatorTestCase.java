@@ -1,5 +1,7 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance;
 
+import org.junit.Test;
+
 /**
  * Calculator类测试用例接口
  * <p>
@@ -269,4 +271,10 @@ public interface ICalculatorTestCase {
      */
     void cal$init_with_TestCase$before$changeParameters() throws Throwable;
 
+    /**
+     * {@code <init>(TestCase)}：调用跟踪 测试多次增强
+     *
+     * @throws Throwable 用例抛出异常
+     */
+    void cal$report$multiEnhance() throws Throwable;
 }

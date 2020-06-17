@@ -79,6 +79,15 @@ public class CalculatorHelper {
             "^sum$"
     );
 
+    /**
+     * 拦截report()方法过滤器
+     */
+    public static final Filter CALCULATOR_REPORT_FILTER
+        = new NameRegexFilter(
+        "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.Calculator$",
+        "^report"
+    );
+
     public static final Filter CALCULATOR_INIT_FILTER_WITH_TEST_CASE
             = new Filter() {
         @Override
@@ -178,6 +187,31 @@ public class CalculatorHelper {
     }
 
     /**
+     * 调用report()方法
+     *
+     * @param calculatorObject 目标计算器对象实例
+     * @param strArray         参数
+     * @return 返回值
+     * @throws Throwable 调用失败
+     */
+    public static void report(final Object calculatorObject, String... strArray) throws Throwable {
+        try {
+             unCaughtInvokeMethod(
+                unCaughtGetClassDeclaredJavaMethod(calculatorObject.getClass(), "report", String.class),
+                calculatorObject,
+                strArray
+            );
+        } catch (Throwable cause) {
+            if (cause instanceof UnCaughtException
+                && (cause.getCause() instanceof InvocationTargetException)) {
+                throw ((InvocationTargetException) cause.getCause()).getTargetException();
+            }
+            throw cause;
+        }
+
+    }
+
+    /**
      * 调用addInStatic()方法
      *
      * @param calculatorObject addInStatic();
@@ -222,6 +256,8 @@ public class CalculatorHelper {
             return calculatorClass.getConstructor().newInstance();
         } catch (InvocationTargetException cause) {
             throw cause.getTargetException();
+        } catch (VerifyError e){
+            throw e;
         }
     }
 
