@@ -211,7 +211,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
      * https://github.com/alibaba/jvm-sandbox/pull/280
      *
      */
-    public static class SandboxClassUtils {
+    private static class SandboxClassUtils {
 
         private static final String SANDBOX_FAMILY_CLASS_RES_PREFIX = "com/alibaba/jvm/sandbox/";
         private static final String SANDBOX_FAMILY_CLASS_RES_QATEST_PREFIX = "com/alibaba/jvm/sandbox/qatest";
