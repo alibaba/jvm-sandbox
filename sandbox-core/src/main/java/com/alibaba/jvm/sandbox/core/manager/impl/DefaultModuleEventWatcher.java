@@ -87,7 +87,10 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         final int watchId,
         final List<Class<?>> waitingReTransformClasses,
         final Progress progress) {
-
+        // 在真正做retransform 前的一刻，做addTransformer，避免java.lang.ClassCircularityError
+        if(null != transformer){
+            inst.addTransformer(transformer, true);
+        }
         // 需要形变总数
         final int total = waitingReTransformClasses.size();
 
@@ -117,10 +120,6 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                                 cause
                         );
                     }
-                }
-                // 在真正做retransform 前的一刻，做addTransformer，避免java.lang.ClassCircularityError
-                if(null != transformer){
-                    inst.addTransformer(transformer, true);
                 }
                 inst.retransformClasses(waitingReTransformClass);
                 logger.info("watch={} in module={} single reTransform {} success, at index={};total={};",
