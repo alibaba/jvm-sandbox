@@ -9,11 +9,23 @@ import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
 
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 沙箱
  */
 public class JvmSandbox {
+
+    /**
+     * 需要提前加载的sandbox工具类
+     */
+    private final static List<String> earlyLoadSandboxClassNameList = new ArrayList<String>();
+
+    static {
+        earlyLoadSandboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.SandboxClassUtils");
+        earlyLoadSandboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByAsm");
+    }
 
     private final CoreConfigure cfg;
     private final CoreModuleManager coreModuleManager;
@@ -33,9 +45,22 @@ public class JvmSandbox {
     }
 
     private void init() {
+        doEarlyLoadSandboxClass();
         SpyUtils.init(cfg.getNamespace());
     }
 
+    /**
+     * 提前加载某些必要的类
+     */
+    private void doEarlyLoadSandboxClass() {
+        for(String className : earlyLoadSandboxClassNameList){
+            try {
+                Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                //加载sandbox内部的类，不可能加载不到
+            }
+        }
+    }
 
     /**
      * 获取模块管理器
