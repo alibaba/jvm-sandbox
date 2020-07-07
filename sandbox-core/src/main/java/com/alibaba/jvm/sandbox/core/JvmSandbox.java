@@ -45,14 +45,14 @@ public class JvmSandbox {
     }
 
     private void init() {
-        loadSandboxClass();
+        doEarlyloadSandboxClass();
         SpyUtils.init(cfg.getNamespace());
     }
 
     /**
      * 提前加载某些必要的类
      */
-    private void loadSandboxClass() {
+    private void doEarlyloadSandboxClass() {
         for(String className : earlyLondSndboxClassNameList){
             try {
                 Class.forName(className);
