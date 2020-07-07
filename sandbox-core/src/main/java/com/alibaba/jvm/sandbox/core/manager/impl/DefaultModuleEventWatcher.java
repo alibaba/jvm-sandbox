@@ -83,14 +83,9 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
      * 形变观察所影响的类
      */
     private void reTransformClasses(
-        SandboxClassFileTransformer transformer,
         final int watchId,
         final List<Class<?>> waitingReTransformClasses,
         final Progress progress) {
-        // 在真正做retransform 前的一刻，做addTransformer，避免java.lang.ClassCircularityError
-        if(null != transformer){
-            inst.addTransformer(transformer, true);
-        }
         // 需要形变总数
         final int total = waitingReTransformClasses.size();
 
@@ -184,6 +179,9 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         // 注册到CoreModule中
         coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
 
+        //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
+        inst.addTransformer(sandClassFileTransformer, true);
+
         // 查找需要渲染的类集合
         final List<Class<?>> waitingReTransformClasses = classDataSource.findForReTransform(matcher);
         logger.info("watch={} in module={} found {} classes for watch(ing).",
@@ -199,7 +197,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         try {
 
             // 应用JVM
-            reTransformClasses(sandClassFileTransformer,watchId, waitingReTransformClasses, progress);
+            reTransformClasses(watchId,waitingReTransformClasses, progress);
 
             // 计数
             cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();
@@ -266,7 +264,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         beginProgress(progress, waitingReTransformClasses.size());
         try {
             // 应用JVM
-            reTransformClasses(null, watcherId, waitingReTransformClasses, progress);
+            reTransformClasses(watcherId, waitingReTransformClasses, progress);
         } finally {
             finishProgress(progress, cCnt, mCnt);
         }
