@@ -20,11 +20,11 @@ public class JvmSandbox {
     /**
      * 需要提前加载的sandbox工具类
      */
-    private final static List<String> earlyLondSndboxClassNameList = new ArrayList<String>();
+    private final static List<String> earlyLoadSndboxClassNameList = new ArrayList<String>();
 
     static {
-        earlyLondSndboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.SandboxClassUtils");
-        earlyLondSndboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByAsm");
+        earlyLoadSndboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.SandboxClassUtils");
+        earlyLoadSndboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByAsm");
     }
 
     private final CoreConfigure cfg;
@@ -45,15 +45,15 @@ public class JvmSandbox {
     }
 
     private void init() {
-        doEarlyloadSandboxClass();
+        doEarlyLoadSandboxClass();
         SpyUtils.init(cfg.getNamespace());
     }
 
     /**
      * 提前加载某些必要的类
      */
-    private void doEarlyloadSandboxClass() {
-        for(String className : earlyLondSndboxClassNameList){
+    private void doEarlyLoadSandboxClass() {
+        for(String className : earlyLoadSndboxClassNameList){
             try {
                 Class.forName(className);
             } catch (ClassNotFoundException e) {
