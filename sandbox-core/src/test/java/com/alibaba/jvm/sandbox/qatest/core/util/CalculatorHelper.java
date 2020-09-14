@@ -26,6 +26,16 @@ public class CalculatorHelper {
     public static final String MY_CALCULATOR_CLASS_NAME = getJavaClassName(MyCalculator.class);
 
     /**
+     * currentTimeMillis()方法过滤器
+     */
+    public static final Filter CALCULATOR_SYSTEM
+        = new NameRegexFilter(
+        "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.NativeClass",
+        "^currentTimeMillis"
+    );
+
+
+    /**
      * 拦截sum()方法过滤器
      */
     public static final Filter CALCULATOR_SUM_FILTER

@@ -13,6 +13,7 @@ import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.GroupMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,7 +174,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                       final Event.Type... eventType) {
         final int watchId = watchIdSequencer.next();
         // 给对应的模块追加ClassFileTransformer
-        final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(
+        final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(inst,
                 watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
 
         // 注册到CoreModule中
@@ -181,6 +182,9 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
 
         //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
         inst.addTransformer(sandClassFileTransformer, true);
+        if(inst.isNativeMethodPrefixSupported() && StringUtils.isNotBlank(sandClassFileTransformer.getNativeMethodPrefix())){
+            inst.setNativeMethodPrefix(sandClassFileTransformer,sandClassFileTransformer.getNativeMethodPrefix());
+        }
 
         // 查找需要渲染的类集合
         final List<Class<?>> waitingReTransformClasses = classDataSource.findForReTransform(matcher);
@@ -198,7 +202,6 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
 
             // 应用JVM
             reTransformClasses(watchId,waitingReTransformClasses, progress);
-
             // 计数
             cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();
             mCnt += sandClassFileTransformer.getAffectStatistic().mCnt();
