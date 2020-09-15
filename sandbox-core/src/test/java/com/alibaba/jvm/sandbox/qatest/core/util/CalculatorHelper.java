@@ -34,6 +34,42 @@ public class CalculatorHelper {
         "^currentTimeMillis"
     );
 
+    /**
+     * param1()方法过滤器
+     */
+    public static final Filter NATIVECLASS_PARAM1
+        = new NameRegexFilter(
+        "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.NativeClass",
+        "^param1"
+    );
+
+    /**
+     * param()方法过滤器
+     */
+    public static final Filter NATIVECLASS_PARAM2
+        = new NameRegexFilter(
+        "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.NativeClass",
+        "^param2"
+    );
+
+    /**
+     * param3()方法过滤器
+     */
+    public static final Filter NATIVECLASS_PARAM3
+        = new NameRegexFilter(
+        "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.NativeClass",
+        "^param3"
+    );
+
+    /**
+     * param4()方法过滤器
+     */
+    public static final Filter NATIVECLASS_PARAM4
+        = new NameRegexFilter(
+        "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.NativeClass",
+        "^param4"
+    );
+
 
     /**
      * 拦截sum()方法过滤器

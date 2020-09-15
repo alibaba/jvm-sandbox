@@ -18,6 +18,7 @@ import java.util.Set;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
 import static org.apache.commons.lang3.ArrayUtils.contains;
+import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.join;
 
 /**
@@ -159,7 +160,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
             //3.增加wrapper的native方法
             //去掉native
             int newAccess = access & ~Opcodes.ACC_NATIVE;
-            final boolean staticMehtod = ((access & Opcodes.ACC_STATIC) != 0);
             final boolean privateMehtod = ((access & Opcodes.ACC_PRIVATE) != 0);
             final MethodVisitor mv = super.visitMethod(newAccess, name, desc, signature, exceptions);
             return new ReWriteMethod(api, new JSRInlinerAdapter(mv, newAccess, name, desc, signature, exceptions), newAccess, name, desc){
@@ -207,7 +207,11 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                                 String wrapperNativeMethodName = sb.toString();
                                 Method wrapperMethod = new Method(access,wrapperNativeMethodName,desc);
                                 String owner = toInternalClassName(targetJavaClassName);
-                                if(staticMehtod){
+                                if(!isStaticMethod()){
+                                    loadThis();
+                                }
+                                loadArgs();
+                                if(isStaticMethod()){
                                     mv.visitMethodInsn(Opcodes.INVOKESTATIC, owner, wrapperMethod.getName(), wrapperMethod.getDescriptor(), false);
                                 }else{
                                     if(privateMehtod){
@@ -226,26 +230,20 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                                 mark(endLabel);
                                 mv.visitLabel(startCatchBlock);
                                 visitTryCatchBlock(beginLabel, endLabel, startCatchBlock, ASM_TYPE_THROWABLE.getInternalName());
-
-                                codeLockForTracing.lock(new CodeLock.Block() {
-                                    @Override
-                                    public void code() {
-                                        newlocal = newLocal(ASM_TYPE_THROWABLE);
-                                        storeLocal(newlocal);
-                                        loadLocal(newlocal);
-                                        push(namespace);
-                                        push(listenerId);
-                                        invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnThrows);
-                                        processControl(desc);
-                                        loadLocal(newlocal);
-                                    }
-                                });
-
+                                newlocal = newLocal(ASM_TYPE_THROWABLE);
+                                storeLocal(newlocal);
+                                loadLocal(newlocal);
+                                push(namespace);
+                                push(listenerId);
+                                invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnThrows);
+                                processControl(desc);
+                                loadLocal(newlocal);
                                 throwException();
                                 mv.visitLabel(endCatchBlock);
                             }
                         });
                     }
+                    super.visitLocalVariable("t",ASM_TYPE_THROWABLE.getDescriptor(),null,startCatchBlock,endCatchBlock,newlocal);
                     super.visitEnd();
                 }
             };

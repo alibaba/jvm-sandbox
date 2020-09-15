@@ -182,10 +182,6 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
 
         //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
         inst.addTransformer(sandClassFileTransformer, true);
-        if(inst.isNativeMethodPrefixSupported() && StringUtils.isNotBlank(sandClassFileTransformer.getNativeMethodPrefix())){
-            inst.setNativeMethodPrefix(sandClassFileTransformer,sandClassFileTransformer.getNativeMethodPrefix());
-        }
-
         // 查找需要渲染的类集合
         final List<Class<?>> waitingReTransformClasses = classDataSource.findForReTransform(matcher);
         logger.info("watch={} in module={} found {} classes for watch(ing).",
