@@ -28,7 +28,7 @@ public class CalculatorHelper {
     /**
      * currentTimeMillis()方法过滤器
      */
-    public static final Filter CALCULATOR_SYSTEM
+    public static final Filter NATIVECLASS_SYSTEM
         = new NameRegexFilter(
         "^com\\.alibaba\\.jvm.sandbox\\.qatest\\.core\\.enhance\\.target\\.NativeClass",
         "^currentTimeMillis"

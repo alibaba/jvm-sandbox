@@ -88,7 +88,8 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final boolean isCallEnable;
 
     public EventWeaver(
-        NativeMethodEnhanceAware nativeMethodEnhanceAware, final int api,
+        final NativeMethodEnhanceAware nativeMethodEnhanceAware,
+        final int api,
         final ClassVisitor cv,
         final String namespace,
         final int listenerId,
@@ -167,6 +168,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 private final Label endLabel = new Label();
                 private final Label startCatchBlock = new Label();
                 private final Label endCatchBlock = new Label();
+                private int newlocal = -1;
                 // 代码锁
                 private final CodeLock codeLockForTracing = new CallAsmCodeLock(this);
 
@@ -177,30 +179,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 /**
                  * 流程控制
                  */
-                private void processControl() {
-                    final Label finishLabel = new Label();
-                    final Label returnLabel = new Label();
-                    final Label throwsLabel = new Label();
-                    dup();
-                    visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "state", ASM_TYPE_INT);
-                    dup();
-                    push(Spy.Ret.RET_STATE_RETURN);
-                    ifICmp(EQ, returnLabel);
-                    push(Spy.Ret.RET_STATE_THROWS);
-                    ifICmp(EQ, throwsLabel);
-                    goTo(finishLabel);
-                    mark(returnLabel);
-                    pop();
-                    visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
-                    checkCastReturn(Type.getReturnType(desc));
-                    goTo(finishLabel);
-                    mark(throwsLabel);
-                    visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
-                    checkCast(ASM_TYPE_THROWABLE);
-                    throwException();
-                    mark(finishLabel);
-                    pop();
-                }
 
                 @Override
                 public void visitEnd() {
@@ -208,9 +186,21 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                         codeLockForTracing.lock(new CodeLock.Block() {
                             @Override
                             public void code() {
-                                mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-                                mv.visitLdcInsn("Hello");
-                                mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+                                mark(beginLabel);
+                                loadArgArray();
+                                dup();
+                                push(namespace);
+                                push(listenerId);
+                                loadClassLoader();
+                                push(targetJavaClassName);
+                                push(name);
+                                push(desc);
+                                loadThisOrPushNullIfIsStatic();
+                                invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnBefore);
+                                swap();
+                                storeArgArray();
+                                pop();
+                                processControl(desc);
                                 StringBuilder sb = new StringBuilder();
                                 sb.append(NATIVE_PREFIX);
                                 sb.append(name);
@@ -227,11 +217,36 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                                     }
                                 }
                                 EventWeaver.this.addMethodNodes.add(wrapperMethod);
-                                mv.visitInsn(LRETURN);
+                                loadReturn(Type.getReturnType(desc));
+                                push(namespace);
+                                push(listenerId);
+                                invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnReturn);
+                                processControl(desc);
+                                returnValue();
+                                mark(endLabel);
+                                mv.visitLabel(startCatchBlock);
+                                visitTryCatchBlock(beginLabel, endLabel, startCatchBlock, ASM_TYPE_THROWABLE.getInternalName());
+
+                                codeLockForTracing.lock(new CodeLock.Block() {
+                                    @Override
+                                    public void code() {
+                                        newlocal = newLocal(ASM_TYPE_THROWABLE);
+                                        storeLocal(newlocal);
+                                        loadLocal(newlocal);
+                                        push(namespace);
+                                        push(listenerId);
+                                        invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnThrows);
+                                        processControl(desc);
+                                        loadLocal(newlocal);
+                                    }
+                                });
+
+                                throwException();
+                                mv.visitLabel(endCatchBlock);
                             }
                         });
                     }
-                    mv.visitEnd();
+                    super.visitEnd();
                 }
             };
 
@@ -254,33 +269,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 // 代码锁
                 private final CodeLock codeLockForTracing = new CallAsmCodeLock(this);
 
-                /**
-                 * 流程控制
-                 */
-                private void processControl() {
-                    final Label finishLabel = new Label();
-                    final Label returnLabel = new Label();
-                    final Label throwsLabel = new Label();
-                    dup();
-                    visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "state", ASM_TYPE_INT);
-                    dup();
-                    push(Spy.Ret.RET_STATE_RETURN);
-                    ifICmp(EQ, returnLabel);
-                    push(Spy.Ret.RET_STATE_THROWS);
-                    ifICmp(EQ, throwsLabel);
-                    goTo(finishLabel);
-                    mark(returnLabel);
-                    pop();
-                    visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
-                    checkCastReturn(Type.getReturnType(desc));
-                    goTo(finishLabel);
-                    mark(throwsLabel);
-                    visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
-                    checkCast(ASM_TYPE_THROWABLE);
-                    throwException();
-                    mark(finishLabel);
-                    pop();
-                }
+
 
                 // 加载ClassLoader
                 private void loadClassLoader() {
@@ -306,7 +295,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                             swap();
                             storeArgArray();
                             pop();
-                            processControl();
+                            processControl(desc);
                             isMethodEnter = true;
                         }
                     });
@@ -365,7 +354,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                                 push(namespace);
                                 push(listenerId);
                                 invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnReturn);
-                                processControl();
+                                processControl(desc);
                             }
                         });
                     }
@@ -386,7 +375,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                             push(namespace);
                             push(listenerId);
                             invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnThrows);
-                            processControl();
+                            processControl(desc);
                             loadLocal(newlocal);
                         }
                     });

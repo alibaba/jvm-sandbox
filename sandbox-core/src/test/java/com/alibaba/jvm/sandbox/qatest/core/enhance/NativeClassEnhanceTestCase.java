@@ -12,7 +12,7 @@ import static com.alibaba.jvm.sandbox.api.event.Event.Type.CALL_BEFORE;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.CALL_RETURN;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.CALL_THROWS;
 
-import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.CALCULATOR_SYSTEM;
+import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.NATIVECLASS_SYSTEM;
 
 /**
  * @author zhuangpeng
@@ -26,7 +26,7 @@ public class NativeClassEnhanceTestCase {
             .createJvm()
             .defineClass(
                 NativeClass.class,
-                CALCULATOR_SYSTEM,
+                NATIVECLASS_SYSTEM,
                 listener = new TracingEventListener(),
                 CALL_BEFORE, CALL_RETURN, CALL_THROWS
             )
