@@ -1,5 +1,9 @@
 package com.alibaba.jvm.sandbox.module.debug;
 
+import java.util.Date;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.ProcessController;
@@ -19,27 +23,29 @@ public class BrokenClockTinkerModule implements Module {
     @Resource
     private ModuleEventWatcher moduleEventWatcher;
 
+
+    private long baseMockTime = 1631750400000L;
+
+    private volatile long baseTime = 0;
+
     @Command("repairCheckState")
     public void repairCheckState() {
-
+        baseTime = System.currentTimeMillis();
         new EventWatchBuilder(moduleEventWatcher)
             .onClass("java.lang.System").includeBootstrap()
             .onBehavior("currentTimeMillis")
             .onWatch(new AdviceListener() {
 
-                /**
-                 * 拦截{@code com.taobao.demo.Clock#checkState()}方法，当这个方法抛出异常时将会被
-                 * AdviceListener#afterThrowing()所拦截
-                 */
                 @Override
-                protected void afterThrowing(Advice advice) throws Throwable {
+                protected void before(Advice advice) throws Throwable {
+                }
 
-                    // 在此，你可以通过ProcessController来改变原有方法的执行流程
-                    // 这里的代码意义是：改变原方法抛出异常的行为，变更为立即返回；void返回值用null表示
-                    ProcessController.returnImmediately(null);
+                @Override
+                protected void after(Advice advice) throws Throwable {
+                    long time = (Long)advice.getReturnObj();
+                    ProcessController.returnImmediately(baseMockTime + (time - baseTime));
                 }
             });
-
     }
 
 }
