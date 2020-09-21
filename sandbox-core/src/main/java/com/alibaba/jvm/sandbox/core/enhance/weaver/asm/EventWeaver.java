@@ -214,11 +214,8 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                                 if(isStaticMethod()){
                                     mv.visitMethodInsn(Opcodes.INVOKESTATIC, owner, wrapperMethod.getName(), wrapperMethod.getDescriptor(), false);
                                 }else{
-                                    if(privateMehtod){
-                                        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, owner, wrapperMethod.getName(), wrapperMethod.getDescriptor(), false);
-                                    }else{
-                                        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, owner, wrapperMethod.getName(), wrapperMethod.getDescriptor(), false);
-                                    }
+                                    //wrapper的方法永远都是private
+                                    mv.visitMethodInsn(Opcodes.INVOKESPECIAL, owner, wrapperMethod.getName(), wrapperMethod.getDescriptor(), false);
                                 }
                                 EventWeaver.this.addMethodNodes.add(wrapperMethod);
                                 loadReturn(Type.getReturnType(desc));
