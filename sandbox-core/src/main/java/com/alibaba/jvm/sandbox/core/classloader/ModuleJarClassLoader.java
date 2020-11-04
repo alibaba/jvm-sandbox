@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessControlContext;
@@ -129,8 +128,7 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
             if (this instanceof Closeable) {
                 logger.debug("JDK is 1.7+, use URLClassLoader[file={}].close()", moduleJarFile);
                 try {
-                    final Method closeMethod = unCaughtGetClassDeclaredJavaMethod(URLClassLoader.class, "close");
-                    closeMethod.invoke(this);
+                    ((Closeable)this).close();
                 } catch (Throwable cause) {
                     logger.warn("close ModuleJarClassLoader[file={}] failed. JDK7+", moduleJarFile, cause);
                 }

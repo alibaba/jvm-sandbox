@@ -3,10 +3,11 @@ package com.alibaba.jvm.sandbox.core.enhance.weaver;
 import com.alibaba.jvm.sandbox.api.ProcessControlException;
 import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
 import com.alibaba.jvm.sandbox.api.event.Event;
-import com.alibaba.jvm.sandbox.api.event.ImmediatelyReturnEvent;
-import com.alibaba.jvm.sandbox.api.event.ImmediatelyThrowsEvent;
+import com.alibaba.jvm.sandbox.api.event.InvokeEvent;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
+import com.alibaba.jvm.sandbox.core.classloader.BusinessClassLoaderHolder;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
+import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ import static com.alibaba.jvm.sandbox.api.event.Event.Type.IMMEDIATELY_RETURN;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.IMMEDIATELY_THROWS;
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.isInterruptEventHandler;
 import static java.com.alibaba.jvm.sandbox.spy.Spy.Ret.newInstanceForNone;
+import static java.com.alibaba.jvm.sandbox.spy.Spy.Ret.newInstanceForThrows;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 import static org.apache.commons.lang3.StringUtils.join;
 
@@ -94,23 +96,25 @@ public class EventListenerHandler implements SpyHandler {
                                 final int invokeId,
                                 final Event event,
                                 final EventProcessor processor) throws Throwable {
+        // 获取事件监听器
         final EventListener listener = processor.listener;
 
+        // 如果当前事件不在事件监听器处理列表中，则直接返回，不处理事件
+        if (!contains(processor.eventTypes, event.type)) {
+            return newInstanceForNone();
+        }
+
+        // 调用事件处理
         try {
-
-            if (contains(processor.eventTypes, event.type)) {
-                // 调用事件处理
-                listener.onEvent(event);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("on-event: event|{}|{}|{}@listener|{}",
-                            event.type,
-                            processId,
-                            invokeId,
-                            listenerId
-                    );
-                }
+            if (logger.isDebugEnabled()) {
+                logger.debug("on-event: event|{}|{}|{}|{}",
+                        event.type,
+                        processId,
+                        invokeId,
+                        listenerId
+                );
             }
-
+            listener.onEvent(event);
         }
 
         // 代码执行流程变更
@@ -119,7 +123,7 @@ public class EventListenerHandler implements SpyHandler {
             final EventProcessor.Process process = processor.processRef.get();
 
             final ProcessControlException.State state = pce.getState();
-            logger.debug("on-event: event|{}|{}|{};listener|{}, process-changed: {}. isIgnoreProcessEvent={};",
+            logger.debug("on-event: event|{}|{}|{}|{}, process-changed: {}. isIgnoreProcessEvent={};",
                     event.type,
                     processId,
                     invokeId,
@@ -129,9 +133,8 @@ public class EventListenerHandler implements SpyHandler {
             );
 
             // 如果流程控制要求忽略后续处理所有事件，则需要在此处进行标记
-            // 标记当前线程中、当前EventListener中需要主动忽略的ProcessId
             if (pce.isIgnoreProcessEvent()) {
-                process.markIgnoreProcessId(processId);
+                process.markIgnoreProcess();
             }
 
             switch (state) {
@@ -139,59 +142,27 @@ public class EventListenerHandler implements SpyHandler {
                 // 立即返回对象
                 case RETURN_IMMEDIATELY: {
 
-                    // 如果在BeforeEvent处理过程中发生ProcessControl行为，将会造成堆栈错位
-                    // 所以这里需要将错位的堆栈进行补齐
-                    if (event instanceof BeforeEvent) {
+                    // 如果已经禁止后续返回任何事件了，则不进行后续的操作
+                    if (pce.isIgnoreProcessEvent()) {
+                        logger.debug("on-event: event|{}|{}|{}|{}, ignore immediately-return-event, isIgnored.",
+                                event.type,
+                                processId,
+                                invokeId,
+                                listenerId
+                        );
+                    } else {
+                        // 补偿立即返回事件
+                        compensateProcessControlEvent(pce, processor, process, event);
+                    }
+
+                    // 如果是在BEFORE中立即返回，则后续不会再有RETURN事件产生
+                    // 这里需要主动对齐堆栈
+                    if (event.type == Event.Type.BEFORE) {
                         process.popInvokeId();
                     }
 
-                    // 如果已经禁止后续返回任何事件了，则不进行后续的操作
-                    if (pce.isIgnoreProcessEvent()) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-return-event, isIgnored.",
-                                event.type,
-                                processId,
-                                invokeId,
-                                listenerId
-                        );
-                        return Spy.Ret.newInstanceForReturn(pce.getRespond());
-                    }
-
-                    // 如果没有注册监听ImmediatelyEvent事件，则不进行后续的操作
-                    if (!contains(processor.eventTypes, IMMEDIATELY_RETURN)) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-return-event, not contains.",
-                                event.type,
-                                processId,
-                                invokeId,
-                                listenerId
-                        );
-                        return Spy.Ret.newInstanceForReturn(pce.getRespond());
-                    }
-
-                    // 这里需要补偿ImmediatelyEvent
-                    final ImmediatelyReturnEvent immediatelyReturnEvent
-                            = process
-                            .getEventFactory()
-                            .makeImmediatelyReturnEvent(processId, invokeId, pce.getRespond());
-
-                    final Spy.Ret ret;
-                    try {
-                        ret = handleEvent(
-                                listenerId,
-                                processId,
-                                invokeId,
-                                immediatelyReturnEvent,
-                                processor
-                        );
-                    } finally {
-                        process.getEventFactory().returnEvent(immediatelyReturnEvent);
-                    }
-
-                    if (ret.state == Spy.Ret.RET_STATE_NONE) {
-                        return Spy.Ret.newInstanceForReturn(pce.getRespond());
-                    } else {
-                        // 如果不是,则返回最新的处理结果
-                        return ret;
-                    }
+                    // 让流程立即返回
+                    return Spy.Ret.newInstanceForReturn(pce.getRespond());
 
                 }
 
@@ -200,64 +171,33 @@ public class EventListenerHandler implements SpyHandler {
 
                     final Throwable throwable = (Throwable) pce.getRespond();
 
-                    // 如果在BeforeEvent处理过程中发生ProcessControl行为，将会造成堆栈错位
-                    // 所以这里需要将错位的堆栈进行补齐
-                    if (event instanceof BeforeEvent) {
-                        process.popInvokeId();
-                    }
-
                     // 如果已经禁止后续返回任何事件了，则不进行后续的操作
                     if (pce.isIgnoreProcessEvent()) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-throws-event, isIgnored.",
+                        logger.debug("on-event: event|{}|{}|{}|{}, ignore immediately-throws-event, isIgnored.",
                                 event.type,
                                 processId,
                                 invokeId,
                                 listenerId
                         );
-                        return Spy.Ret.newInstanceForThrows(throwable);
-                    }
-
-                    // 如果没有注册监听ImmediatelyEvent事件，则不进行后续的操作
-                    if (!contains(processor.eventTypes, IMMEDIATELY_THROWS)) {
-                        logger.debug("on-event: event|{}|{}|{};listener|{}, ignore immediately-throws-event, not contains.",
-                                event.type,
-                                processId,
-                                invokeId,
-                                listenerId
-                        );
-                        return Spy.Ret.newInstanceForThrows(throwable);
-                    }
-
-                    // 如果已经禁止后续返回任何事件了，则不进行后续的操作
-                    if (pce.isIgnoreProcessEvent()) {
-                        return Spy.Ret.newInstanceForThrows(throwable);
-                    }
-
-                    final ImmediatelyThrowsEvent immediatelyThrowsEvent
-                            = process
-                            .getEventFactory()
-                            .makeImmediatelyThrowsEvent(processId, invokeId, throwable);
-
-
-                    final Spy.Ret ret;
-                    try {
-                        ret = handleEvent(
-                                listenerId,
-                                processId,
-                                invokeId,
-                                immediatelyThrowsEvent,
-                                processor
-                        );
-                    } finally {
-                        process.getEventFactory().returnEvent(immediatelyThrowsEvent);
-                    }
-
-                    if (ret.state == Spy.Ret.RET_STATE_NONE) {
-                        return Spy.Ret.newInstanceForThrows(throwable);
                     } else {
-                        // 如果不是,则返回最新的处理结果
-                        return ret;
+
+                        // 如果是在BEFORE中立即抛出，则后续不会再有THROWS事件产生
+                        // 这里需要主动对齐堆栈
+                        if (event.type == Event.Type.BEFORE) {
+                            process.popInvokeId();
+                        }
+
+                        // 标记本次异常由ImmediatelyException产生，让下次异常事件处理直接忽略
+                        if (event.type != Event.Type.THROWS) {
+                            process.markExceptionFromImmediately();
+                        }
+
+                        // 补偿立即抛出事件
+                        compensateProcessControlEvent(pce, processor, process, event);
                     }
+
+                    // 让流程立即抛出
+                    return Spy.Ret.newInstanceForThrows(throwable);
 
                 }
 
@@ -281,7 +221,7 @@ public class EventListenerHandler implements SpyHandler {
 
             // 普通事件处理器则可以打个日志后,直接放行
             else {
-                logger.warn("on-event: event|{}|{}|{};listener|{} occur an error.",
+                logger.warn("on-event: event|{}|{}|{}|{} occur an error.",
                         event.type,
                         processId,
                         invokeId,
@@ -293,6 +233,63 @@ public class EventListenerHandler implements SpyHandler {
 
         // 默认返回不进行任何流程变更
         return newInstanceForNone();
+    }
+
+    // 补偿事件
+    // 随着历史版本的演进，一些事件已经过期，但为了兼容API，需要在这里进行补偿
+    private void compensateProcessControlEvent(ProcessControlException pce, EventProcessor processor, EventProcessor.Process process, Event event) {
+
+        // 核对是否需要补偿，如果目标监听器没监听过这类事件，则不需要进行补偿
+        if (!(event instanceof InvokeEvent)
+                || !contains(processor.eventTypes, event.type)) {
+            return;
+        }
+
+        final InvokeEvent iEvent = (InvokeEvent) event;
+        final Event compensateEvent;
+
+        // 补偿立即返回事件
+        if (pce.getState() == ProcessControlException.State.RETURN_IMMEDIATELY
+                && contains(processor.eventTypes, IMMEDIATELY_RETURN)) {
+            compensateEvent = process
+                    .getEventFactory()
+                    .makeImmediatelyReturnEvent(iEvent.processId, iEvent.invokeId, pce.getRespond());
+        }
+
+        // 补偿立即抛出事件
+        else if (pce.getState() == ProcessControlException.State.THROWS_IMMEDIATELY
+                && contains(processor.eventTypes, IMMEDIATELY_THROWS)) {
+            compensateEvent = process
+                    .getEventFactory()
+                    .makeImmediatelyThrowsEvent(iEvent.processId, iEvent.invokeId, (Throwable) pce.getRespond());
+        }
+
+        // 异常情况不补偿
+        else {
+            return;
+        }
+
+        try {
+            logger.debug("compensate-event: event|{}|{}|{}|{} when ori-event:{}",
+                    compensateEvent.type,
+                    iEvent.processId,
+                    iEvent.invokeId,
+                    processor.listenerId,
+                    event.type
+            );
+            processor.listener.onEvent(compensateEvent);
+        } catch (Throwable cause) {
+            logger.warn("compensate-event: event|{}|{}|{}|{} when ori-event:{} occur error.",
+                    compensateEvent.type,
+                    iEvent.processId,
+                    iEvent.invokeId,
+                    processor.listenerId,
+                    event.type,
+                    cause
+            );
+        } finally {
+            process.getEventFactory().returnEvent(compensateEvent);
+        }
     }
 
     /*
@@ -307,6 +304,13 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public Spy.Ret handleOnBefore(int listenerId, int targetClassLoaderObjectID, Object[] argumentArray, String javaClassName, String javaMethodName, String javaMethodDesc, Object target) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing before-event", listenerId);
+            return newInstanceForNone();
+        }
+
         // 获取事件处理器
         final EventProcessor processor = mappingOfEventProcessor.get(listenerId);
 
@@ -319,6 +323,12 @@ public class EventListenerHandler implements SpyHandler {
         // 获取调用跟踪信息
         final EventProcessor.Process process = processor.processRef.get();
 
+        // 如果当前处理ID被忽略，则立即返回
+        if (process.isIgnoreProcess()) {
+            logger.debug("listener={} is marked ignore process!", listenerId);
+            return newInstanceForNone();
+        }
+
         // 调用ID
         final int invokeId = invokeIdSequencer.getAndIncrement();
         process.pushInvokeId(invokeId);
@@ -326,13 +336,9 @@ public class EventListenerHandler implements SpyHandler {
         // 调用过程ID
         final int processId = process.getProcessId();
 
-        // 如果当前处理ID被忽略，则立即返回
-        if (process.touchIsIgnoreProcess(processId)) {
-            process.popInvokeId();
-            return newInstanceForNone();
-        }
-
         final ClassLoader javaClassLoader = ObjectIDs.instance.getObject(targetClassLoaderObjectID);
+        //放置业务类加载器
+        BusinessClassLoaderHolder.setBussinessClassLoader(javaClassLoader);
         final BeforeEvent event = process.getEventFactory().makeBeforeEvent(
                 processId,
                 invokeId,
@@ -352,18 +358,32 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public Spy.Ret handleOnThrows(int listenerId, Throwable throwable) throws Throwable {
-        return handleOnEnd(listenerId, throwable, false);
+        try{
+            return handleOnEnd(listenerId, throwable, false);
+        }finally {
+            BusinessClassLoaderHolder.removeBussinessClassLoader();
+        }
     }
 
     @Override
     public Spy.Ret handleOnReturn(int listenerId, Object object) throws Throwable {
-        return handleOnEnd(listenerId, object, true);
+        try{
+            return handleOnEnd(listenerId, object, true);
+        }finally {
+            BusinessClassLoaderHolder.removeBussinessClassLoader();
+        }
     }
 
 
     private Spy.Ret handleOnEnd(final int listenerId,
                                 final Object object,
                                 final boolean isReturn) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing {}-event", listenerId, isReturn ? "return" : "throws");
+            return newInstanceForNone();
+        }
 
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
 
@@ -383,8 +403,21 @@ public class EventListenerHandler implements SpyHandler {
             return newInstanceForNone();
         }
 
+        // 如果异常来自于ImmediatelyException，则忽略处理直接返回抛异常
+        final boolean isExceptionFromImmediately = !isReturn && process.rollingIsExceptionFromImmediately();
+        if (isExceptionFromImmediately) {
+            return newInstanceForThrows((Throwable) object);
+        }
+
+        // 继续异常处理
         final int processId = process.getProcessId();
         final int invokeId = process.popInvokeId();
+
+        // 忽略事件处理
+        // 放在stack.pop()后边是为了对齐执行栈
+        if (process.isIgnoreProcess()) {
+            return newInstanceForNone();
+        }
 
         // 如果PID==IID说明已经到栈顶，此时需要核对堆栈是否为空
         // 如果不为空需要输出日志进行告警
@@ -394,12 +427,6 @@ public class EventListenerHandler implements SpyHandler {
                     invokeId,
                     listenerId
             );
-        }
-
-        // 忽略事件处理
-        // 放在stack.pop()后边是为了对齐执行栈
-        if (process.touchIsIgnoreProcess(processId)) {
-            return newInstanceForNone();
         }
 
         final Event event = isReturn
@@ -417,6 +444,13 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public void handleOnCallBefore(int listenerId, int lineNumber, String owner, String name, String desc) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing call-before-event", listenerId);
+            return;
+        }
+
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-before-event.", listenerId);
@@ -438,7 +472,7 @@ public class EventListenerHandler implements SpyHandler {
         final int invokeId = process.getInvokeId();
 
         // 如果事件处理流被忽略，则直接返回，不产生后续事件
-        if (process.touchIsIgnoreProcess(processId)) {
+        if (process.isIgnoreProcess()) {
             return;
         }
 
@@ -454,6 +488,13 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public void handleOnCallReturn(int listenerId) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing call-return-event", listenerId);
+            return;
+        }
+
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-return-event.", listenerId);
@@ -469,7 +510,7 @@ public class EventListenerHandler implements SpyHandler {
         final int invokeId = process.getInvokeId();
 
         // 如果事件处理流被忽略，则直接返回，不产生后续事件
-        if (process.touchIsIgnoreProcess(processId)) {
+        if (process.isIgnoreProcess()) {
             return;
         }
 
@@ -485,6 +526,13 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public void handleOnCallThrows(int listenerId, String throwException) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing call-throws-event", listenerId);
+            return;
+        }
+
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing call-throws-event.", listenerId);
@@ -500,7 +548,7 @@ public class EventListenerHandler implements SpyHandler {
         final int invokeId = process.getInvokeId();
 
         // 如果事件处理流被忽略，则直接返回，不产生后续事件
-        if (process.touchIsIgnoreProcess(processId)) {
+        if (process.isIgnoreProcess()) {
             return;
         }
 
@@ -516,6 +564,13 @@ public class EventListenerHandler implements SpyHandler {
 
     @Override
     public void handleOnLine(int listenerId, int lineNumber) throws Throwable {
+
+        // 在守护区内产生的事件不需要响应
+        if (SandboxProtector.instance.isInProtecting()) {
+            logger.debug("listener={} is in protecting, ignore processing call-line-event", listenerId);
+            return;
+        }
+
         final EventProcessor wrap = mappingOfEventProcessor.get(listenerId);
         if (null == wrap) {
             logger.debug("listener={} is not activated, ignore processing line-event.", listenerId);
@@ -534,7 +589,7 @@ public class EventListenerHandler implements SpyHandler {
         final int invokeId = process.getInvokeId();
 
         // 如果事件处理流被忽略，则直接返回，不产生后续事件
-        if (process.touchIsIgnoreProcess(processId)) {
+        if (process.isIgnoreProcess()) {
             return;
         }
 

@@ -82,10 +82,10 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
     /*
      * 形变观察所影响的类
      */
-    private void reTransformClasses(final int watchId,
-                                    final List<Class<?>> waitingReTransformClasses,
-                                    final Progress progress) {
-
+    private void reTransformClasses(
+        final int watchId,
+        final List<Class<?>> waitingReTransformClasses,
+        final Progress progress) {
         // 需要形变总数
         final int total = waitingReTransformClasses.size();
 
@@ -179,7 +179,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         // 注册到CoreModule中
         coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
 
-        // 注册到JVM加载上ClassFileTransformer处理新增的类
+        //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
         inst.addTransformer(sandClassFileTransformer, true);
 
         // 查找需要渲染的类集合
@@ -197,7 +197,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         try {
 
             // 应用JVM
-            reTransformClasses(watchId, waitingReTransformClasses, progress);
+            reTransformClasses(watchId,waitingReTransformClasses, progress);
 
             // 计数
             cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();

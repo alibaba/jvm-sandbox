@@ -10,6 +10,10 @@
 typeset SANDBOX_HOME_DIR
 [[ -z ${SANDBOX_HOME_DIR} ]] && SANDBOX_HOME_DIR=${PWD}/..
 
+# define current SANDBOX_USER
+typeset SANDBOX_USER=${USER}
+[[ -z ${SANDBOX_USER} ]] && SANDBOX_USER=$(whoami)
+
 # define sandbox's network
 typeset SANDBOX_SERVER_NETWORK
 
@@ -67,7 +71,7 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
          Prints loaded module list
 
 
-    -F : flush
+    -F : force flush
          Force flush the sandbox\`s user module library.
 
          flush reload user module library\`s module jar file.
@@ -79,7 +83,7 @@ usage: ${0} [h] [<p:> [vlRFfu:a:A:d:m:I:P:C:X]]
             - ${SANDBOX_HOME_DIR}/sandbox-module/
 
 
-    -f : force flush
+    -f : soft flush
          Soft flush the sandbox\`s user module library.
 
          flush user module library\`s module which module jar file was changed.
@@ -180,8 +184,8 @@ check_permission() {
     exit_on_err 1 "permission denied, java process ${TARGET_JVM_PID} is not existed."
 
   # check attach
-  pgrep -U "${USER}" | grep "${TARGET_JVM_PID}" > /dev/null ||
-    exit_on_err 1 "permission denied, ${USER} is not allow attach to ${TARGET_JVM_PID}."
+  pgrep -U "${SANDBOX_USER}" | grep "${TARGET_JVM_PID}" > /dev/null ||
+    exit_on_err 1 "permission denied, ${SANDBOX_USER} is not allow attach to ${TARGET_JVM_PID}."
 
   # check $HOME is writeable
   [[ ! -w ${HOME} ]] &&

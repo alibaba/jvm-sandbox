@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.qatest.core.util;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
+import com.alibaba.jvm.sandbox.api.event.Event.Type;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
@@ -13,11 +14,17 @@ import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedAdviceAdapterListener;
+import com.alibaba.jvm.sandbox.qatest.core.enhance.transformer.TestThirdEnhance;
+
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -35,6 +42,8 @@ import static org.apache.commons.lang3.ArrayUtils.toArray;
  * JVM帮助类，能模拟一个JVM对类的管理行为
  */
 public class JvmHelper {
+
+    private static final Logger logger = LoggerFactory.getLogger(JvmHelper.class);
 
     private final String namespace;
     private final PrivateClassLoader classLoader
@@ -58,10 +67,30 @@ public class JvmHelper {
         classLoader.defineClass(javaClassName, byteCodeArray);
         return this;
     }
+    
+    public static class ThirdTransformer extends Transformer{
+
+        public ThirdTransformer(Filter filter, EventListener listener) {
+            super(filter, listener, null);
+        }
+
+        @Override
+        public byte[] transform(String namespace, ClassLoader loader, byte[] byteCodes) {
+            final MatchingResult matchingResult = new ExtFilterMatcher(make(filter))
+                .matching(ClassStructureFactory.createClassStructure(byteCodes, loader));
+
+            if (matchingResult.isMatched()) {
+                return new TestThirdEnhance(matchingResult.getBehaviorSignCodes()).transform(loader,byteCodes);
+            } else {
+                return byteCodes;
+            }
+
+        }
+    }
 
     public static class Transformer {
 
-        private final Filter filter;
+        protected final Filter filter;
         private final EventListener listener;
         private final Event.Type[] eventTypes;
 
@@ -149,8 +178,15 @@ public class JvmHelper {
         return this;
     }
 
+
+
     public Class<?> loadClass(String javaClassName) throws ClassNotFoundException {
         return classLoader.loadClass(javaClassName);
+    }
+
+    public JvmHelper dump(File dumpDir) {
+        classLoader.dump(dumpDir);
+        return this;
     }
 
 
@@ -202,6 +238,18 @@ public class JvmHelper {
             final Class<?> clazz = SandboxReflectUtils.defineClass(this, javaClassName, classByteArray);
             classes.add(clazz);
             return clazz;
+        }
+
+        public void dump(File dumpDir) {
+            for (Map.Entry<String, byte[]> entry : javaClassByteArrayMap.entrySet()) {
+                final File dumpClassFile = new File(dumpDir.getPath() + File.separatorChar + entry.getKey());
+                try {
+                    FileUtils.writeByteArrayToFile(dumpClassFile, entry.getValue());
+                    logger.info("dump class {}", dumpClassFile);
+                } catch (IOException e) {
+                    logger.warn("dump class file:{} occur error!", dumpClassFile, e);
+                }
+            }
         }
 
         @Override

@@ -6,12 +6,9 @@ import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
-import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
-import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.MyCalculator;
 import com.alibaba.jvm.sandbox.qatest.core.mock.EmptyModuleEventWatcher;
-import com.alibaba.jvm.sandbox.qatest.core.util.QaClassUtils;
 import org.junit.Assert;
 import org.junit.Test;
 

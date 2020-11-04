@@ -190,6 +190,15 @@ public class EventWatchBuilder {
          */
         EventWatcher onWatch(AdviceListener adviceListener);
 
+        /**
+         * 观察器
+         *
+         * @param adviceListener advice监听器
+         * @param eventTypeArray 需要被监听的事件列表（参数废弃）
+         * @return this
+         * @deprecated 根据 #256 的建议，这个接口废弃，请采用 {@link #onWatch(AdviceListener)} 代替
+         */
+        @Deprecated
         EventWatcher onWatch(AdviceListener adviceListener, Event.Type... eventTypeArray);
 
         EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray);
@@ -639,16 +648,13 @@ public class EventWatchBuilder {
 
         @Override
         public EventWatcher onWatch(AdviceListener adviceListener) {
-            return onWatch(adviceListener, EMPTY);
+            return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
         }
 
+        @Deprecated
         @Override
         public EventWatcher onWatch(final AdviceListener adviceListener, Event.Type... eventTypeArray) {
-            if (eventTypeArray == null
-                    || eventTypeArray.length == 0) {
-                return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
-            }
-            return build(new AdviceAdapterListener(adviceListener), null, eventTypeArray);
+            return onWatch(adviceListener);
         }
 
         @Override

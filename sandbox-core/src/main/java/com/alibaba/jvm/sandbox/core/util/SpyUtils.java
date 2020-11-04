@@ -4,8 +4,6 @@ import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 
 import java.com.alibaba.jvm.sandbox.spy.Spy;
 
-import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtGetClassDeclaredJavaMethod;
-
 /**
  * Spy类操作工具类
  *

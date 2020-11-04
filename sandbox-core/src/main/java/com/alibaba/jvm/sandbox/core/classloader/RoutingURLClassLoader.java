@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.concurrent.ConcurrentHashMap;
+
+import com.alibaba.jvm.sandbox.core.classloader.BusinessClassLoaderHolder.DelegateBizClassLoader;
 
 /**
  * 可路由的URLClassLoader
@@ -93,6 +94,14 @@ public class RoutingURLClassLoader extends URLClassLoader {
                     }
                     return aClass;
                 } catch (Exception cause) {
+                    DelegateBizClassLoader delegateBizClassLoader = BusinessClassLoaderHolder.getBussinessClassLoader();
+                    try {
+                        if(null != delegateBizClassLoader){
+                            return delegateBizClassLoader.loadClass(javaClassName,resolve);
+                        }
+                    } catch (Exception e) {
+                        //忽略异常，继续往下加载
+                    }
                     return RoutingURLClassLoader.super.loadClass(javaClassName, resolve);
                 }
             }
