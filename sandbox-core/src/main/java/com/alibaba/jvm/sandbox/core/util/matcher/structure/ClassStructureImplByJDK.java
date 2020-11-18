@@ -101,6 +101,7 @@ class AccessImplByJDKBehavior extends ModifierAccess {
     public boolean isAnnotation() {
         return false;
     }
+
 }
 
 /**

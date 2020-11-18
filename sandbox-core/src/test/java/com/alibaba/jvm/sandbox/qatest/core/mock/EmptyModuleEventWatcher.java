@@ -19,7 +19,17 @@ public class EmptyModuleEventWatcher implements ModuleEventWatcher {
     }
 
     @Override
+    public int watch(Filter filter, EventListener listener, Progress progress, boolean lazyReload, Event.Type... eventType) {
+        return 0;
+    }
+
+    @Override
     public int watch(EventWatchCondition condition, EventListener listener, Progress progress, Event.Type... eventType) {
+        return 0;
+    }
+
+    @Override
+    public int watch(EventWatchCondition condition, EventListener listener, Progress progress, boolean lazyReload, Event.Type... eventType) {
         return 0;
     }
 

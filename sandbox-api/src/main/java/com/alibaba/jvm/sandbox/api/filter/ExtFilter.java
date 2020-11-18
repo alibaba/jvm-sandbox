@@ -12,7 +12,7 @@ import com.alibaba.jvm.sandbox.api.annotation.IncludeSubClasses;
  * @author luanjia@taobao.com
  * @since {@code sandbox-api:1.0.11}
  */
-public interface ExtFilter extends Filter {
+public interface ExtFilter extends Filter, ClassIdentifiable {
 
     /**
      * 是否搜索子类或实现类
@@ -30,6 +30,21 @@ public interface ExtFilter extends Filter {
     boolean isIncludeBootstrap();
 
     /**
+     * 是否至少配置实现了一组接口
+     *
+     * @return
+     */
+    boolean hasInterfaceTypes();
+
+    /**
+     * 是否至少配置了一个标注
+     *
+     * @return
+     */
+    boolean hasAnnotationTypes();
+
+
+    /**
      * 增强过滤器工厂类
      */
     class ExtFilterFactory {
@@ -45,7 +60,33 @@ public interface ExtFilter extends Filter {
         public static ExtFilter make(final Filter filter,
                                      final boolean isIncludeSubClasses,
                                      final boolean isIncludeBootstrap) {
+            return make(filter, isIncludeSubClasses, isIncludeBootstrap, true, true);
+        }
+
+        /**
+         * 生产增强过滤器
+         *
+         * @param filter              原生过滤器
+         * @param isIncludeSubClasses 是否包含子类
+         * @param isIncludeBootstrap  是否搜索BootstrapClassLoader所加载的类
+         * @return 增强过滤器
+         */
+        public static ExtFilter make(final Filter filter,
+                                     final boolean isIncludeSubClasses,
+                                     final boolean isIncludeBootstrap,
+                                     final boolean hasInterfaceTypes,
+                                     final boolean hasAnnotationTypes) {
             return new ExtFilter() {
+
+                @Override
+                public boolean hasClassIdentity() {
+                    return filter instanceof ClassIdentifiable;
+                }
+
+                @Override
+                public String getClassIdentity() {
+                    return ((ClassIdentifiable) filter).getClassIdentity();
+                }
 
                 @Override
                 public boolean isIncludeSubClasses() {
@@ -55,6 +96,16 @@ public interface ExtFilter extends Filter {
                 @Override
                 public boolean isIncludeBootstrap() {
                     return isIncludeBootstrap;
+                }
+
+                @Override
+                public boolean hasInterfaceTypes() {
+                    return hasInterfaceTypes;
+                }
+
+                @Override
+                public boolean hasAnnotationTypes() {
+                    return hasAnnotationTypes;
                 }
 
                 @Override
@@ -96,8 +147,7 @@ public interface ExtFilter extends Filter {
          * @return 增强过滤器
          */
         public static ExtFilter make(final Filter filter) {
-            return
-                    filter instanceof ExtFilter
+            return filter instanceof ExtFilter
                             ? (ExtFilter) filter
                             : make(
                             filter,

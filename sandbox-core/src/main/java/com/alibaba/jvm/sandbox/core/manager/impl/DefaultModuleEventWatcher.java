@@ -4,10 +4,13 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
+import com.alibaba.jvm.sandbox.api.listener.ext.WatchIdHolder;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
+import com.alibaba.jvm.sandbox.core.manager.async.TransformationManager;
+import com.alibaba.jvm.sandbox.core.manager.async.TransformationQuintuple;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.GroupMatcher;
@@ -39,6 +42,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
     private final CoreModule coreModule;
     private final boolean isEnableUnsafe;
     private final String namespace;
+    private final TransformationManager transformationManager;
 
     // 观察ID序列生成器
     private final Sequencer watchIdSequencer = new Sequencer();
@@ -53,6 +57,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         this.coreModule = coreModule;
         this.isEnableUnsafe = isEnableUnsafe;
         this.namespace = namespace;
+        this.transformationManager = TransformationManager.getInstance(this);
     }
 
 
@@ -83,9 +88,9 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
      * 形变观察所影响的类
      */
     private void reTransformClasses(
-        final int watchId,
-        final List<Class<?>> waitingReTransformClasses,
-        final Progress progress) {
+            final int watchId,
+            final List<Class<?>> waitingReTransformClasses,
+            final Progress progress) {
         // 需要形变总数
         final int total = waitingReTransformClasses.size();
 
@@ -159,11 +164,45 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
     }
 
     @Override
+    public int watch(final Filter filter,
+                     final EventListener listener,
+                     final Progress progress,
+                     final boolean lazyReload,
+                     final Event.Type... eventType) {
+        return watch(new ExtFilterMatcher(make(filter)), listener, progress, lazyReload, eventType);
+    }
+
+    @Override
     public int watch(final EventWatchCondition condition,
                      final EventListener listener,
                      final Progress progress,
                      final Event.Type... eventType) {
-        return watch(toOrGroupMatcher(condition.getOrFilterArray()), listener, progress, eventType);
+
+        Filter[] orFilterArray = condition.getOrFilterArray();
+
+        if (orFilterArray.length == 1) {
+            return watch(orFilterArray[0], listener, progress, eventType);
+        }
+
+        return watch(toOrGroupMatcher(orFilterArray), listener, progress, eventType);
+
+    }
+
+    @Override
+    public int watch(EventWatchCondition condition,
+                     EventListener listener,
+                     Progress progress,
+                     boolean lazyReload,
+                     Event.Type... eventType) {
+
+        Filter[] orFilterArray = condition.getOrFilterArray();
+
+        if (orFilterArray.length == 1) {
+            return watch(orFilterArray[0], listener, progress, lazyReload, eventType);
+
+        }
+
+        return watch(toOrGroupMatcher(orFilterArray), listener, progress, lazyReload, eventType);
     }
 
     // 这里是用matcher重制过后的watch
@@ -171,16 +210,28 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                       final EventListener listener,
                       final Progress progress,
                       final Event.Type... eventType) {
+        return watch(matcher, listener, progress, false, eventType);
+    }
+
+    // 这里是用matcher重制过后的watch
+    private int watch(final Matcher matcher,
+                      final EventListener listener,
+                      final Progress progress,
+                      boolean lazyReload,
+                      final Event.Type... eventType) {
+
         final int watchId = watchIdSequencer.next();
-        // 给对应的模块追加ClassFileTransformer
-        final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(
-                watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
 
-        // 注册到CoreModule中
-        coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
+        WatchIdHolder.addWaitingWatchId(watchId);
 
-        //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
-        inst.addTransformer(sandClassFileTransformer, true);
+        // 这里添加一下懒加载
+        if (lazyReload) {
+
+            transformationManager.onData(watchId, matcher, listener, progress, eventType);
+
+            return watchId;
+        }
+
 
         // 查找需要渲染的类集合
         final List<Class<?>> waitingReTransformClasses = classDataSource.findForReTransform(matcher);
@@ -190,30 +241,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                 waitingReTransformClasses.size()
         );
 
-        int cCnt = 0, mCnt = 0;
-
-        // 进度通知启动
-        beginProgress(progress, waitingReTransformClasses.size());
-        try {
-
-            // 应用JVM
-            reTransformClasses(watchId,waitingReTransformClasses, progress);
-
-            // 计数
-            cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();
-            mCnt += sandClassFileTransformer.getAffectStatistic().mCnt();
-
-
-            // 激活增强类
-            if (coreModule.isActivated()) {
-                final int listenerId = sandClassFileTransformer.getListenerId();
-                EventListenerHandler.getSingleton()
-                        .active(listenerId, listener, eventType);
-            }
-
-        } finally {
-            finishProgress(progress, cCnt, mCnt);
-        }
+        _transform(watchId, matcher, listener, progress, waitingReTransformClasses, eventType);
 
         return watchId;
     }
@@ -268,6 +296,73 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         } finally {
             finishProgress(progress, cCnt, mCnt);
         }
+    }
+
+    private void _transform(final int watchId,
+                            final Matcher matcher,
+                            final EventListener listener,
+                            final Progress progress,
+                            final List<Class<?>> waitingReTransformClasses,
+                            final Event.Type... eventType) {
+
+        // 给对应的模块追加ClassFileTransformer
+        final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(
+                watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
+
+        // 注册到CoreModule中
+        coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
+
+        //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
+        inst.addTransformer(sandClassFileTransformer, true);
+        int cCnt = 0, mCnt = 0;
+
+        // 进度通知启动
+        beginProgress(progress, waitingReTransformClasses.size());
+        try {
+
+            // 应用JVM
+            reTransformClasses(watchId, waitingReTransformClasses, progress);
+
+            // 计数
+            cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();
+            mCnt += sandClassFileTransformer.getAffectStatistic().mCnt();
+
+            // 激活增强类
+            if (coreModule.isActivated()) {
+                final int listenerId = sandClassFileTransformer.getListenerId();
+                EventListenerHandler.getSingleton().active(listenerId, listener, eventType);
+            }
+
+        } finally {
+            WatchIdHolder.finish(watchId);
+            finishProgress(progress, cCnt, mCnt);
+        }
+
+    }
+
+    public void batchTransform(final Matcher matcher,
+                               final List<? extends TransformationQuintuple> transformationQuintuples) {
+
+        // 查找需要渲染的类集合
+        final List<Class<?>> waitingReTransformClasses = classDataSource.findForReTransform(matcher);
+
+        for (TransformationQuintuple quintuple : transformationQuintuples) {
+
+            logger.info("Maybe watchId={} in module={} found {} classes for watch(ing).",
+                    quintuple.getWatchId(),
+                    coreModule.getUniqueId(),
+                    waitingReTransformClasses.size()
+            );
+
+            _transform(quintuple.getWatchId(),
+                    quintuple.getMatcher(),
+                    quintuple.getListener(),
+                    quintuple.getProgress(),
+                    waitingReTransformClasses,
+                    quintuple.getEventTypes());
+
+        }
+
     }
 
     @Override

@@ -82,7 +82,19 @@ public class DebugLifeCycleModule implements Module, ModuleLifecycle{
 
 
         int watcherId = moduleEventWatcher.watch(
-                new ExtFilter(){//不增强类，这里只是体验sandbox的生命周期，ExtFilter新增了增强接口的所有实现类，到boostrap ClassLoader中加载类 的能力
+                new ExtFilter(){
+
+                    @Override
+                    public boolean hasClassIdentity() {
+                        return false;
+                    }
+
+                    @Override
+                    public String getClassIdentity() {
+                        return null;
+                    }
+
+                    //不增强类，这里只是体验sandbox的生命周期，ExtFilter新增了增强接口的所有实现类，到boostrap ClassLoader中加载类 的能力
 
                     @Override
                     public boolean doClassFilter(int access, String javaClassName, String superClassTypeJavaClassName, String[] interfaceTypeJavaClassNameArray, String[] annotationTypeJavaClassNameArray) {
@@ -105,6 +117,16 @@ public class DebugLifeCycleModule implements Module, ModuleLifecycle{
 
                     @Override
                     public boolean isIncludeBootstrap() {//搜索来自BootstrapClassLoader所加载的类
+                        return true;
+                    }
+
+                    @Override
+                    public boolean hasInterfaceTypes() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean hasAnnotationTypes() {
                         return true;
                     }
                 },

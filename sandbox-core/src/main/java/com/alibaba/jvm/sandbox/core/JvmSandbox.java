@@ -34,7 +34,7 @@ public class JvmSandbox {
                       final Instrumentation inst) {
         EventListenerHandler.getSingleton();
         this.cfg = cfg;
-        this.coreModuleManager = SandboxProtector.instance.protectProxy(CoreModuleManager.class, new DefaultCoreModuleManager(
+        this.coreModuleManager = SandboxProtector.getOrCreateInstance().protectProxy(CoreModuleManager.class, new DefaultCoreModuleManager(
                 cfg,
                 inst,
                 new DefaultCoreLoadedClassDataSource(inst, cfg.isEnableUnsafe()),

@@ -214,7 +214,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 else if (ModuleEventWatcher.class.isAssignableFrom(fieldType)) {
                     final ModuleEventWatcher moduleEventWatcher = coreModule.append(
                             new ReleaseResource<ModuleEventWatcher>(
-                                    SandboxProtector.instance.protectProxy(
+                                    SandboxProtector.getOrCreateInstance().protectProxy(
                                             ModuleEventWatcher.class,
                                             new DefaultModuleEventWatcher(inst, classDataSource, coreModule, cfg.isEnableUnsafe(), cfg.getNamespace())
                                     )

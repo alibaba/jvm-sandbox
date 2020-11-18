@@ -73,16 +73,13 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
         return find(matcher, true);
     }
 
-    private List<Class<?>> find(final Matcher matcher,
-                                final boolean isRemoveUnsupported) {
+    private List<Class<?>> find(final Matcher matcher, final boolean isRemoveUnsupported) {
 
-        SandboxProtector.instance.enterProtecting();
+        SandboxProtector.getOrCreateInstance().enterProtecting();
+
         try {
 
             final List<Class<?>> classes = new ArrayList<Class<?>>();
-            if (null == matcher) {
-                return classes;
-            }
 
             final Iterator<Class<?>> itForLoaded = iteratorForLoadedClasses();
             while (itForLoaded.hasNext()) {
@@ -94,8 +91,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
                 }
 
                 // 过滤掉对于JVM认为不可修改的类
-                if (isRemoveUnsupported
-                        && !inst.isModifiableClass(clazz)) {
+                if (isRemoveUnsupported && !inst.isModifiableClass(clazz)) {
                     // logger.debug("remove from findForReTransform, because class:{} is unModifiable", clazz.getName());
                     continue;
                 }
@@ -113,6 +109,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
                         }
                     }
 
+
                 } catch (Throwable cause) {
                     // 在这里可能会遇到非常坑爹的模块卸载错误
                     // 当一个URLClassLoader被动态关闭之后，但JVM已经加载的类并不知情（因为没有GC）
@@ -125,7 +122,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
             return classes;
 
         } finally {
-            SandboxProtector.instance.exitProtecting();
+            SandboxProtector.getOrCreateInstance().exitProtecting();
         }
 
     }

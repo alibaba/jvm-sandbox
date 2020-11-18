@@ -147,7 +147,7 @@ public class CoreModuleManagerTestCase {
     }
 
     private CoreModuleManager buildingCoreModuleManager(final File... moduleJarFiles) throws ModuleException {
-        return SandboxProtector.instance.protectProxy(CoreModuleManager.class, new DefaultCoreModuleManager(
+        return SandboxProtector.getOrCreateInstance().protectProxy(CoreModuleManager.class, new DefaultCoreModuleManager(
                 buildingCoreConfigureWithUserModuleLib(moduleJarFiles),
                 new EmptyInstrumentation(),
                 new EmptyCoreLoadedClassDataSource(),

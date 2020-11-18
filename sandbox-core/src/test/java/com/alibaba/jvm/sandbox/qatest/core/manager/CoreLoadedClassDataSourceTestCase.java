@@ -210,6 +210,25 @@ public class CoreLoadedClassDataSourceTestCase {
             return false;
         }
 
+        @Override
+        public boolean hasInterfaceTypes() {
+            return true;
+        }
+
+        @Override
+        public boolean hasAnnotationTypes() {
+            return true;
+        }
+
+        @Override
+        public boolean hasClassIdentity() {
+            return false;
+        }
+
+        @Override
+        public String getClassIdentity() {
+            return null;
+        }
     }
 
     @Test

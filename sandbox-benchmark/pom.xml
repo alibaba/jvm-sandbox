@@ -9,29 +9,10 @@
         <version>1.3.3</version>
         <relativePath>../sandbox-module-starter/pom.xml</relativePath>
     </parent>
-    <artifactId>sandbox-test</artifactId>
-    <name>A Test Framework For Sandbox - ${sandbox.version}</name>
+    <artifactId>sandbox-benchmark</artifactId>
+    <name>sandbox-benchmark ${sandbox.version}</name>
 
     <dependencies>
-
-        <!-- DEBUG工程公共依赖模块，SANDBOX父工程托管 -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
-        </dependency>
-
-        <!-- DEBUG工程独有依赖模块，所以单独配置并指定了版本 -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
-        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -44,45 +25,39 @@
             <version>1.2.1</version>
         </dependency>
 
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>provided</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <version>1.3</version>
-            <scope>provided</scope>
-        </dependency>
-
 
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
             <version>1.7.0</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
             <version>1.7.0</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy-agent</artifactId>
             <version>1.9.10</version>
-            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-all</artifactId>
+            <version>1.3</version>
         </dependency>
 
         <dependency>
             <groupId>com.alibaba.jvm.sandbox</groupId>
             <artifactId>sandbox-core</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -92,9 +67,20 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <scope>test</scope>
+            <groupId>com.alibaba.jvm.sandbox</groupId>
+            <artifactId>sandbox-test</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.26</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>1.26</version>
         </dependency>
 
     </dependencies>
@@ -145,6 +131,5 @@
         </plugins>
 
     </build>
-
 
 </project>

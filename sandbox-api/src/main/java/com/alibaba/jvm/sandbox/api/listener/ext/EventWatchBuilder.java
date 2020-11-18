@@ -4,16 +4,14 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.AccessFlags;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
+import com.alibaba.jvm.sandbox.api.filter.ClassIdentifiable;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher.Progress;
 import com.alibaba.jvm.sandbox.api.util.GaArrayUtils;
 import com.alibaba.jvm.sandbox.api.util.GaStringUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
 import static com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder.PatternType.WILDCARD;
@@ -155,9 +153,13 @@ public class EventWatchBuilder {
      */
     public interface IBuildingForBehavior {
 
+        Event.Type[] DEFAULT_EVENT_TYPE_ARRAY = new Event.Type[]{BEFORE, RETURN, THROWS};
+
         IBuildingForBehavior withAccess(int access);
 
         IBuildingForBehavior withEmptyParameterTypes();
+
+        IBuildingForBehavior withLazyReload(boolean lazyReload);
 
         IBuildingForBehavior withParameterTypes(String... patterns);
 
@@ -198,7 +200,6 @@ public class EventWatchBuilder {
          * @return this
          * @deprecated 根据 #256 的建议，这个接口废弃，请采用 {@link #onWatch(AdviceListener)} 代替
          */
-        @Deprecated
         EventWatcher onWatch(AdviceListener adviceListener, Event.Type... eventTypeArray);
 
         EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray);
@@ -301,19 +302,38 @@ public class EventWatchBuilder {
     public enum PatternType {
 
         /**
+         * 精确完全匹配
+         */
+        PRECISE("**"),
+
+        /**
          * 通配符表达式
          */
-        WILDCARD,
+        WILDCARD("*"),
 
         /**
          * 正则表达式
          */
-        REGEX
+        REGEX(".*");
+
+        private String anyClassPattern;
+
+        PatternType(String anyClassPattern) {
+            this.anyClassPattern = anyClassPattern;
+        }
+
     }
 
     private final ModuleEventWatcher moduleEventWatcher;
     private final PatternType patternType;
     private List<BuildingForClass> bfClasses = new ArrayList<BuildingForClass>();
+
+    private static final Event.Type[] DEFAULT_EVENT_TYPE_ARRAY_BOX = new Event.Type[6];
+
+    static {
+        System.arraycopy(IBuildingForBehavior.DEFAULT_EVENT_TYPE_ARRAY, 0, DEFAULT_EVENT_TYPE_ARRAY_BOX, 0, 3);
+    }
+
 
     /**
      * 构造事件观察者构造器(通配符匹配模式)
@@ -349,6 +369,8 @@ public class EventWatchBuilder {
                                            final String pattern,
                                            final PatternType patternType) {
         switch (patternType) {
+            case PRECISE:
+                return (string == pattern) || (string != null && string.equals(pattern));
             case WILDCARD:
                 return GaStringUtils.matching(string, pattern);
             case REGEX:
@@ -385,13 +407,7 @@ public class EventWatchBuilder {
      * @return IBuildingForClass
      */
     public IBuildingForClass onAnyClass() {
-        switch (patternType) {
-            case REGEX:
-                return onClass(".*");
-            case WILDCARD:
-            default:
-                return onClass("*");
-        }
+        return onClass(patternType.anyClassPattern);
     }
 
     /**
@@ -409,6 +425,7 @@ public class EventWatchBuilder {
             case REGEX: {
                 return onClass(quote(getJavaClassName(clazz)));
             }
+            case PRECISE:
             case WILDCARD:
             default:
                 return onClass(getJavaClassName(clazz));
@@ -452,6 +469,74 @@ public class EventWatchBuilder {
          */
         BuildingForClass(final String pattern) {
             this.pattern = pattern;
+        }
+
+        /**
+         * The signature also the unique key for {@link ClassIdentifiable}
+         *
+         * @return
+         */
+        String toClassSignature() {
+
+            StringBuilder result = new StringBuilder();
+            result.append(pattern);
+            result.append(withAccess);
+            result.append(isIncludeSubClasses ? 1 : 0);
+            result.append(isIncludeBootstrap ? 1 : 0);
+
+            for (Group group : hasInterfaceTypes.groups) {
+                for (String pattern : group.patternArray) {
+                    result.append(pattern);
+                }
+            }
+
+            for (Group group : hasAnnotationTypes.groups) {
+                for (String pattern : group.patternArray) {
+                    result.append(pattern);
+                }
+            }
+
+            return result.toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof BuildingForClass)) {
+                return false;
+            }
+
+            BuildingForClass that = (BuildingForClass) o;
+
+            if (withAccess != that.withAccess) {
+                return false;
+            }
+            if (isIncludeSubClasses != that.isIncludeSubClasses) {
+                return false;
+            }
+            if (isIncludeBootstrap != that.isIncludeBootstrap) {
+                return false;
+            }
+            if (pattern != null ? !pattern.equals(that.pattern) : that.pattern != null) {
+                return false;
+            }
+            if (hasInterfaceTypes != null ? !hasInterfaceTypes.equals(that.hasInterfaceTypes) : that.hasInterfaceTypes != null) {
+                return false;
+            }
+            return hasAnnotationTypes != null ? hasAnnotationTypes.equals(that.hasAnnotationTypes) : that.hasAnnotationTypes == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = pattern != null ? pattern.hashCode() : 0;
+            result = 31 * result + withAccess;
+            result = 31 * result + (isIncludeSubClasses ? 1 : 0);
+            result = 31 * result + (isIncludeBootstrap ? 1 : 0);
+            result = 31 * result + (hasInterfaceTypes != null ? hasInterfaceTypes.hashCode() : 0);
+            result = 31 * result + (hasAnnotationTypes != null ? hasAnnotationTypes.hashCode() : 0);
+            return result;
         }
 
         @Override
@@ -505,6 +590,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return hasInterfaceTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return hasInterfaceTypes(getJavaClassNameArray(classes));
@@ -516,6 +602,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return hasAnnotationTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return hasAnnotationTypes(getJavaClassNameArray(classes));
@@ -529,13 +616,7 @@ public class EventWatchBuilder {
 
         @Override
         public IBuildingForBehavior onAnyBehavior() {
-            switch (patternType) {
-                case REGEX:
-                    return onBehavior(".*");
-                case WILDCARD:
-                default:
-                    return onBehavior("*");
-            }
+            return onBehavior(patternType.anyClassPattern);
         }
 
     }
@@ -548,6 +629,7 @@ public class EventWatchBuilder {
         private final BuildingForClass bfClass;
         private final String pattern;
         private int withAccess = 0;
+        private boolean lazyReload;
         private final PatternGroupList withParameterTypes = new PatternGroupList();
         private final PatternGroupList hasExceptionTypes = new PatternGroupList();
         private final PatternGroupList hasAnnotationTypes = new PatternGroupList();
@@ -571,6 +653,12 @@ public class EventWatchBuilder {
         }
 
         @Override
+        public IBuildingForBehavior withLazyReload(boolean lazyReload) {
+            this.lazyReload = lazyReload;
+            return this;
+        }
+
+        @Override
         public IBuildingForBehavior withParameterTypes(final String... patterns) {
             withParameterTypes.add(patterns);
             return this;
@@ -581,6 +669,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return withParameterTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return withParameterTypes(getJavaClassNameArray(classes));
@@ -598,6 +687,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return hasExceptionTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return hasExceptionTypes(getJavaClassNameArray(classes));
@@ -615,6 +705,7 @@ public class EventWatchBuilder {
             switch (patternType) {
                 case REGEX:
                     return hasAnnotationTypes(toRegexQuoteArray(getJavaClassNameArray(classes)));
+                case PRECISE:
                 case WILDCARD:
                 default:
                     return hasAnnotationTypes(getJavaClassNameArray(classes));
@@ -648,18 +739,38 @@ public class EventWatchBuilder {
 
         @Override
         public EventWatcher onWatch(AdviceListener adviceListener) {
-            return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
+            return build(new AdviceAdapterListener(adviceListener), null, lazyReload, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
         }
 
         @Deprecated
         @Override
         public EventWatcher onWatch(final AdviceListener adviceListener, Event.Type... eventTypeArray) {
-            return onWatch(adviceListener);
+
+            if (eventTypeArray == DEFAULT_EVENT_TYPE_ARRAY) {
+                return build(new AdviceAdapterListener(adviceListener), null, lazyReload, DEFAULT_EVENT_TYPE_ARRAY);
+            }
+
+            // clear array box
+            Arrays.fill(DEFAULT_EVENT_TYPE_ARRAY_BOX, 3,5, null);
+
+            int lastIndex = 2;
+            if(eventTypeArray != null) {
+                for (Event.Type type : eventTypeArray) {
+                    if (lastIndex == 5) {
+                        break;
+                    }
+                    if (type != BEFORE && type != RETURN && type != THROWS) {
+                        DEFAULT_EVENT_TYPE_ARRAY_BOX[++lastIndex] = type;
+                    }
+                }
+            }
+
+            return build(new AdviceAdapterListener(adviceListener), null, lazyReload, Arrays.copyOf(DEFAULT_EVENT_TYPE_ARRAY_BOX, ++lastIndex));
         }
 
         @Override
         public EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray) {
-            return build(eventListener, null, eventTypeArray);
+            return build(eventListener, null, lazyReload, eventTypeArray);
         }
 
     }
@@ -700,8 +811,7 @@ public class EventWatchBuilder {
             eventTypeSet.add(IMMEDIATELY_THROWS);
             return build(
                     new AdviceAdapterListener(adviceListener),
-                    toProgressGroup(progresses),
-                    eventTypeSet.toArray(EMPTY)
+                    toProgressGroup(progresses), eventTypeSet.toArray(EMPTY)
             );
         }
 
@@ -715,7 +825,19 @@ public class EventWatchBuilder {
     private EventWatchCondition toEventWatchCondition() {
         final List<Filter> filters = new ArrayList<Filter>();
         for (final BuildingForClass bfClass : bfClasses) {
-            final Filter filter = new Filter() {
+
+            final Filter filter = new IdentifiedConditionalFilter() {
+
+                @Override
+                public boolean hasClassIdentity() {
+                    return true;
+                }
+
+                @Override
+                public String getClassIdentity() {
+                    return bfClass.toClassSignature();
+                }
+
                 @Override
                 public boolean doClassFilter(final int access,
                                              final String javaClassName,
@@ -770,7 +892,9 @@ public class EventWatchBuilder {
         return ExtFilter.ExtFilterFactory.make(
                 filter,
                 bfClass.isIncludeSubClasses,
-                bfClass.isIncludeBootstrap
+                bfClass.isIncludeBootstrap,
+                bfClass.hasInterfaceTypes.isEmpty(),
+                bfClass.hasAnnotationTypes.isEmpty()
         );
     }
 
@@ -784,11 +908,19 @@ public class EventWatchBuilder {
     private EventWatcher build(final EventListener listener,
                                final Progress progress,
                                final Event.Type... eventTypes) {
+        return build(listener, progress, false, eventTypes);
+    }
+
+    private EventWatcher build(final EventListener listener,
+                               final Progress progress,
+                               final boolean lazyReload,
+                               final Event.Type... eventTypes) {
 
         final int watchId = moduleEventWatcher.watch(
                 toEventWatchCondition(),
                 listener,
                 progress,
+                lazyReload,
                 eventTypes
         );
 
@@ -864,6 +996,10 @@ public class EventWatchBuilder {
     private class PatternGroupList {
 
         final List<Group> groups = new ArrayList<Group>();
+
+        boolean isEmpty() {
+            return groups.isEmpty();
+        }
 
         /*
          * 添加模式匹配组
@@ -980,6 +1116,9 @@ public class EventWatchBuilder {
             return true;
         }
 
+    }
+
+    public interface IdentifiedConditionalFilter extends Filter, ClassIdentifiable {
     }
 
 }

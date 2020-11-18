@@ -71,8 +71,8 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                             final Class<?> classBeingRedefined,
                             final ProtectionDomain protectionDomain,
                             final byte[] srcByteCodeArray) {
+        SandboxProtector.getOrCreateInstance().enterProtecting();
 
-        SandboxProtector.instance.enterProtecting();
         try {
 
             // 这里过滤掉Sandbox所需要的类|来自SandboxClassLoader所加载的类|来自ModuleJarClassLoader加载的类
@@ -99,7 +99,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
             );
             return null;
         } finally {
-            SandboxProtector.instance.exitProtecting();
+            SandboxProtector.getOrCreateInstance().exitProtecting();
         }
     }
 

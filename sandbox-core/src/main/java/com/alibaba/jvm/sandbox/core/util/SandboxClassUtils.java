@@ -50,7 +50,7 @@ public class SandboxClassUtils {
      * @return 标准化类名
      */
     private static String normalizeClass(String className) {
-        return className.replace(".", "/");
+        return className.replace('.', '/');
     }
 
     /**

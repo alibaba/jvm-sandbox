@@ -37,6 +37,12 @@ public interface ModuleEventWatcher {
      */
     int watch(Filter filter, EventListener listener, Event.Type... eventType);
 
+    int watch(Filter filter,
+              EventListener listener,
+              Progress progress,
+              boolean lazyReload,
+              Event.Type... eventType);
+
     /**
      * 观察事件
      *
@@ -49,6 +55,21 @@ public interface ModuleEventWatcher {
      * @since {@code sandbox-api:1.0.10}
      */
     int watch(EventWatchCondition condition, EventListener listener, Progress progress, Event.Type... eventType);
+
+    /**
+     * 观察事件
+     *
+     * @param condition 事件观察条件，只有符合条件的类/方法才会被观察
+     * @param listener  事件监听器
+     *                  观察到的事件将会告知此事件监听器
+     * @param progress  观察渲染进度报告
+     * @param lazyReload 异步懒加载，不阻塞主线程，同时可以通过注入节点合并优化相同类的注入点注入
+     * @param eventType 观察事件类型
+     * @return {@code watchId}，本次观察的唯一编号，{@code watcherId}对象将会是整个操作的唯一KEY，后续删除观察事件的时候也需要通过同一个{@code watcherId}来完成
+     * @since {@code sandbox-api:1.0.10}
+     */
+    int watch(EventWatchCondition condition, EventListener listener, Progress progress, boolean lazyReload, Event.Type... eventType);
+
 
     /**
      * 删除观察事件

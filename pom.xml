@@ -23,9 +23,40 @@
             <properties>
                 <tools-jar>${java.home}/../lib/tools.jar</tools-jar>
             </properties>
+            <modules>
+                <module>sandbox-agent</module>
+                <module>sandbox-core</module>
+                <module>sandbox-api</module>
+                <module>sandbox-spy</module>
+                <module>sandbox-mgr-module</module>
+                <module>sandbox-provider-api</module>
+                <module>sandbox-common-api</module>
+                <module>sandbox-mgr-provider</module>
+                <module>sandbox-module-starter</module>
+                <module>sandbox-debug-module</module>
+                <module>sandbox-test</module>
+            </modules>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+        </profile>
+
+        <profile>
+            <id>benchmark</id>
+            <modules>
+                <module>sandbox-agent</module>
+                <module>sandbox-core</module>
+                <module>sandbox-api</module>
+                <module>sandbox-spy</module>
+                <module>sandbox-mgr-module</module>
+                <module>sandbox-provider-api</module>
+                <module>sandbox-common-api</module>
+                <module>sandbox-mgr-provider</module>
+                <module>sandbox-module-starter</module>
+                <module>sandbox-debug-module</module>
+                <module>sandbox-test</module>
+                <module>sandbox-benchmark</module>
+            </modules>
         </profile>
 
     </profiles>
@@ -79,6 +110,9 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -143,19 +177,6 @@
         </plugins>
     </build>
 
-    <modules>
-        <module>sandbox-agent</module>
-        <module>sandbox-core</module>
-        <module>sandbox-api</module>
-        <module>sandbox-spy</module>
-        <module>sandbox-mgr-module</module>
-        <module>sandbox-provider-api</module>
-        <module>sandbox-common-api</module>
-        <module>sandbox-mgr-provider</module>
-        <module>sandbox-module-starter</module>
-        <module>sandbox-debug-module</module>
-    </modules>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -187,6 +208,12 @@
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-core</artifactId>
+                <version>${sandbox.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.jvm.sandbox</groupId>
+                <artifactId>sandbox-test</artifactId>
                 <version>${sandbox.version}</version>
                 <scope>test</scope>
             </dependency>

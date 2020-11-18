@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Sandbox守护者
@@ -16,14 +15,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author oldmanpushcart@gamil.com
  */
-public class SandboxProtector {
+public class SandboxProtector implements com.alibaba.jvm.sandbox.api.util.SandboxProtector {
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ThreadLocal<AtomicInteger> isInProtectingThreadLocal = new ThreadLocal<AtomicInteger>() {
+    private static final ThreadLocal<Integer> isInProtectingThreadLocal = new ThreadLocal<Integer>() {
         @Override
-        protected AtomicInteger initialValue() {
-            return new AtomicInteger(0);
+        protected Integer initialValue() {
+            return 0;
         }
     };
 
@@ -32,8 +31,10 @@ public class SandboxProtector {
      *
      * @return 守护区域当前引用计数
      */
+    @Override
     public int enterProtecting() {
-        final int referenceCount = isInProtectingThreadLocal.get().getAndIncrement();
+        final int referenceCount = isInProtectingThreadLocal.get();
+        isInProtectingThreadLocal.set(referenceCount + 1);
         if (logger.isDebugEnabled()) {
             logger.debug("thread:{} enter protect:{}", Thread.currentThread(), referenceCount);
         }
@@ -45,11 +46,12 @@ public class SandboxProtector {
      *
      * @return 守护区域当前引用计数
      */
+    @Override
     public int exitProtecting() {
-        final int referenceCount = isInProtectingThreadLocal.get().decrementAndGet();
+        final int referenceCount = isInProtectingThreadLocal.get() - 1;
+        isInProtectingThreadLocal.set(referenceCount);
         assert referenceCount >= 0;
         if (referenceCount == 0) {
-            isInProtectingThreadLocal.remove();
             if (logger.isDebugEnabled()) {
                 logger.debug("thread:{} exit protect:{} with clean", Thread.currentThread(), referenceCount);
             }
@@ -68,8 +70,9 @@ public class SandboxProtector {
      *
      * @return TRUE:在守护区域中；FALSE：非守护区域中
      */
+    @Override
     public boolean isInProtecting() {
-        return isInProtectingThreadLocal.get().get() > 0;
+        return isInProtectingThreadLocal.get() > 0;
     }
 
     /**
@@ -80,6 +83,7 @@ public class SandboxProtector {
      * @param <T>                    接口类型
      * @return 被保护的目标接口实现
      */
+    @Override
     public <T> T protectProxy(final Class<T> protectTargetInterface,
                               final T protectTarget) {
         return (T) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{protectTargetInterface}, new InvocationHandler() {
@@ -109,6 +113,17 @@ public class SandboxProtector {
     /**
      * Sandbox守护者单例
      */
-    public static final SandboxProtector instance = new SandboxProtector();
+    private static SandboxProtector instance;
 
+    public static com.alibaba.jvm.sandbox.api.util.SandboxProtector getOrCreateInstance() {
+        if (instance == null) {
+            synchronized (SandboxProtector.class) {
+                if (instance == null) {
+                    instance = new SandboxProtector();
+                    SandboxProtectors.prepare(instance);
+                }
+            }
+        }
+        return SandboxProtectors.getInstance();
+    }
 }

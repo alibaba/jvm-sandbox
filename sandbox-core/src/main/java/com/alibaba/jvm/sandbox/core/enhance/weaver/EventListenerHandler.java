@@ -306,7 +306,7 @@ public class EventListenerHandler implements SpyHandler {
     public Spy.Ret handleOnBefore(int listenerId, int targetClassLoaderObjectID, Object[] argumentArray, String javaClassName, String javaMethodName, String javaMethodDesc, Object target) throws Throwable {
 
         // 在守护区内产生的事件不需要响应
-        if (SandboxProtector.instance.isInProtecting()) {
+        if (SandboxProtector.getOrCreateInstance().isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing before-event", listenerId);
             return newInstanceForNone();
         }
@@ -380,7 +380,7 @@ public class EventListenerHandler implements SpyHandler {
                                 final boolean isReturn) throws Throwable {
 
         // 在守护区内产生的事件不需要响应
-        if (SandboxProtector.instance.isInProtecting()) {
+        if (SandboxProtector.getOrCreateInstance().isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing {}-event", listenerId, isReturn ? "return" : "throws");
             return newInstanceForNone();
         }
@@ -446,7 +446,7 @@ public class EventListenerHandler implements SpyHandler {
     public void handleOnCallBefore(int listenerId, int lineNumber, String owner, String name, String desc) throws Throwable {
 
         // 在守护区内产生的事件不需要响应
-        if (SandboxProtector.instance.isInProtecting()) {
+        if (SandboxProtector.getOrCreateInstance().isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing call-before-event", listenerId);
             return;
         }
@@ -490,7 +490,7 @@ public class EventListenerHandler implements SpyHandler {
     public void handleOnCallReturn(int listenerId) throws Throwable {
 
         // 在守护区内产生的事件不需要响应
-        if (SandboxProtector.instance.isInProtecting()) {
+        if (SandboxProtector.getOrCreateInstance().isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing call-return-event", listenerId);
             return;
         }
@@ -528,7 +528,7 @@ public class EventListenerHandler implements SpyHandler {
     public void handleOnCallThrows(int listenerId, String throwException) throws Throwable {
 
         // 在守护区内产生的事件不需要响应
-        if (SandboxProtector.instance.isInProtecting()) {
+        if (SandboxProtector.getOrCreateInstance().isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing call-throws-event", listenerId);
             return;
         }
@@ -566,7 +566,7 @@ public class EventListenerHandler implements SpyHandler {
     public void handleOnLine(int listenerId, int lineNumber) throws Throwable {
 
         // 在守护区内产生的事件不需要响应
-        if (SandboxProtector.instance.isInProtecting()) {
+        if (SandboxProtector.getOrCreateInstance().isInProtecting()) {
             logger.debug("listener={} is in protecting, ignore processing call-line-event", listenerId);
             return;
         }

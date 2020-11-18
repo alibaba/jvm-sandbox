@@ -49,11 +49,21 @@ public class MockForBuilderModuleEventWatcher implements ModuleEventWatcher {
     }
 
     @Override
+    public int watch(Filter filter, EventListener listener, Progress progress, boolean lazyReload, Event.Type... eventType) {
+        return 0;
+    }
+
+    @Override
     public int watch(EventWatchCondition condition, EventListener listener, Progress progress, Event.Type... eventType) {
         eventWatchConditionRef.set(condition);
         eventListenerRef.set(listener);
         progressRef.set(progress);
         eventTypeArrayRef.set(eventType);
+        return 0;
+    }
+
+    @Override
+    public int watch(EventWatchCondition condition, EventListener listener, Progress progress, boolean lazyReload, Event.Type... eventType) {
         return 0;
     }
 

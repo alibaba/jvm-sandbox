@@ -1,20 +1,24 @@
 package com.alibaba.jvm.sandbox.core.util.matcher;
 
-import com.alibaba.jvm.sandbox.api.filter.AccessFlags;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
-import com.alibaba.jvm.sandbox.core.util.matcher.structure.*;
+import com.alibaba.jvm.sandbox.core.util.matcher.inner.BehaviorExtFilterMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.inner.BehaviorMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.inner.ClassExtFilterMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.inner.ClassMatcher;
+import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
+import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
+import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
+import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByJDK;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import static com.alibaba.jvm.sandbox.api.filter.AccessFlags.*;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 
 /**
@@ -22,53 +26,20 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalCla
  *
  * @author luanjia@taobao.com
  */
-public class ExtFilterMatcher implements Matcher {
+public class ExtFilterMatcher implements Matcher, ClassMatcher, BehaviorMatcher {
 
-    private final ExtFilter extFilter;
+    private final ClassMatcher classMatcher;
+
+    private final List<BehaviorMatcher> behaviorMatchers;
 
     public ExtFilterMatcher(final ExtFilter extFilter) {
-        this.extFilter = extFilter;
+        this.classMatcher = new ClassExtFilterMatcher(extFilter);
+        this.behaviorMatchers = Lists.newArrayList((BehaviorMatcher) new BehaviorExtFilterMatcher(extFilter));
     }
 
-    // 获取需要匹配的类结构
-    // 如果要匹配子类就需要将这个类的所有家族成员找出
-    private Collection<ClassStructure> getWaitingMatchClassStructures(final ClassStructure classStructure) {
-        final Collection<ClassStructure> waitingMatchClassStructures = new ArrayList<ClassStructure>();
-        waitingMatchClassStructures.add(classStructure);
-        if (extFilter.isIncludeSubClasses()) {
-            waitingMatchClassStructures.addAll(classStructure.getFamilyTypeClassStructures());
-        }
-        return waitingMatchClassStructures;
-    }
-
-    private String[] toJavaClassNameArray(final Collection<ClassStructure> classStructures) {
-        if (null == classStructures) {
-            return null;
-        }
-        final List<String> javaClassNames = new ArrayList<String>();
-        for (final ClassStructure classStructure : classStructures) {
-            javaClassNames.add(classStructure.getJavaClassName());
-        }
-        return javaClassNames.toArray(new String[0]);
-    }
-
-    private boolean matchingClassStructure(ClassStructure classStructure) {
-        for (final ClassStructure wmCs : getWaitingMatchClassStructures(classStructure)) {
-
-            // 匹配类结构
-            if (extFilter.doClassFilter(
-                    toFilterAccess(wmCs.getAccess()),
-                    wmCs.getJavaClassName(),
-                    null == wmCs.getSuperClassStructure()
-                            ? null
-                            : wmCs.getSuperClassStructure().getJavaClassName(),
-                    toJavaClassNameArray(wmCs.getFamilyInterfaceClassStructures()),
-                    toJavaClassNameArray(wmCs.getFamilyAnnotationTypeClassStructures())
-            )) {
-                return true;
-            }
-        }
-        return false;
+    public ExtFilterMatcher(final ClassMatcher classMatcher, List<BehaviorMatcher> behaviorMatchers) {
+        this.classMatcher = classMatcher;
+        this.behaviorMatchers = behaviorMatchers;
     }
 
     @Override
@@ -99,55 +70,40 @@ public class ExtFilterMatcher implements Matcher {
 
     }
 
+    @Override
+    public boolean matches(BehaviorStructure behaviorStructure) {
+        for (BehaviorMatcher behaviorMatcher : behaviorMatchers) {
+            if (behaviorMatcher.matches(behaviorStructure)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean matches(ClassStructure classStructure) {
+        return classMatcher.matches(classStructure);
+    }
+
+
     private MatchingResult _matching(final ClassStructure classStructure) {
         final MatchingResult result = new MatchingResult();
-        // 如果不开启加载Bootstrap的类，遇到就过滤掉
-        if (!extFilter.isIncludeBootstrap()
-                && classStructure.getClassLoader() == null) {
-            return result;
-        }
 
         // 匹配ClassStructure
-        if (!matchingClassStructure(classStructure)) {
+        if (!classMatcher.matches(classStructure)) {
             return result;
         }
 
         // 匹配BehaviorStructure
         for (final BehaviorStructure behaviorStructure : classStructure.getBehaviorStructures()) {
-            if (extFilter.doMethodFilter(
-                    toFilterAccess(behaviorStructure.getAccess()),
-                    behaviorStructure.getName(),
-                    toJavaClassNameArray(behaviorStructure.getParameterTypeClassStructures()),
-                    toJavaClassNameArray(behaviorStructure.getExceptionTypeClassStructures()),
-                    toJavaClassNameArray(behaviorStructure.getAnnotationTypeClassStructures())
-            )) {
+            if (matches(behaviorStructure)) {
                 result.getBehaviorStructures().add(behaviorStructure);
             }
         }
+
         return result;
     }
 
-
-    /**
-     * 转换为{@link AccessFlags}的Access体系
-     *
-     * @param access access flag
-     * @return 部分兼容ASM的access flag
-     */
-    private static int toFilterAccess(final Access access) {
-        int flag = 0;
-        if (access.isPublic()) flag |= ACF_PUBLIC;
-        if (access.isPrivate()) flag |= ACF_PRIVATE;
-        if (access.isProtected()) flag |= ACF_PROTECTED;
-        if (access.isStatic()) flag |= ACF_STATIC;
-        if (access.isFinal()) flag |= ACF_FINAL;
-        if (access.isInterface()) flag |= ACF_INTERFACE;
-        if (access.isNative()) flag |= ACF_NATIVE;
-        if (access.isAbstract()) flag |= ACF_ABSTRACT;
-        if (access.isEnum()) flag |= ACF_ENUM;
-        if (access.isAnnotation()) flag |= ACF_ANNOTATION;
-        return flag;
-    }
 
     /**
      * 兼容{@code sandbox-api:1.0.10}时
@@ -162,7 +118,7 @@ public class ExtFilterMatcher implements Matcher {
      * @param filterArray 过滤器数组
      * @return 兼容的Matcher
      */
-    public static Matcher toOrGroupMatcher(final Filter[] filterArray) {
+    public static GroupMatcher toOrGroupMatcher(final Filter[] filterArray) {
         final ExtFilter[] extFilterArray = new ExtFilter[filterArray.length];
         for (int index = 0; index < filterArray.length; index++) {
             extFilterArray[index] = ExtFilterFactory.make(filterArray[index]);
@@ -176,7 +132,7 @@ public class ExtFilterMatcher implements Matcher {
      * @param extFilterArray 增强过滤器数组
      * @return Or关系Matcher
      */
-    public static Matcher toOrGroupMatcher(final ExtFilter[] extFilterArray) {
+    public static GroupMatcher toOrGroupMatcher(final ExtFilter[] extFilterArray) {
         final Matcher[] matcherArray = new Matcher[ArrayUtils.getLength(extFilterArray)];
         for (int index = 0; index < matcherArray.length; index++) {
             matcherArray[index] = new ExtFilterMatcher(extFilterArray[index]);
@@ -184,4 +140,21 @@ public class ExtFilterMatcher implements Matcher {
         return new GroupMatcher.Or(matcherArray);
     }
 
+    public ClassMatcher getClassMatcher() {
+        return classMatcher;
+    }
+
+    public List<BehaviorMatcher> getBehaviorMatchers() {
+        return behaviorMatchers;
+    }
+
+    @Override
+    public boolean hasClassIdentity() {
+        return classMatcher.hasClassIdentity();
+    }
+
+    @Override
+    public String getClassIdentity() {
+        return classMatcher.getClassIdentity();
+    }
 }
