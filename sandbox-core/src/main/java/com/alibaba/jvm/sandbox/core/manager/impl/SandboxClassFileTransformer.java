@@ -224,6 +224,8 @@ public class SandboxClassFileTransformer implements ClassFileTransformer, Native
         if(setNativeMethodPrefix.compareAndSet(false,true)){
             if(inst.isNativeMethodPrefixSupported()){
                 inst.setNativeMethodPrefix(this,getNativeMethodPrefix());
+            }else{
+                throw new UnsupportedOperationException("Native Method Prefix unspported");
             }
         }
     }
