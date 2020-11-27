@@ -18,7 +18,7 @@ import org.kohsuke.MetaInfServices;
  *
  * 如果增强的方法是/hotspot/src/share/vm/classfile/vmSymbols.hpp 宏定义：
  * #define VM_INTRINSICS_DO(do_intrinsic, do_class, do_name, do_signature, do_alias)
- * 所定义的native方法，则需要VM参数中添加:
+ * 所定义的native方法,并且实际运行中发现增强过一段时间会失效,则需要VM参数中添加:
  * -XX:+UnlockDiagnosticVMOptions -XX:CompileCommand=dontinline,${ClassName}::${MethodName} -XX:DisableIntrinsic=${MethodNameId}
  *
  * ${ClassName}: 类全限定名
