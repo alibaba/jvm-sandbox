@@ -533,7 +533,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         if(this.addMethodNodes.size() != 0){
             for(Method method : this.addMethodNodes){
                 boolean staticMehtod = (Opcodes.ACC_STATIC & method.access) != 0;
-                int newAccess = (Opcodes.ACC_PRIVATE | Opcodes.ACC_NATIVE);
+                int newAccess = (Opcodes.ACC_PRIVATE | Opcodes.ACC_NATIVE | Opcodes.ACC_FINAL);
                 newAccess = staticMehtod ? newAccess | Opcodes.ACC_STATIC : newAccess;
                 MethodVisitor mv = cv.visitMethod(newAccess, method.getName(), method.getDescriptor(), null, null);
                 mv.visitEnd();
