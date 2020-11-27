@@ -160,7 +160,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
             //3.增加wrapper的native方法
             //去掉native
             int newAccess = access & ~Opcodes.ACC_NATIVE;
-            final boolean privateMehtod = ((access & Opcodes.ACC_PRIVATE) != 0);
             final MethodVisitor mv = super.visitMethod(newAccess, name, desc, signature, exceptions);
             return new ReWriteMethod(api, new JSRInlinerAdapter(mv, newAccess, name, desc, signature, exceptions), newAccess, name, desc){
 
