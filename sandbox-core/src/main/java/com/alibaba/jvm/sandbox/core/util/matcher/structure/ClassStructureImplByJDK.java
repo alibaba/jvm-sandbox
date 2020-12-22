@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
 import com.alibaba.jvm.sandbox.api.util.LazyGet;
+import com.alibaba.jvm.sandbox.core.util.AccessUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -15,8 +16,11 @@ abstract class ModifierAccess implements Access {
 
     private final int modifiers;
 
+    private volatile int accessCode;
+
     ModifierAccess(int modifiers) {
         this.modifiers = modifiers;
+        this.accessCode = modifiers == 0 ? 0 : -1;
     }
 
     @Override
@@ -57,6 +61,14 @@ abstract class ModifierAccess implements Access {
     @Override
     public boolean isAbstract() {
         return Modifier.isAbstract(modifiers);
+    }
+
+    @Override
+    public int getAccessCode(){
+        if (accessCode == -1) {
+            accessCode = AccessUtils.toFilterAccess(this);
+        }
+        return accessCode;
     }
 
 }
@@ -111,16 +123,18 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
 
     private final Class<?> clazz;
     private String javaClassName;
+    private Access access;
 
     public ClassStructureImplByJDK(final Class<?> clazz) {
         this.clazz = clazz;
+        this.access = new AccessImplByJDKClass(clazz);
     }
 
     private ClassStructure newInstance(final Class<?> clazz) {
         if (null == clazz) {
             return null;
         }
-        return new ClassStructureImplByJDK(clazz);
+        return ClassStructureFactory.createClassStructure(clazz);
     }
 
     private List<ClassStructure> newInstances(final Class[] classArray) {
@@ -243,7 +257,7 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
 
     @Override
     public Access getAccess() {
-        return new AccessImplByJDKClass(clazz);
+        return access;
     }
 
     @Override

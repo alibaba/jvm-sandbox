@@ -6,7 +6,6 @@ import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static com.alibaba.jvm.sandbox.core.util.AccessUtils.toFilterAccess;
 import static com.alibaba.jvm.sandbox.core.util.ClassStructureUtils.toJavaClassNameArray;
 
 /**
@@ -42,7 +41,7 @@ public class ClassExtFilterMatcher implements ClassMatcher {
 
             // 匹配类结构
             if (extFilter.doClassFilter(
-                    toFilterAccess(wmCs.getAccess()),
+                    wmCs.getAccess().getAccessCode(),
                     wmCs.getJavaClassName(),
                     null == superClassStructure ? null : superClassStructure.getJavaClassName(),
                     interfaceTypeJavaClassNameArray,

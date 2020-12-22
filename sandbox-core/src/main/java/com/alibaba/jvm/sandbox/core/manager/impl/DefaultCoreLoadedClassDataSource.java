@@ -2,6 +2,7 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
+import com.alibaba.jvm.sandbox.core.util.SandboxClassUtils;
 import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.Matcher;
@@ -81,12 +82,13 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
 
             final List<Class<?>> classes = new ArrayList<Class<?>>();
 
-            final Iterator<Class<?>> itForLoaded = iteratorForLoadedClasses();
-            while (itForLoaded.hasNext()) {
-                final Class<?> clazz = itForLoaded.next();
+            // 大量计算部分，需要非常小心处理性能问题，能不计算就不计算
+            for (Class clazz : inst.getAllLoadedClasses()) {
+                String className = clazz.getName();
+                ClassLoader classLoader = clazz.getClassLoader();
 
                 // #242 的建议，过滤掉sandbox家族的类
-                if (isComeFromSandboxFamily(toInternalClassName(clazz.getName()), clazz.getClassLoader())) {
+                if (SandboxClassUtils.startWithCom(className) && isComeFromSandboxFamily(toInternalClassName(className), classLoader)) {
                     continue;
                 }
 
@@ -97,7 +99,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
                 }
                 try {
                     if (isRemoveUnsupported) {
-                        if (new UnsupportedMatcher(clazz.getClassLoader(), isEnableUnsafe)
+                        if (new UnsupportedMatcher(classLoader, isEnableUnsafe)
                                 .and(matcher)
                                 .matching(ClassStructureFactory.createClassStructure(clazz))
                                 .isMatched()) {
@@ -119,6 +121,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
                     logger.debug("remove from findForReTransform, because loading class:{} occur an exception", clazz.getName(), cause);
                 }
             }
+
             return classes;
 
         } finally {

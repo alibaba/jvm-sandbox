@@ -3,7 +3,6 @@ package com.alibaba.jvm.sandbox.core.util.matcher.inner;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 
-import static com.alibaba.jvm.sandbox.core.util.AccessUtils.toFilterAccess;
 import static com.alibaba.jvm.sandbox.core.util.ClassStructureUtils.toJavaClassNameArray;
 
 /**
@@ -21,7 +20,7 @@ public class BehaviorExtFilterMatcher implements BehaviorMatcher {
     @Override
     public boolean matches(BehaviorStructure behaviorStructure) {
         return extFilter.doMethodFilter(
-                toFilterAccess(behaviorStructure.getAccess()),
+                behaviorStructure.getAccess().getAccessCode(),
                 behaviorStructure.getName(),
                 toJavaClassNameArray(behaviorStructure.getParameterTypeClassStructures()),
                 toJavaClassNameArray(behaviorStructure.getExceptionTypeClassStructures()),

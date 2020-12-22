@@ -34,4 +34,6 @@ public interface Access {
 
     boolean isAnnotation();
 
+    int getAccessCode();
+
 }

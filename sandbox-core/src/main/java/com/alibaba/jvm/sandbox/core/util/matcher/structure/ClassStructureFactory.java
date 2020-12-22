@@ -1,10 +1,15 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 类结构工厂类
@@ -18,6 +23,17 @@ public class ClassStructureFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(ClassStructureFactory.class);
 
+    // cache stat: hit ratio: 1024 - 41% ; 2048 - 56%
+    // 最佳的性能应该是Caffeine，但是jdk版本不够
+    private final static LoadingCache<Class<?>, ClassStructure> CLASS_STRUCTURE_CACHE
+            = CacheBuilder.newBuilder().expireAfterWrite(15, TimeUnit.MINUTES)
+            .maximumSize(2048).build(new CacheLoader<Class<?>, ClassStructure>() {
+                @Override
+                public ClassStructure load(Class<?> key) {
+                    return new ClassStructureImplByJDK(key);
+                }
+            });
+
     /**
      * 通过Class类来构造类结构
      *
@@ -25,7 +41,7 @@ public class ClassStructureFactory {
      * @return JDK实现的类结构
      */
     public static ClassStructure createClassStructure(final Class<?> clazz) {
-        return new ClassStructureImplByJDK(clazz);
+        return CLASS_STRUCTURE_CACHE.getUnchecked(clazz);
     }
 
     /**

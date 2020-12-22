@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.core.util.matcher.structure;
 
 import com.alibaba.jvm.sandbox.api.util.LazyGet;
+import com.alibaba.jvm.sandbox.core.util.AccessUtils;
 import com.alibaba.jvm.sandbox.core.util.BitUtils;
 import com.alibaba.jvm.sandbox.core.util.collection.Pair;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.PrimitiveClassStructure.Primitive;
@@ -29,6 +30,8 @@ import static org.objectweb.asm.Opcodes.*;
 class AccessImplByAsm implements Access {
 
     private final int access;
+
+    private volatile int accessCode;
 
     AccessImplByAsm(final int access) {
         this.access = access;
@@ -98,9 +101,20 @@ class AccessImplByAsm implements Access {
     public boolean isAnnotation() {
         return BitUtils.isIn(getAccess(), ACC_ANNOTATION);
     }
+
+
+    @Override
+    public int getAccessCode() {
+        if (accessCode == -1) {
+            accessCode = AccessUtils.toFilterAccess(this);
+        }
+        return accessCode;
+    }
 }
 
 class EmptyClassStructure implements ClassStructure {
+
+    private static final Access access = new AccessImplByAsm(0);
 
     @Override
     public String getJavaClassName() {
@@ -154,7 +168,7 @@ class EmptyClassStructure implements ClassStructure {
 
     @Override
     public Access getAccess() {
-        return new AccessImplByAsm(0);
+        return access;
     }
 }
 

@@ -11,6 +11,7 @@ import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.async.TransformationManager;
 import com.alibaba.jvm.sandbox.core.manager.async.TransformationQuintuple;
+import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
 import com.alibaba.jvm.sandbox.core.util.matcher.GroupMatcher;
@@ -305,37 +306,47 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                             final List<Class<?>> waitingReTransformClasses,
                             final Event.Type... eventType) {
 
-        // 给对应的模块追加ClassFileTransformer
-        final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(
-                watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
+        SandboxProtector.getOrCreateInstance().enterProtecting();
 
-        // 注册到CoreModule中
-        coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
-
-        //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
-        inst.addTransformer(sandClassFileTransformer, true);
-        int cCnt = 0, mCnt = 0;
-
-        // 进度通知启动
-        beginProgress(progress, waitingReTransformClasses.size());
         try {
 
-            // 应用JVM
-            reTransformClasses(watchId, waitingReTransformClasses, progress);
+            // 给对应的模块追加ClassFileTransformer
+            final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(
+                    watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
 
-            // 计数
-            cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();
-            mCnt += sandClassFileTransformer.getAffectStatistic().mCnt();
+            // 注册到CoreModule中
+            coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
 
-            // 激活增强类
-            if (coreModule.isActivated()) {
-                final int listenerId = sandClassFileTransformer.getListenerId();
-                EventListenerHandler.getSingleton().active(listenerId, listener, eventType);
+            //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
+            inst.addTransformer(sandClassFileTransformer, true);
+            int cCnt = 0, mCnt = 0;
+
+            // 进度通知启动
+            beginProgress(progress, waitingReTransformClasses.size());
+            try {
+
+                // 应用JVM
+                reTransformClasses(watchId, waitingReTransformClasses, progress);
+
+                // 计数
+                cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();
+                mCnt += sandClassFileTransformer.getAffectStatistic().mCnt();
+
+                // 激活增强类
+                if (coreModule.isActivated()) {
+                    final int listenerId = sandClassFileTransformer.getListenerId();
+                    EventListenerHandler.getSingleton().active(listenerId, listener, eventType);
+                }
+
+            } finally {
+                WatchIdHolder.finish(watchId);
+                finishProgress(progress, cCnt, mCnt);
             }
 
-        } finally {
-            WatchIdHolder.finish(watchId);
-            finishProgress(progress, cCnt, mCnt);
+        } finally  {
+
+            SandboxProtector.getOrCreateInstance().exitProtecting();
+
         }
 
     }

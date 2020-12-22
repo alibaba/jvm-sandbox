@@ -3,10 +3,14 @@ package com.alibaba.jvm.sandbox.core.util;
 /**
  * Sandbox的类操作工具类
  */
-public class SandboxClassUtils {
+public abstract class SandboxClassUtils {
 
     private static final String SANDBOX_FAMILY_CLASS_RES_PREFIX = "com/alibaba/jvm/sandbox/";
     private static final String SANDBOX_FAMILY_CLASS_RES_QATEST_PREFIX = "com/alibaba/jvm/sandbox/qatest";
+
+    public static boolean startWithCom(final String className){
+        return className != null && className.startsWith("com");
+    }
 
     /**
      * 是否是SANDBOX家族所管理的类

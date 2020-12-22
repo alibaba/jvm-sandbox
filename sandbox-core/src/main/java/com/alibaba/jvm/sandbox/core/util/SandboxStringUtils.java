@@ -23,7 +23,8 @@ public class SandboxStringUtils {
         if (StringUtils.isEmpty(javaClassName)) {
             return javaClassName;
         }
-        return javaClassName.replace('.', '/');    }
+        return javaClassName.replace('.', '/');
+    }
 
     /**
      * internal's classname to java's classname
