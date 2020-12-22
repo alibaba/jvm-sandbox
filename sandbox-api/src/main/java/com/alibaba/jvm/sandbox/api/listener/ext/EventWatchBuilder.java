@@ -328,13 +328,6 @@ public class EventWatchBuilder {
     private final PatternType patternType;
     private List<BuildingForClass> bfClasses = new ArrayList<BuildingForClass>();
 
-    private static final Event.Type[] DEFAULT_EVENT_TYPE_ARRAY_BOX = new Event.Type[6];
-
-    static {
-        System.arraycopy(IBuildingForBehavior.DEFAULT_EVENT_TYPE_ARRAY, 0, DEFAULT_EVENT_TYPE_ARRAY_BOX, 0, 3);
-    }
-
-
     /**
      * 构造事件观察者构造器(通配符匹配模式)
      *
@@ -750,8 +743,9 @@ public class EventWatchBuilder {
                 return build(new AdviceAdapterListener(adviceListener), null, lazyReload, DEFAULT_EVENT_TYPE_ARRAY);
             }
 
-            // clear array box
-            Arrays.fill(DEFAULT_EVENT_TYPE_ARRAY_BOX, 3,5, null);
+            // new array box
+            Event.Type[] DEFAULT_EVENT_TYPE_ARRAY_BOX = new Event.Type[6];
+            System.arraycopy(IBuildingForBehavior.DEFAULT_EVENT_TYPE_ARRAY, 0, DEFAULT_EVENT_TYPE_ARRAY_BOX, 0, 3);
 
             int lastIndex = 2;
             if(eventTypeArray != null) {
