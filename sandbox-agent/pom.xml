@@ -40,6 +40,7 @@
                                     <Agent-Class>com.alibaba.jvm.sandbox.agent.AgentLauncher</Agent-Class>
                                     <Can-Redefine-Classes>true</Can-Redefine-Classes>
                                     <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                                    <Can-Set-Native-Method-Prefix>true</Can-Set-Native-Method-Prefix>
                                 </manifestEntries>
                             </archive>
                         </configuration>
