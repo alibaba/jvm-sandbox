@@ -30,12 +30,12 @@ public class TransformationManager {
 
     private static TransformationManager instance;
 
-    public static TransformationManager getInstance(DefaultModuleEventWatcher eventWatcher) {
+    public static TransformationManager getInstance() {
 
         if (instance == null) {
             synchronized (TransformationManager.class) {
                 if (instance == null) {
-                    instance = new TransformationManager(eventWatcher);
+                    instance = new TransformationManager();
                 }
             }
         }
@@ -43,11 +43,11 @@ public class TransformationManager {
         return instance;
     }
 
-    private TransformationManager(DefaultModuleEventWatcher eventWatcher) {
-        init(eventWatcher);
+    private TransformationManager() {
+        init();
     }
 
-    private void init(DefaultModuleEventWatcher eventWatcher) {
+    private void init() {
 
         logger.info("On initializing transformation disruptor...");
 
@@ -78,14 +78,10 @@ public class TransformationManager {
         // park for 1 minute
         SleepingWaitStrategy sleepingWaitStrategy = new SleepingWaitStrategy(0, TimeUnit.MILLISECONDS.toNanos(1L));
 
-//        ExecutorService executorService = new ThreadPoolExecutor(4, 4, 0L, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>(), threadFactory);
-
-//        ExecutorService executorService = Executors.newFixedThreadPool(4, threadFactory);
-
         // only one thread could be used
-        this.disruptor = new Disruptor<>(factory, MAX_QUEUE_SIZE, Executors.defaultThreadFactory(), ProducerType.MULTI, sleepingWaitStrategy);
+        this.disruptor = new Disruptor<>(factory, MAX_QUEUE_SIZE, threadFactory, ProducerType.MULTI, sleepingWaitStrategy);
 
-        TransformationEventHandler transformationEventHandler = new TransformationEventHandler(eventWatcher);
+        TransformationEventHandler transformationEventHandler = new TransformationEventHandler();
 
         this.disruptor.handleEventsWith(transformationEventHandler)
                 .thenHandleEventsWithWorkerPool(transformationEventHandler, transformationEventHandler, transformationEventHandler, transformationEventHandler);
@@ -102,7 +98,8 @@ public class TransformationManager {
                        Matcher matcher,
                        EventListener listener,
                        ModuleEventWatcher.Progress progress,
-                       Event.Type[] eventType) {
+                       Event.Type[] eventType,
+                       DefaultModuleEventWatcher eventWatcher) {
 
         RingBuffer<TransformationEvent> ringBuffer = disruptor.getRingBuffer();
 
@@ -115,6 +112,7 @@ public class TransformationManager {
             transformationEvent.setListener(listener);
             transformationEvent.setProgress(progress);
             transformationEvent.setEventTypes(eventType);
+            transformationEvent.setDefaultModuleEventWatcher(eventWatcher);
         } finally {
             ringBuffer.publish(sequence);
         }

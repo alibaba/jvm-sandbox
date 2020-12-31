@@ -24,13 +24,7 @@ public class TransformationEventHandler implements EventHandler<TransformationEv
 
     private static Map<String, List<TransformationEvent>> transformationEventMap = Maps.newLinkedHashMap();
 
-    private final DefaultModuleEventWatcher eventWatcher;
-
     private static final Queue<Map<String, List<TransformationEvent>>> QUEUE = new ArrayBlockingQueue<>(300);
-
-    TransformationEventHandler(DefaultModuleEventWatcher eventWatcher) {
-        this.eventWatcher = eventWatcher;
-    }
 
     @Override
     public void onEvent(TransformationEvent event, long sequence, boolean endOfBatch) throws Exception {
@@ -57,9 +51,11 @@ public class TransformationEventHandler implements EventHandler<TransformationEv
         // if it is the end of batch, compute all of them
         Map<String, List<TransformationEvent>> transformationEvents = QUEUE.poll();
 
-        if (transformationEvents == null) {
+        if (transformationEvents == null || event.getDefaultModuleEventWatcher() == null) {
             return;
         }
+
+        DefaultModuleEventWatcher eventWatcher = event.getDefaultModuleEventWatcher();
 
         for (Map.Entry<String, List<TransformationEvent>> entry : transformationEvents.entrySet()) {
             List<TransformationEvent> transformationEventList = entry.getValue();

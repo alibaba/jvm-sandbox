@@ -5,7 +5,7 @@ package com.alibaba.jvm.sandbox.api.util;
  *
  * <code>
  *         SandboxProtector currentProtector = SandboxProtector.SandboxProtectors.getInstance();
- *         SandboxProtector stopAllSandboxProtector = new StopAllSandboxProtector(currentProtector);
+ *         SandboxProtector stopAllSandboxProtector = new StopAllSandboxProtector();
  *         SandboxProtector.SandboxProtectors.force2resetInstance(stopAllSandboxProtector);
  *         try {
  *             initialize();
@@ -19,10 +19,8 @@ package com.alibaba.jvm.sandbox.api.util;
  */
 public class StopAllSandboxProtector implements SandboxProtector {
 
-    private SandboxProtector sandboxProtector;
 
-    public StopAllSandboxProtector(SandboxProtector sandboxProtector) {
-        this.sandboxProtector = sandboxProtector;
+    public StopAllSandboxProtector() {
     }
 
     @Override
@@ -37,7 +35,7 @@ public class StopAllSandboxProtector implements SandboxProtector {
 
     @Override
     public <T> T protectProxy(Class<T> protectTargetInterface, final T protectTarget) {
-        return sandboxProtector.protectProxy(protectTargetInterface, protectTarget);
+        return protectTarget;
     }
 
     @Override
