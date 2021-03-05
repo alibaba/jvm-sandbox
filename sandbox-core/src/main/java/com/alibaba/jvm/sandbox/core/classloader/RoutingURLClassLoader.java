@@ -94,7 +94,7 @@ public class RoutingURLClassLoader extends URLClassLoader {
                     }
                     return aClass;
                 } catch (Exception cause) {
-                    DelegateBizClassLoader delegateBizClassLoader = BusinessClassLoaderHolder.getBussinessClassLoader();
+                    DelegateBizClassLoader delegateBizClassLoader = BusinessClassLoaderHolder.getBusinessClassLoader();
                     try {
                         if(null != delegateBizClassLoader){
                             return delegateBizClassLoader.loadClass(javaClassName,resolve);
