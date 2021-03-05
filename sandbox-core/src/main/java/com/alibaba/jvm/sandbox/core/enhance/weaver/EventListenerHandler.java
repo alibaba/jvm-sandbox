@@ -338,7 +338,7 @@ public class EventListenerHandler implements SpyHandler {
 
         final ClassLoader javaClassLoader = ObjectIDs.instance.getObject(targetClassLoaderObjectID);
         //放置业务类加载器
-        BusinessClassLoaderHolder.setBussinessClassLoader(javaClassLoader);
+        BusinessClassLoaderHolder.setBusinessClassLoader(javaClassLoader);
         final BeforeEvent event = process.getEventFactory().makeBeforeEvent(
                 processId,
                 invokeId,
@@ -361,7 +361,7 @@ public class EventListenerHandler implements SpyHandler {
         try{
             return handleOnEnd(listenerId, throwable, false);
         }finally {
-            BusinessClassLoaderHolder.removeBussinessClassLoader();
+            BusinessClassLoaderHolder.removeBusinessClassLoader();
         }
     }
 
@@ -370,7 +370,7 @@ public class EventListenerHandler implements SpyHandler {
         try{
             return handleOnEnd(listenerId, object, true);
         }finally {
-            BusinessClassLoaderHolder.removeBussinessClassLoader();
+            BusinessClassLoaderHolder.removeBusinessClassLoader();
         }
     }
 
