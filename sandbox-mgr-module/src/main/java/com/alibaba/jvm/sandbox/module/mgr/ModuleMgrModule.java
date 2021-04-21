@@ -8,6 +8,7 @@ import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +17,8 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.*;
 
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.matching;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -217,10 +217,51 @@ public class ModuleMgrModule implements Module {
                 "   CLASS : " + module.getClass().getName() + "\n" +
                 "  LOADER : " + module.getClass().getClassLoader() + "\n" +
                 "    cCnt : " + cCnt + "\n" +
-                "    mCnt : " + mCnt;
+                "    mCnt : " + mCnt + "\n" +
+                "COMMANDS : " + joinString(getCommandsByModuleClz(module.getClass()));
 
         output(writer, sb);
 
     }
 
+    /**
+     * get command list via a sandbox module's class
+     *
+     * @param clz the class of a sandbox module
+     * @return the command list of the module
+     */
+    private List<String> getCommandsByModuleClz(Class<?> clz) {
+        if (clz == null) {
+            return Collections.emptyList();
+        }
+        List<Method> methods = MethodUtils.getMethodsListWithAnnotation(clz, Command.class);
+        List<String> commands = new ArrayList<String>();
+        for (Method method : methods) {
+            final Command commandAnnotation = method.getAnnotation(Command.class);
+            if (null == commandAnnotation) {
+                continue;
+            }
+            if (commandAnnotation.value().trim().length() > 0) {
+                commands.add(commandAnnotation.value());
+            }
+        }
+        return commands;
+    }
+
+    /**
+     * join string with separator comma ","
+     *
+     * @param list the string list to be joined
+     * @return joined result
+     */
+    private static String joinString(List<String> list) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            builder.append(list.get(i));
+            if (i != list.size() - 1) {
+                builder.append(",");
+            }
+        }
+        return builder.toString();
+    }
 }
