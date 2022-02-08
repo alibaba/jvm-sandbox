@@ -219,7 +219,6 @@ class SingleEventFactory {
                 }catch (IllegalAccessException e){
                     throw new UnCaughtException(e);
                 }
-//                unCaughtSetClassDeclaredJavaFieldValue(ThrowsEvent.class, "throwable", event, null);
                 break;
             case IMMEDIATELY_RETURN:
             case RETURN:
@@ -230,7 +229,6 @@ class SingleEventFactory {
                 }catch (IllegalAccessException e){
                     throw new UnCaughtException(e);
                 }
-//                unCaughtSetClassDeclaredJavaFieldValue(ReturnEvent.class, "object", event, null);
                 break;
         }
     }
