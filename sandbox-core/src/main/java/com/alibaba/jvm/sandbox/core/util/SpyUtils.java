@@ -1,10 +1,8 @@
 package com.alibaba.jvm.sandbox.core.util;
 
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 
 import java.com.alibaba.jvm.sandbox.spy.Spy;
-
-import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtGetClassDeclaredJavaMethod;
 
 /**
  * Spy类操作工具类
@@ -21,51 +19,9 @@ public class SpyUtils {
      */
     public synchronized static void init(final String namespace) {
 
-        if (Spy.isInit(namespace)) {
-            return;
+        if (!Spy.isInit(namespace)) {
+            Spy.init(namespace, EventListenerHandler.getSingleton());
         }
-
-        Spy.init(
-                namespace,
-                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onBefore",
-                        int.class,
-                        int.class,
-                        Class.class,
-                        String.class,
-                        String.class,
-                        String.class,
-                        Object.class,
-                        Object[].class
-                ),
-                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onReturn",
-                        int.class,
-                        Class.class,
-                        Object.class
-                ),
-                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onThrows",
-                        int.class,
-                        Class.class,
-                        Throwable.class
-                ),
-                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onLine",
-                        int.class,
-                        int.class
-                ),
-                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallBefore",
-                        int.class,
-                        int.class,
-                        String.class,
-                        String.class,
-                        String.class
-                ),
-                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallReturn",
-                        int.class
-                ),
-                unCaughtGetClassDeclaredJavaMethod(EventListenerHandlers.class, "onCallThrows",
-                        int.class,
-                        String.class
-                )
-        );
 
     }
 

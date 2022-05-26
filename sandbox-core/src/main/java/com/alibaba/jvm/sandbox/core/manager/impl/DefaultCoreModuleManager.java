@@ -7,12 +7,14 @@ import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.CoreModule.ReleaseResource;
 import com.alibaba.jvm.sandbox.core.classloader.ModuleJarClassLoader;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.ProviderManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.ModuleLibLoader.ModuleJarLoadCallback;
+import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +69,9 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 初始化模块目录
         this.moduleLibDirArray = mergeFileArray(
-                new File[]{new File(cfg.getSystemModuleLibPath())},
+                StringUtils.isBlank(cfg.getSystemModuleLibPath())
+                        ? new File[0]
+                        : new File[]{new File(cfg.getSystemModuleLibPath())},
                 cfg.getUserModuleLibFilesWithCache()
         );
     }
@@ -208,25 +212,25 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
                 // ModuleEventWatcher对象注入
                 else if (ModuleEventWatcher.class.isAssignableFrom(fieldType)) {
-                    final ModuleEventWatcher moduleEventWatcher = coreModule.append(new ReleaseResource<ModuleEventWatcher>(new DefaultModuleEventWatcher(
-                            inst,
-                            classDataSource,
-                            coreModule,
-                            cfg.isEnableUnsafe(),
-                            cfg.getNamespace()
-                    )) {
-                        @Override
-                        public void release() {
-                            logger.info("release all SandboxClassFileTransformer for module={}", coreModule.getUniqueId());
-                            final ModuleEventWatcher moduleEventWatcher = get();
-                            if (null != moduleEventWatcher) {
-                                for (final SandboxClassFileTransformer sandboxClassFileTransformer
-                                        : new ArrayList<SandboxClassFileTransformer>(coreModule.getSandboxClassFileTransformers())) {
-                                    moduleEventWatcher.delete(sandboxClassFileTransformer.getWatchId());
+                    final ModuleEventWatcher moduleEventWatcher = coreModule.append(
+                            new ReleaseResource<ModuleEventWatcher>(
+                                    SandboxProtector.instance.protectProxy(
+                                            ModuleEventWatcher.class,
+                                            new DefaultModuleEventWatcher(inst, classDataSource, coreModule, cfg.isEnableUnsafe(), cfg.getNamespace())
+                                    )
+                            ) {
+                                @Override
+                                public void release() {
+                                    logger.info("release all SandboxClassFileTransformer for module={}", coreModule.getUniqueId());
+                                    final ModuleEventWatcher moduleEventWatcher = get();
+                                    if (null != moduleEventWatcher) {
+                                        for (final SandboxClassFileTransformer sandboxClassFileTransformer
+                                                : new ArrayList<SandboxClassFileTransformer>(coreModule.getSandboxClassFileTransformers())) {
+                                            moduleEventWatcher.delete(sandboxClassFileTransformer.getWatchId());
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                    });
+                            });
 
                     writeField(
                             resourceField,
@@ -420,7 +424,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 激活所有监听器
         for (final SandboxClassFileTransformer sandboxClassFileTransformer : coreModule.getSandboxClassFileTransformers()) {
-            EventListenerHandlers.getSingleton().active(
+            EventListenerHandler.getSingleton().active(
                     sandboxClassFileTransformer.getListenerId(),
                     sandboxClassFileTransformer.getEventListener(),
                     sandboxClassFileTransformer.getEventTypeArray()
@@ -465,7 +469,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 冻结所有监听器
         for (final SandboxClassFileTransformer sandboxClassFileTransformer : coreModule.getSandboxClassFileTransformers()) {
-            EventListenerHandlers.getSingleton()
+            EventListenerHandler.getSingleton()
                     .frozen(sandboxClassFileTransformer.getListenerId());
         }
 

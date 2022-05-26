@@ -181,6 +181,24 @@ public class EventWatchBuilder {
 
         IBuildingForWatching onWatching();
 
+        /**
+         * <p>兼容老版本BUGFIX</p>
+         * 在1.2.0的版本中没有考虑好老版本的API向下兼容性问题，这里做一个修复 #236
+         *
+         * @param adviceListener advice监听器
+         * @return this
+         */
+        EventWatcher onWatch(AdviceListener adviceListener);
+
+        /**
+         * 观察器
+         *
+         * @param adviceListener advice监听器
+         * @param eventTypeArray 需要被监听的事件列表（参数废弃）
+         * @return this
+         * @deprecated 根据 #256 的建议，这个接口废弃，请采用 {@link #onWatch(AdviceListener)} 代替
+         */
+        @Deprecated
         EventWatcher onWatch(AdviceListener adviceListener, Event.Type... eventTypeArray);
 
         EventWatcher onWatch(EventListener eventListener, Event.Type... eventTypeArray);
@@ -629,12 +647,14 @@ public class EventWatchBuilder {
         }
 
         @Override
+        public EventWatcher onWatch(AdviceListener adviceListener) {
+            return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
+        }
+
+        @Deprecated
+        @Override
         public EventWatcher onWatch(final AdviceListener adviceListener, Event.Type... eventTypeArray) {
-            if (eventTypeArray == null
-                    || eventTypeArray.length == 0) {
-                return build(new AdviceAdapterListener(adviceListener), null, BEFORE, RETURN, THROWS, IMMEDIATELY_RETURN, IMMEDIATELY_THROWS);
-            }
-            return build(new AdviceAdapterListener(adviceListener), null, eventTypeArray);
+            return onWatch(adviceListener);
         }
 
         @Override
@@ -681,7 +701,7 @@ public class EventWatchBuilder {
             return build(
                     new AdviceAdapterListener(adviceListener),
                     toProgressGroup(progresses),
-                    eventTypeSet.toArray(new Event.Type[0])
+                    eventTypeSet.toArray(EMPTY)
             );
         }
 
@@ -816,14 +836,14 @@ public class EventWatchBuilder {
         }
 
         @Override
-        public void progressOnSuccess(Class clazz, int index) {
+        public void progressOnSuccess(Class<?> clazz, int index) {
             for (final Progress progress : progresses) {
                 progress.progressOnSuccess(clazz, index);
             }
         }
 
         @Override
-        public void progressOnFailed(Class clazz, int index, Throwable cause) {
+        public void progressOnFailed(Class<?> clazz, int index, Throwable cause) {
             for (final Progress progress : progresses) {
                 progress.progressOnFailed(clazz, index, cause);
             }

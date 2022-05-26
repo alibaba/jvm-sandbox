@@ -16,8 +16,14 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalCla
 public class AsmUtils {
 
     /**
+     * 获取两个类型的共同父类
      * just the same
      * {@code org.objectweb.asm.ClassWriter#getCommonSuperClass(String, String)}
+     *
+     * @param type1  类型1
+     * @param type2  类型2
+     * @param loader 所在ClassLoader
+     * @return 共同的父类
      */
     public static String getCommonSuperClass(String type1, String type2, ClassLoader loader) {
         return getCommonSuperClassImplByAsm(type1, type2, loader);
@@ -28,10 +34,10 @@ public class AsmUtils {
         InputStream inputStreamOfType1 = null, inputStreamOfType2 = null;
         try {
             //targetClassLoader 为null，说明是BootStrapClassLoader，不能显式引用，故使用系统类加载器间接引用
-            if(null == targetClassLoader){
+            if (null == targetClassLoader) {
                 targetClassLoader = ClassLoader.getSystemClassLoader();
             }
-            if(null == targetClassLoader){
+            if (null == targetClassLoader) {
                 return "java/lang/Object";
             }
             inputStreamOfType1 = targetClassLoader.getResourceAsStream(type1 + ".class");

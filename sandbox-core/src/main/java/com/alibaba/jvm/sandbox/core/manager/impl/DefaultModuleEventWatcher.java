@@ -6,7 +6,7 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.core.CoreModule;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
@@ -82,10 +82,10 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
     /*
      * 形变观察所影响的类
      */
-    private void reTransformClasses(final int watchId,
-                                    final List<Class<?>> waitingReTransformClasses,
-                                    final Progress progress) {
-
+    private void reTransformClasses(
+        final int watchId,
+        final List<Class<?>> waitingReTransformClasses,
+        final Progress progress) {
         // 需要形变总数
         final int total = waitingReTransformClasses.size();
 
@@ -179,7 +179,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         // 注册到CoreModule中
         coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
 
-        // 注册到JVM加载上ClassFileTransformer处理新增的类
+        //这里addTransformer后，接下来引起的类加载都会经过sandClassFileTransformer
         inst.addTransformer(sandClassFileTransformer, true);
 
         // 查找需要渲染的类集合
@@ -197,7 +197,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         try {
 
             // 应用JVM
-            reTransformClasses(watchId, waitingReTransformClasses, progress);
+            reTransformClasses(watchId,waitingReTransformClasses, progress);
 
             // 计数
             cCnt += sandClassFileTransformer.getAffectStatistic().cCnt();
@@ -207,7 +207,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
             // 激活增强类
             if (coreModule.isActivated()) {
                 final int listenerId = sandClassFileTransformer.getListenerId();
-                EventListenerHandlers.getSingleton()
+                EventListenerHandler.getSingleton()
                         .active(listenerId, listener, eventType);
             }
 
@@ -232,7 +232,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
             if (watcherId == sandboxClassFileTransformer.getWatchId()) {
 
                 // 冻结所有关联代码增强
-                EventListenerHandlers.getSingleton()
+                EventListenerHandler.getSingleton()
                         .frozen(sandboxClassFileTransformer.getListenerId());
 
                 // 在JVM中移除掉命中的ClassFileTransformer

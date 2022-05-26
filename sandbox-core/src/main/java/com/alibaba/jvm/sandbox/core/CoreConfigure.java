@@ -38,7 +38,7 @@ public class CoreConfigure {
 
     private static final String KEY_UNSAFE_ENABLE = "unsafe.enable";
 
-    // 受保护key数组，在保护key范围之内，如果前端已经传递过参数了，只能认前端，后端无法修改
+    // 受保护key数组，在保护key范围之内，以用户传递的配置为准，系统配置不允许覆盖
     private static final String[] PROTECT_KEY_ARRAY = {KEY_NAMESPACE, KEY_SANDBOX_HOME, KEY_LAUNCH_MODE, KEY_SERVER_IP, KEY_SERVER_PORT, KEY_SERVER_CHARSET};
 
     // 用户配置和系统默认配置都可以，需要进行合并的key，例如user_module
@@ -46,58 +46,92 @@ public class CoreConfigure {
 
     private static final FeatureCodec codec = new FeatureCodec(';', '=');
 
-    private final Map<String, String> featureMap;
+    private final Map<String, String> featureMap = new LinkedHashMap<String, String>();
 
-    private CoreConfigure(final String featureString) {
-        this.featureMap = codec.toMap(featureString);
+    private CoreConfigure(final String featureString,
+                          final String propertiesFilePath) {
+        final Map<String, String> featureMap = toFeatureMap(featureString);
+        final Map<String, String> propertiesMap = toPropertiesMap(propertiesFilePath);
+        this.featureMap.putAll(merge(featureMap, propertiesMap));
     }
 
-    private static volatile CoreConfigure instance;
-
-    public static CoreConfigure toConfigure(final String featureString, final String propertiesFilePath) {
-        return instance = mergePropertiesFile(new CoreConfigure(featureString), propertiesFilePath);
+    private Map<String, String> toFeatureMap(String featureString) {
+        return codec.toMap(featureString);
     }
 
-    // 从配置文件中合并配置到CoreConfigure中
-    private static CoreConfigure mergePropertiesFile(final CoreConfigure cfg, final String propertiesFilePath) {
-        Map<String, String> propertiesMap = propertiesToStringMap(cfg, fetchProperties(propertiesFilePath));
-        for (String key : MULTI_KEY_ARRAY) {
-            if (cfg.featureMap.containsKey(key) && propertiesMap.containsKey(key)) {
-                propertiesMap.put(key, cfg.featureMap.get(key) + ";" + propertiesMap.get(key));
-            }
+    private Map<String, String> toPropertiesMap(String propertiesFilePath) {
+        final Map<String, String> propertiesMap = new LinkedHashMap<String, String>();
+
+        if(null == propertiesFilePath) {
+            return propertiesMap;
         }
-        cfg.featureMap.putAll(propertiesMap);
-        return cfg;
-    }
 
-    // 从指定配置文件路径中获取配置信息
-    private static Properties fetchProperties(final String propertiesFilePath) {
+        final File propertiesFile = new File(propertiesFilePath);
+        if (!propertiesFile.exists()
+                || !propertiesFile.canRead()) {
+            return propertiesMap;
+        }
+
+
+        // 从指定配置文件路径中获取配置信息
         final Properties properties = new Properties();
         InputStream is = null;
         try {
-            is = FileUtils.openInputStream(new File(propertiesFilePath));
+            is = FileUtils.openInputStream(propertiesFile);
             properties.load(is);
         } catch (Throwable cause) {
             // cause.printStackTrace(System.err);
         } finally {
             IOUtils.closeQuietly(is);
         }
-        return properties;
+
+        // 转换为Map
+        for (String key : properties.stringPropertyNames()) {
+            propertiesMap.put(key, properties.getProperty(key));
+        }
+
+        return propertiesMap;
     }
 
-    // 配置转map
-    private static Map<String, String> propertiesToStringMap(CoreConfigure cfg, final Properties properties) {
-        final Map<String, String> map = new HashMap<String, String>();
-        for (String key : properties.stringPropertyNames()) {
+    private Map<String, String> merge(Map<String, String> featureMap, Map<String, String> propertiesMap) {
 
-            //如果受保护的key已经由入参指定，则过滤掉受保护的key,防止入参被覆盖
-            if (cfg.featureMap.containsKey(key) && ArrayUtils.contains(PROTECT_KEY_ARRAY, key)) {
+        // 以featureMap配置为准
+        final Map<String, String> mergeMap = new LinkedHashMap<String, String>(featureMap);
+
+        // 合并propertiesMap
+        for (final Map.Entry<String, String> propertiesEntry : propertiesMap.entrySet()) {
+
+            // 如果是受保护的KEY，则以featureMap中的非空值为准
+            if (mergeMap.containsKey(propertiesEntry.getKey())
+                    && ArrayUtils.contains(PROTECT_KEY_ARRAY, propertiesEntry.getKey())) {
                 continue;
             }
 
-            map.put(key, properties.getProperty(key));
+            // 如果是多值合并的KEY，则不进行覆盖，转为合并
+            else if (ArrayUtils.contains(MULTI_KEY_ARRAY, propertiesEntry.getKey())
+                    && mergeMap.containsKey(propertiesEntry.getKey())) {
+                mergeMap.put(
+                        propertiesEntry.getKey(),
+                        mergeMap.get(propertiesEntry.getKey()) + ";" + propertiesEntry.getValue()
+                );
+                continue;
+            }
+
+            // 合并K,V
+            else {
+                mergeMap.put(propertiesEntry.getKey(), propertiesEntry.getValue());
+            }
+
         }
-        return map;
+
+        return mergeMap;
+
+    }
+
+    private static volatile CoreConfigure instance;
+
+    public static CoreConfigure toConfigure(final String featureString, final String propertiesFilePath) {
+        return instance = new CoreConfigure(featureString, propertiesFilePath);
     }
 
     public static CoreConfigure getInstance() {

@@ -5,6 +5,8 @@ import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.Test
 /**
  * 计算器类（靶机类：所有方法拦截都基于这个类进行）
  */
+@InheritedComputer
+@Computer
 public class Calculator {
 
     public static final String ERROR_EXCEPTION_MESSAGE = "THIS IS A TEST CAME FROM CALCULATOR!";
@@ -120,6 +122,36 @@ public class Calculator {
      */
     private static void throwCalculatorException() {
         throw new RuntimeException(ERROR_EXCEPTION_MESSAGE);
+    }
+
+    private static TestCase tCaseInStatic;
+
+    /**
+     * 静态方法-求两数之和
+     * @param a 数字1
+     * @param b 数字2
+     * @return a+b
+     */
+    public static int addInStatic(int a,int b){
+        if(tCaseInStatic == ADD$EXCEPTION){
+            throwCalculatorException();
+        }
+        return a+b;
+    }
+
+    /**
+     * 通过静态方法设置异常变量信息
+     * @param tCase 异常信息
+     */
+    public static void settCaseInStatic(TestCase tCase){
+        tCaseInStatic=tCase;
+    }
+
+    /**
+     * 空方法
+     */
+    public void report(String param){
+
     }
 
 }

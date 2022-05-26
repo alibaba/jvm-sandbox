@@ -92,7 +92,14 @@ public abstract class Event {
          * 立即调用:THROWS
          * 由{@link com.alibaba.jvm.sandbox.api.ProcessControlException#throwThrowsImmediately(Throwable)}触发
          */
-        IMMEDIATELY_THROWS,
+        IMMEDIATELY_THROWS;
+
+        /**
+         * 空类型
+         *
+         * @since {@code sandbox-api:1.3.0}
+         */
+        public static final Event.Type[] EMPTY = new Event.Type[0];
 
     }
 

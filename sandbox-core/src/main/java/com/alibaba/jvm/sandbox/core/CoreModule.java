@@ -197,7 +197,9 @@ public class CoreModule {
                 || null == resource.get()) {
             return null;
         }
-        releaseResources.add(resource);
+        synchronized (releaseResources) {
+            releaseResources.add(resource);
+        }
         logger.debug("append resource={} in module[id={};]", resource.get(), uniqueId);
         return resource.get();
     }
@@ -208,32 +210,34 @@ public class CoreModule {
      * @param target 待释放的资源实体
      */
     public void release(Object target) {
-        final Iterator<ReleaseResource<?>> resourceRefIt = releaseResources.iterator();
-        while (resourceRefIt.hasNext()) {
-            final ReleaseResource<?> resourceRef = resourceRefIt.next();
+        synchronized (releaseResources) {
+            final Iterator<ReleaseResource<?>> resourceRefIt = releaseResources.iterator();
+            while (resourceRefIt.hasNext()) {
+                final ReleaseResource<?> resourceRef = resourceRefIt.next();
 
-            // 删除掉无效的资源
-            if (null == resourceRef) {
-                resourceRefIt.remove();
-                logger.info("remove null resource in module={}", uniqueId);
-                continue;
-            }
+                // 删除掉无效的资源
+                if (null == resourceRef) {
+                    resourceRefIt.remove();
+                    logger.info("remove null resource in module={}", uniqueId);
+                    continue;
+                }
 
-            // 删除掉已经被GC掉的资源
-            final Object resource = resourceRef.get();
-            if (null == resource) {
-                resourceRefIt.remove();
-                logger.info("remove empty resource in module={}", uniqueId);
-                continue;
-            }
+                // 删除掉已经被GC掉的资源
+                final Object resource = resourceRef.get();
+                if (null == resource) {
+                    resourceRefIt.remove();
+                    logger.info("remove empty resource in module={}", uniqueId);
+                    continue;
+                }
 
-            if (target.equals(resource)) {
-                resourceRefIt.remove();
-                logger.debug("release resource={} in module={}", resourceRef.get(), uniqueId);
-                try {
-                    resourceRef.release();
-                } catch (Exception cause) {
-                    logger.warn("release resource occur error in module={};", uniqueId, cause);
+                if (target.equals(resource)) {
+                    resourceRefIt.remove();
+                    logger.debug("release resource={} in module={}", resourceRef.get(), uniqueId);
+                    try {
+                        resourceRef.release();
+                    } catch (Exception cause) {
+                        logger.warn("release resource occur error in module={};", uniqueId, cause);
+                    }
                 }
             }
         }
@@ -243,16 +247,18 @@ public class CoreModule {
      * 在当前模块下移除所有可释放资源
      */
     public void releaseAll() {
-        final Iterator<ReleaseResource<?>> resourceRefIt = releaseResources.iterator();
-        while (resourceRefIt.hasNext()) {
-            final ReleaseResource<?> resourceRef = resourceRefIt.next();
-            resourceRefIt.remove();
-            if (null != resourceRef) {
-                logger.debug("release resource={} in module={}", resourceRef.get(), uniqueId);
-                try {
-                    resourceRef.release();
-                } catch (Exception cause) {
-                    logger.warn("release resource occur error in module={};", uniqueId, cause);
+        synchronized (releaseResources) {
+            final Iterator<ReleaseResource<?>> resourceRefIt = releaseResources.iterator();
+            while (resourceRefIt.hasNext()) {
+                final ReleaseResource<?> resourceRef = resourceRefIt.next();
+                resourceRefIt.remove();
+                if (null != resourceRef) {
+                    logger.debug("release resource={} in module={}", resourceRef.get(), uniqueId);
+                    try {
+                        resourceRef.release();
+                    } catch (Exception cause) {
+                        logger.warn("release resource occur error in module={};", uniqueId, cause);
+                    }
                 }
             }
         }

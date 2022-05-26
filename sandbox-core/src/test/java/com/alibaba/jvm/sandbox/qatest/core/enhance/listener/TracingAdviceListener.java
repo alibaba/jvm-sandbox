@@ -3,7 +3,7 @@ package com.alibaba.jvm.sandbox.qatest.core.enhance.listener;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandlers;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import org.objectweb.asm.Type;
 
@@ -256,7 +256,7 @@ public class TracingAdviceListener extends AdviceListener {
 
     // 检查内核事件处理器是否正确
     private void assertEventProcessor() {
-        EventListenerHandlers
+        EventListenerHandler
                 .getSingleton()
                 .checkEventProcessor(ObjectIDs.instance.identity(eventListener));
     }

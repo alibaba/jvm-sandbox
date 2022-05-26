@@ -157,7 +157,6 @@ public class ConcurrentLinkedQueuePrinter implements Printer {
                 : 0;
 
         try {
-            int heartBeat = 0;
             while (!writer.checkError()
                     && !isBrokenRef.get()
                     && !Thread.currentThread().isInterrupted()) {
@@ -169,10 +168,6 @@ public class ConcurrentLinkedQueuePrinter implements Printer {
 
                 if (writeQueue.isEmpty()) {
                     delay();
-                    if (heartBeat++ > 20) {
-                        heartBeat = 0;
-                        writer.write(0x0);
-                    }
                 } else {
                     flush();
                     resetDelayTimeMs();
