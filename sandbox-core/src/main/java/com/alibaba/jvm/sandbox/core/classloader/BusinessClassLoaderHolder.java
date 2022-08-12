@@ -8,7 +8,7 @@ public class BusinessClassLoaderHolder {
 
     private static final ThreadLocal<DelegateBizClassLoader> holder = new ThreadLocal<DelegateBizClassLoader>();
 
-    public static void setBussinessClassLoader(ClassLoader classLoader){
+    public static void setBusinessClassLoader(ClassLoader classLoader){
         if(null == classLoader){
             return;
         }
@@ -17,11 +17,11 @@ public class BusinessClassLoaderHolder {
     }
 
 
-    public static void removeBussinessClassLoader(){
+    public static void removeBusinessClassLoader(){
         holder.remove();
     }
 
-    public static DelegateBizClassLoader getBussinessClassLoader(){
+    public static DelegateBizClassLoader getBusinessClassLoader(){
 
         return holder.get();
     }
