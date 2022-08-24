@@ -125,7 +125,10 @@ public interface Behavior {
 
         @Override
         public boolean equals(Object obj) {
-            return target.equals(obj);
+            if(obj instanceof Method) {
+                return target.equals(obj);
+            }
+            return false;
         }
     }
 
@@ -209,7 +212,10 @@ public interface Behavior {
 
         @Override
         public boolean equals(Object obj) {
-            return target.equals(obj);
+            if (obj instanceof Constructor<?>) {
+                return target.equals(obj);
+            }
+            return false;
         }
 
     }
