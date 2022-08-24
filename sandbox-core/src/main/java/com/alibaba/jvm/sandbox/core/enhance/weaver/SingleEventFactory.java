@@ -8,7 +8,6 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtGetClassDeclaredJavaField;
-import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.unCaughtSetClassDeclaredJavaFieldValue;
 
 /**
  * 单例事件工厂
@@ -196,7 +195,7 @@ class SingleEventFactory {
         return callThrowsEvent;
     }
 
-    private final static Field throwableFieldInThrowsEvent = unCaughtGetClassDeclaredJavaField(ThrowsEvent.class, "throwalbe");
+    private final static Field throwableFieldInThrowsEvent = unCaughtGetClassDeclaredJavaField(ThrowsEvent.class, "throwable");
     private final static Field objectFieldInReturnEvent = unCaughtGetClassDeclaredJavaField(ReturnEvent.class, "object");
 
     static {
