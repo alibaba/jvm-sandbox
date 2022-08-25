@@ -7,6 +7,8 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
+import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
@@ -88,7 +90,7 @@ public class JvmHelper {
         }
     }
 
-    public static class Transformer {
+    public static class Transformer implements NativeMethodEnhanceAware {
 
         protected final Filter filter;
         private final EventListener listener;
@@ -128,7 +130,7 @@ public class JvmHelper {
             );
 
             if (matchingResult.isMatched()) {
-                return new EventEnhancer().toByteCodeArray(
+                return new EventEnhancer(this).toByteCodeArray(
                         loader,
                         byteCodes,
                         matchingResult.getBehaviorSignCodes(),
@@ -141,6 +143,15 @@ public class JvmHelper {
             }
         }
 
+        @Override
+        public String getNativeMethodPrefix() {
+            return EventWeaver.NATIVE_PREFIX;
+        }
+
+        @Override
+        public void makrNativeMethodEnhance() {
+
+        }
     }
 
     public JvmHelper defineClass(final Class<?> clazz,

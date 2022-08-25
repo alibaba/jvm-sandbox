@@ -100,8 +100,7 @@ public class UnsupportedMatcher implements Matcher {
      */
     private boolean isUnsupportedBehavior(final BehaviorStructure behaviorStructure) {
         final Access access = behaviorStructure.getAccess();
-        return access.isAbstract()
-                || access.isNative();
+        return access.isAbstract();
     }
 
     @Override
