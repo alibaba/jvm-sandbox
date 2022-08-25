@@ -3,6 +3,7 @@ package com.alibaba.jvm.sandbox.core.util.matcher;
 import com.alibaba.jvm.sandbox.api.filter.AccessFlags;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter.ExtFilterFactory;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilterImplByV140;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.*;
@@ -12,6 +13,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static com.alibaba.jvm.sandbox.api.filter.AccessFlags.*;
@@ -55,6 +57,16 @@ public class ExtFilterMatcher implements Matcher {
     private boolean matchingClassStructure(ClassStructure classStructure) {
         for (final ClassStructure wmCs : getWaitingMatchClassStructures(classStructure)) {
 
+            // #292 性能优化
+            final boolean isHasInterfaceTypes, isHasAnnotationTypes;
+            if (extFilter instanceof ExtFilterImplByV140) {
+                final ExtFilterImplByV140 v140 = (ExtFilterImplByV140) extFilter;
+                isHasInterfaceTypes = v140.isHasInterfaceTypes();
+                isHasAnnotationTypes = v140.isHasAnnotationTypes();
+            } else {
+                isHasInterfaceTypes = isHasAnnotationTypes = true;
+            }
+
             // 匹配类结构
             if (extFilter.doClassFilter(
                     toFilterAccess(wmCs.getAccess()),
@@ -62,8 +74,16 @@ public class ExtFilterMatcher implements Matcher {
                     null == wmCs.getSuperClassStructure()
                             ? null
                             : wmCs.getSuperClassStructure().getJavaClassName(),
-                    toJavaClassNameArray(wmCs.getFamilyInterfaceClassStructures()),
-                    toJavaClassNameArray(wmCs.getFamilyAnnotationTypeClassStructures())
+                    toJavaClassNameArray(
+                            isHasInterfaceTypes
+                                    ? wmCs.getFamilyInterfaceClassStructures()
+                                    : Collections.<ClassStructure>emptySet()
+                    ),
+                    toJavaClassNameArray(
+                            isHasAnnotationTypes
+                                    ? wmCs.getFamilyAnnotationTypeClassStructures()
+                                    : Collections.<ClassStructure>emptySet()
+                    )
             )) {
                 return true;
             }

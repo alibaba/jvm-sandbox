@@ -3,6 +3,7 @@ package com.alibaba.jvm.sandbox.api.listener.ext;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.AccessFlags;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilterImplByV140;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
@@ -313,7 +314,7 @@ public class EventWatchBuilder {
 
     private final ModuleEventWatcher moduleEventWatcher;
     private final PatternType patternType;
-    private List<BuildingForClass> bfClasses = new ArrayList<BuildingForClass>();
+    private final List<BuildingForClass> bfClasses = new ArrayList<BuildingForClass>();
 
     /**
      * 构造事件观察者构造器(通配符匹配模式)
@@ -767,10 +768,16 @@ public class EventWatchBuilder {
 
     private Filter makeExtFilter(final Filter filter,
                                  final BuildingForClass bfClass) {
-        return ExtFilter.ExtFilterFactory.make(
+        final ExtFilter extFilter = ExtFilter.ExtFilterFactory.make(
                 filter,
                 bfClass.isIncludeSubClasses,
                 bfClass.isIncludeBootstrap
+        );
+
+        return new ExtFilterImplByV140(
+                extFilter,
+                !bfClass.hasInterfaceTypes.isEmpty(),
+                !bfClass.hasAnnotationTypes.isEmpty()
         );
     }
 
@@ -870,6 +877,13 @@ public class EventWatchBuilder {
          */
         void add(String... patternArray) {
             groups.add(new Group(patternArray));
+        }
+
+        /*
+         * 是否为空
+         */
+        boolean isEmpty() {
+            return groups.isEmpty();
         }
 
         /*
