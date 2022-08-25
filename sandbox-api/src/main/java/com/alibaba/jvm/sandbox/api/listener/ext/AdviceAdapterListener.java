@@ -292,7 +292,11 @@ public class AdviceAdapterListener implements EventListener {
         if (GaStringUtils.isEmpty(internalClassName)) {
             return internalClassName;
         } else {
-            return internalClassName.replaceAll("/", ".");
+
+            // #302
+            return internalClassName.replace('/', '.');
+            // return internalClassName.replaceAll("/", ".");
+
         }
     }
 
