@@ -400,6 +400,10 @@ public class EventListenerHandler implements SpyHandler {
         // 2. super.<init>
         // 处理方式是直接返回,不做任何事件的处理和代码流程的改变,放弃对super.<init>的观察，可惜了
         if (process.isEmptyStack()) {
+
+            // 修复 #194 问题
+            wrap.processRef.remove();
+
             return newInstanceForNone();
         }
 
@@ -615,7 +619,7 @@ public class EventListenerHandler implements SpyHandler {
 
     // ----------------------------------- 单例模式 -----------------------------------
 
-    private static EventListenerHandler singleton = new EventListenerHandler();
+    private final static EventListenerHandler singleton = new EventListenerHandler();
 
     public static EventListenerHandler getSingleton() {
         return singleton;
