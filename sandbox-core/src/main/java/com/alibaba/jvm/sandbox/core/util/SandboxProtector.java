@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SandboxProtector {
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ThreadLocal<AtomicInteger> isInProtectingThreadLocal = new ThreadLocal<AtomicInteger>() {
         @Override
@@ -47,7 +47,7 @@ public class SandboxProtector {
      */
     public int exitProtecting() {
         final int referenceCount = isInProtectingThreadLocal.get().decrementAndGet();
-        assert referenceCount >= 0;
+        // assert referenceCount >= 0;
         if (referenceCount == 0) {
             isInProtectingThreadLocal.remove();
             if (logger.isDebugEnabled()) {
@@ -80,6 +80,7 @@ public class SandboxProtector {
      * @param <T>                    接口类型
      * @return 被保护的目标接口实现
      */
+    @SuppressWarnings("unchecked")
     public <T> T protectProxy(final Class<T> protectTargetInterface,
                               final T protectTarget) {
         return (T) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{protectTargetInterface}, new InvocationHandler() {
@@ -91,7 +92,7 @@ public class SandboxProtector {
                     return method.invoke(protectTarget, args);
                 } finally {
                     final int exitReferenceCount = exitProtecting();
-                    assert enterReferenceCount == exitReferenceCount;
+                    // assert enterReferenceCount == exitReferenceCount;
                     if (enterReferenceCount != exitReferenceCount) {
                         logger.warn("thread:{} exit protecting with error!, expect:{} actual:{}",
                                 Thread.currentThread(),
