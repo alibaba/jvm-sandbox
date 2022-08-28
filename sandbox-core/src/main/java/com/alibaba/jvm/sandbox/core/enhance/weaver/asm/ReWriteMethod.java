@@ -148,7 +148,33 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         }
     }
 
+
+    final protected void popRawRespond(Type returnType) {
+        final int sort = returnType.getSort();
+        switch (sort) {
+            case Type.VOID: {
+                break;
+            }
+            case Type.LONG:
+            case Type.DOUBLE: {
+                dupX2();
+                pop();
+                pop2();
+                break;
+            }
+            default: {
+                swap();
+                pop();
+                break;
+            }
+        }
+    }
+
     final protected void processControl(String desc) {
+       processControl(desc,false);
+    }
+
+    final protected void processControl(String desc,boolean onMethodExit) {
         final Label finishLabel = new Label();
         final Label returnLabel = new Label();
         final Label throwsLabel = new Label();
@@ -162,7 +188,10 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         goTo(finishLabel);
         mark(returnLabel);
         pop();
-        //TODO 此时可能的栈状态 [Ret,object] | [Ret,[Long high],[long low]],需要处理掉栈底原始需要返回的对象
+        //此时可能的栈状态 [Ret,raw object] | [Ret,[raw long high],[raw long low]],需要处理掉栈底原始需要返回的对象
+        if(onMethodExit){
+            popRawRespond(Type.getReturnType(desc));
+        }
         visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
         checkCastReturn(Type.getReturnType(desc));
         goTo(finishLabel);
@@ -173,6 +202,4 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         mark(finishLabel);
         pop();
     }
-
-
 }
