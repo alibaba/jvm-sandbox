@@ -162,6 +162,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         goTo(finishLabel);
         mark(returnLabel);
         pop();
+        //TODO 此时可能的栈状态 [Ret,object] | [Ret,[Long high],[long low]],需要处理掉栈底原始需要返回的对象
         visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
         checkCastReturn(Type.getReturnType(desc));
         goTo(finishLabel);
