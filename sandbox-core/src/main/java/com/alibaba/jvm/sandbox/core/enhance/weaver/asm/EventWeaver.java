@@ -221,7 +221,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                                 push(namespace);
                                 push(listenerId);
                                 invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnReturn);
-                                processControl(desc);
+                                processControl(desc,true);
                                 returnValue();
                                 mark(endLabel);
                                 mv.visitLabel(startCatchBlock);
