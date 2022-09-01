@@ -14,5 +14,5 @@ public interface NativeMethodEnhanceAware {
      */
     String getNativeMethodPrefix();
 
-    void makrNativeMethodEnhance();
+    void markNativeMethodEnhance();
 }

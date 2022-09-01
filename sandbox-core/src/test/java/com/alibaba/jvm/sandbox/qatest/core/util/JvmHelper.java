@@ -149,7 +149,7 @@ public class JvmHelper {
         }
 
         @Override
-        public void makrNativeMethodEnhance() {
+        public void markNativeMethodEnhance() {
 
         }
     }

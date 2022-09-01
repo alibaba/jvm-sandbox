@@ -1,6 +1,7 @@
 package com.alibaba.jvm.sandbox.core.util.matcher;
 
 import com.alibaba.jvm.sandbox.api.annotation.Stealth;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.Access;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
@@ -99,6 +100,7 @@ public class UnsupportedMatcher implements Matcher {
      * 2. native的方法暂时无法支持
      */
     private boolean isUnsupportedBehavior(final BehaviorStructure behaviorStructure) {
+        //TODO unSupportMethodName
         final Access access = behaviorStructure.getAccess();
         return access.isAbstract();
     }

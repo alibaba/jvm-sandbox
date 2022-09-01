@@ -10,7 +10,6 @@ import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.com.alibaba.jvm.sandbox.spy.Spy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -153,7 +152,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         );
 
         if((access & Opcodes.ACC_NATIVE) != 0){
-            nativeMethodEnhanceAware.makrNativeMethodEnhance();
+            nativeMethodEnhanceAware.markNativeMethodEnhance();
             //native 方法插桩策略：
             //1.原始的native变为非native方法，并增加AOP式方法体
             //2.在AOP中增加调用wrapper后的native方法
@@ -167,7 +166,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 private final Label endLabel = new Label();
                 private final Label startCatchBlock = new Label();
                 private final Label endCatchBlock = new Label();
-                private int newlocal = -1;
+                private int newLocal = -1;
                 // 代码锁
                 private final CodeLock codeLockForTracing = new CallAsmCodeLock(this);
 
@@ -200,10 +199,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                                 storeArgArray();
                                 pop();
                                 processControl(desc);
-                                StringBuilder sb = new StringBuilder();
-                                sb.append(NATIVE_PREFIX);
-                                sb.append(name);
-                                String wrapperNativeMethodName = sb.toString();
+                                final String wrapperNativeMethodName = NATIVE_PREFIX + name;
                                 Method wrapperMethod = new Method(access,wrapperNativeMethodName,desc);
                                 String owner = toInternalClassName(targetJavaClassName);
                                 if(!isStaticMethod()){
@@ -226,20 +222,21 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                                 mark(endLabel);
                                 mv.visitLabel(startCatchBlock);
                                 visitTryCatchBlock(beginLabel, endLabel, startCatchBlock, ASM_TYPE_THROWABLE.getInternalName());
-                                newlocal = newLocal(ASM_TYPE_THROWABLE);
-                                storeLocal(newlocal);
-                                loadLocal(newlocal);
+                                newLocal = newLocal(ASM_TYPE_THROWABLE);
+                                storeLocal(newLocal);
+                                loadLocal(newLocal);
                                 push(namespace);
                                 push(listenerId);
                                 invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnThrows);
                                 processControl(desc);
-                                loadLocal(newlocal);
+                                loadLocal(newLocal);
                                 throwException();
                                 mv.visitLabel(endCatchBlock);
                             }
                         });
                     }
-                    super.visitLocalVariable("t",ASM_TYPE_THROWABLE.getDescriptor(),null,startCatchBlock,endCatchBlock,newlocal);
+                    super.visitLocalVariable("t",ASM_TYPE_THROWABLE.getDescriptor(),null,startCatchBlock,endCatchBlock,
+                        newLocal);
                     super.visitEnd();
                 }
             };
@@ -532,9 +529,9 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         //add wrapper native method
         if(this.addMethodNodes.size() != 0){
             for(Method method : this.addMethodNodes){
-                boolean staticMehtod = (Opcodes.ACC_STATIC & method.access) != 0;
+                boolean staticMethod = (Opcodes.ACC_STATIC & method.access) != 0;
                 int newAccess = (Opcodes.ACC_PRIVATE | Opcodes.ACC_NATIVE | Opcodes.ACC_FINAL);
-                newAccess = staticMehtod ? newAccess | Opcodes.ACC_STATIC : newAccess;
+                newAccess = staticMethod ? newAccess | Opcodes.ACC_STATIC : newAccess;
                 MethodVisitor mv = cv.visitMethod(newAccess, method.getName(), method.getDescriptor(), null, null);
                 mv.visitEnd();
             }

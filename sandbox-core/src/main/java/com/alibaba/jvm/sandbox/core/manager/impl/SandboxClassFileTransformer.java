@@ -220,12 +220,12 @@ public class SandboxClassFileTransformer implements ClassFileTransformer, Native
     }
 
     @Override
-    public void makrNativeMethodEnhance() {
+    public void markNativeMethodEnhance() {
         if(setNativeMethodPrefix.compareAndSet(false,true)){
             if(inst.isNativeMethodPrefixSupported()){
                 inst.setNativeMethodPrefix(this,getNativeMethodPrefix());
             }else{
-                throw new UnsupportedOperationException("Native Method Prefix Unspported");
+                throw new UnsupportedOperationException("Native Method Prefix Unsupported");
             }
         }
     }
