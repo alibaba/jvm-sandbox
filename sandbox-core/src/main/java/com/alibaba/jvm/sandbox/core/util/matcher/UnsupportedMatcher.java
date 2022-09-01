@@ -102,7 +102,15 @@ public class UnsupportedMatcher implements Matcher {
     private boolean isUnsupportedBehavior(final BehaviorStructure behaviorStructure) {
         //TODO unSupportMethodName
         final Access access = behaviorStructure.getAccess();
-        return access.isAbstract();
+        if(access.isAbstract()){
+            return true;
+        }
+
+        if(null != behaviorStructure.getName() && behaviorStructure.getName().startsWith(EventWeaver.NATIVE_PREFIX)){
+            return true;
+        }
+
+        return false;
     }
 
     @Override
