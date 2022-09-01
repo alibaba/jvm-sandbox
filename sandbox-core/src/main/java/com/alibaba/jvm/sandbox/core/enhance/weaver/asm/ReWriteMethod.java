@@ -252,9 +252,13 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
         /**
          *  [spyRespond] ,execute XReturn
-         *  Exit
          */
         checkCastReturn(type);
+        /**
+         *  [spyRespond] Return Exit
+         */
+
+
         /**
          * [spyRespond]
          */
@@ -280,7 +284,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
          */
         throwException();
         /**
-         * Exit
+         * throw [Throwable] Exit
          */
         mark(finishLabel);
         /**
@@ -289,7 +293,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         pop();
         /**
          * [{raw respond}]
-         *  Exit
+         *  None Exit
          */
     }
 }
