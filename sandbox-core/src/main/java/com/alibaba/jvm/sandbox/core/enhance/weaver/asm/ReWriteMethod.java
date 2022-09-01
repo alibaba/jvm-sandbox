@@ -174,7 +174,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
        processControl(desc,false);
     }
 
-    final protected void processControl(String desc,boolean onMethodExit) {
+    final protected void processControl(String desc,boolean isPopRawRespond) {
         final Label finishLabel = new Label();
         final Label returnLabel = new Label();
         final Label throwsLabel = new Label();
@@ -188,8 +188,8 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         goTo(finishLabel);
         mark(returnLabel);
         pop();
-        //此时可能的栈状态 [Ret,raw object] | [Ret,[raw long high],[raw long low]],需要处理掉栈底原始需要返回的对象
-        if(onMethodExit){
+        //此时可能的栈状态 [Ret,raw object] | [Ret,[raw long high],[raw long low]],需要处理掉栈底原始需要返回的对象 #fix issue #328
+        if(isPopRawRespond){
             popRawRespond(Type.getReturnType(desc));
         }
         visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
