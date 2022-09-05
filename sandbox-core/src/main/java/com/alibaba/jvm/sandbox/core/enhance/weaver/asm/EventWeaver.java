@@ -337,8 +337,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
                 @Override
                 protected void onMethodExit(final int opcode) {
-                    //TODO 这里是否应该先判断 codeLockForTracing.isLock()
-                    if (!isThrow(opcode)) {
+                    if (!isThrow(opcode) && !codeLockForTracing.isLock()) {
                         codeLockForTracing.lock(new CodeLock.Block() {
                             @Override
                             public void code() {

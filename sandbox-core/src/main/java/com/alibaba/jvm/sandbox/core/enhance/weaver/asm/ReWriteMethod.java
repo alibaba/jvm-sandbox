@@ -262,8 +262,6 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         /**
          * [spyRespond]
          */
-        //TODO 需要这个GOTO吗？似乎是多余的，review确认后再确定
-        goTo(finishLabel);
         mark(throwsLabel);
         /**
          * [Ret, {rawRespond}]
