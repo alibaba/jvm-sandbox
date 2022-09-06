@@ -15,8 +15,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessControlContext;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -44,20 +47,22 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
         return tempFile;
     }
 
-    public ModuleJarClassLoader(final File moduleJarFile) throws IOException {
-        this(moduleJarFile, copyToTempFile(moduleJarFile));
+    public ModuleJarClassLoader(final File moduleJarFile,
+            final Routing... specialRouting) throws IOException {
+        this(moduleJarFile, copyToTempFile(moduleJarFile), specialRouting);
     }
 
     private ModuleJarClassLoader(final File moduleJarFile,
-                                 final File tempModuleJarFile) throws IOException {
+            final File tempModuleJarFile,
+            final Routing... specialRouting) throws IOException {
         super(
-                new URL[]{new URL("file:" + tempModuleJarFile.getPath())},
-                new Routing(
+                new URL[] {new URL("file:" + tempModuleJarFile.getPath())},
+                assembleRouting(new Routing(
                         ModuleJarClassLoader.class.getClassLoader(),
                         "^com\\.alibaba\\.jvm\\.sandbox\\.api\\..*",
                         "^javax\\.servlet\\..*",
                         "^javax\\.annotation\\.Resource.*$"
-                )
+                ), specialRouting)
         );
         this.checksumCRC32 = FileUtils.checksumCRC32(moduleJarFile);
         this.moduleJarFile = moduleJarFile;
@@ -70,6 +75,23 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
             logger.warn("clean ProtectionDomain in {}'s acc failed.", this, e);
         }
 
+    }
+
+    /**
+     * 合并路由信息
+     *
+     * @param selfRouting  自身路由表
+     * @param specialRouting 扩展路由表
+     *
+     * @return 合并完成路由信息
+     */
+    private static Routing[] assembleRouting(final Routing selfRouting, final Routing... specialRouting) {
+        List<Routing> rs = new ArrayList<Routing>();
+        if (specialRouting != null && specialRouting.length > 0) {
+            rs.addAll(Arrays.asList(specialRouting));
+        }
+        rs.add(selfRouting);
+        return rs.toArray(new Routing[0]);
     }
 
     /**
