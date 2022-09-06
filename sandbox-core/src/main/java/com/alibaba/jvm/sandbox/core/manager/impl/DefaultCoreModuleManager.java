@@ -44,6 +44,8 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     private final CoreLoadedClassDataSource classDataSource;
     private final ProviderManager providerManager;
 
+    private final JniAnchorManager jniAnchorManager;
+
     // 模块目录&文件集合
     private final File[] moduleLibDirArray;
 
@@ -61,11 +63,13 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     public DefaultCoreModuleManager(final CoreConfigure cfg,
                                     final Instrumentation inst,
                                     final CoreLoadedClassDataSource classDataSource,
-                                    final ProviderManager providerManager) {
+                                    final ProviderManager providerManager,
+                                    final JniAnchorManager jniAnchorManager) {
         this.cfg = cfg;
         this.inst = inst;
         this.classDataSource = classDataSource;
         this.providerManager = providerManager;
+        this.jniAnchorManager = jniAnchorManager;
 
         // 初始化模块目录
         this.moduleLibDirArray = mergeFileArray(
@@ -301,6 +305,16 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                                     };
                                 }
                             },
+                            true
+                    );
+                }
+
+                // JniAnchorManager注入
+                else if (JniAnchorManager.class.isAssignableFrom(fieldType)) {
+                    writeField(
+                            resourceField,
+                            module,
+                            jniAnchorManager,
                             true
                     );
                 }
@@ -593,7 +607,8 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 new ModuleLibLoader(moduleLibDir, cfg.getLaunchMode())
                         .load(
                                 new InnerModuleJarLoadCallback(),
-                                new InnerModuleLoadCallback()
+                                new InnerModuleLoadCallback(),
+                                classDataSource
                         );
             } else {
                 logger.warn("module-lib not access, ignore flush load this lib. path={}", moduleLibDir);
@@ -711,7 +726,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
             // 4. 加载add
             for (final File jarFile : appendJarFiles) {
                 new ModuleLibLoader(jarFile, cfg.getLaunchMode())
-                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
+                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback(), classDataSource);
             }
         } catch (Throwable cause) {
             logger.warn("soft-flushing modules: occur error.", cause);
@@ -765,7 +780,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                     && userModuleLibDir.canRead()) {
                 logger.info("force-flush modules: module-lib={}", userModuleLibDir);
                 new ModuleLibLoader(userModuleLibDir, cfg.getLaunchMode())
-                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
+                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback(), classDataSource);
             } else {
                 logger.warn("force-flush modules: module-lib can not access, will be ignored. module-lib={}", userModuleLibDir);
             }

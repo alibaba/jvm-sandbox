@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>sandbox</artifactId>
+        <groupId>com.alibaba.jvm.sandbox</groupId>
+        <version>1.3.3</version>
+    </parent>
+    <name>sandbox-jni ${sandbox.version}</name>
+
+    <artifactId>sandbox-jni</artifactId>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>darwin</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <os_name>darwin</os_name>
+                <os_arch_option>-arch x86_64 -arch arm64</os_arch_option>
+                <lib_name>libSandboxJniLibrary-darwin.dylib</lib_name>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>linux</id>
+            <activation>
+                <os>
+                    <name>linux</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <os_name>linux</os_name>
+                <os_arch_option>-m64</os_arch_option>
+                <lib_name>libSandboxJniLibrary-linux.so</lib_name>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>win32</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <os_name>win32</os_name>
+                <os_arch_option>-m64</os_arch_option>
+                <lib_name>libSandboxJniLibrary-win32.dll</lib_name>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>1.0-alpha-11</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <javahIncludes>
+                                <javahInclude>
+                                    <className>com.alibaba.jvm.sandbox.JniAnchorPoint</className>
+                                </javahInclude>
+                            </javahIncludes>
+                            <jdkIncludePath>${project.basedir}/src/main/native/head</jdkIncludePath>
+                            <javahOS>${os_name}</javahOS>
+                            <sources>
+                                <source>
+                                    <directory>src/main/native/src</directory>
+                                    <fileNames>
+                                        <fileName>libSandboxJniLibrary.cpp</fileName>
+                                    </fileNames>
+                                </source>
+                            </sources>
+
+                            <compilerProvider>generic-classic</compilerProvider>
+                            <compilerExecutable>g++</compilerExecutable>
+                            <compilerStartOptions>
+                                <compilerStartOption>${os_arch_option}</compilerStartOption>
+                                <compilerStartOption>-fpic</compilerStartOption>
+                                <compilerStartOption>-o</compilerStartOption>
+                            </compilerStartOptions>
+
+                            <linkerOutputDirectory>target</linkerOutputDirectory>
+                            <linkerExecutable>g++</linkerExecutable>
+                            <linkerStartOptions>
+                                <linkerStartOption>-shared</linkerStartOption>
+                                <linkerStartOption>-o</linkerStartOption>
+                                <linkerStartOption>-static-libstdc++</linkerStartOption>
+                                <linkerStartOption>-static</linkerStartOption>
+                            </linkerStartOptions>
+                            <linkerEndOptions>
+                                <linkerEndOption>-o ${project.build.directory}/${lib_name}</linkerEndOption>
+                            </linkerEndOptions>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>javah</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>javah</goal>
+                                    <goal>initialize</goal>
+                                    <goal>compile</goal>
+                                    <goal>link</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <encoding>UTF-8</encoding>
+                    <showDeprecation>true</showDeprecation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <version>1.0-alpha-11</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <javahIncludes>
+                        <javahInclude>
+                            <className>com.alibaba.jvm.sandbox.JniAnchorPoint</className>
+                        </javahInclude>
+                    </javahIncludes>
+                    <jdkIncludePath>${project.basedir}/src/main/native/head</jdkIncludePath>
+                    <javahOS>${os_name}</javahOS>
+                    <sources>
+                        <source>
+                            <directory>src/main/native/src</directory>
+                            <fileNames>
+                                <fileName>libSandboxJniLibrary.cpp</fileName>
+                            </fileNames>
+                        </source>
+                    </sources>
+
+                    <compilerProvider>generic-classic</compilerProvider>
+                    <compilerExecutable>g++</compilerExecutable>
+                    <compilerStartOptions>
+                        <compilerStartOption>${os_arch_option}</compilerStartOption>
+                        <compilerStartOption>-fpic</compilerStartOption>
+                        <compilerStartOption>-o</compilerStartOption>
+                    </compilerStartOptions>
+
+                    <linkerOutputDirectory>target</linkerOutputDirectory>
+                    <linkerExecutable>g++</linkerExecutable>
+                    <linkerStartOptions>
+                        <linkerStartOption>${os_arch_option}</linkerStartOption>
+                        <linkerStartOption>-fpic</linkerStartOption>
+                        <linkerStartOption>-shared</linkerStartOption>
+                        <!-- <linkerStartOption>-o</linkerStartOption> -->
+                    </linkerStartOptions>
+                    <linkerEndOptions>
+                        <linkerEndOption>-o ${project.build.directory}/${lib_name}</linkerEndOption>
+                    </linkerEndOptions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>javah</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>javah</goal>
+                            <goal>initialize</goal>
+                            <goal>compile</goal>
+                            <goal>link</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

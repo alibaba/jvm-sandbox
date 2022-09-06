@@ -95,6 +95,10 @@
         </dependency>
         <dependency>
             <groupId>com.alibaba.jvm.sandbox</groupId>
+            <artifactId>sandbox-jni</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.jvm.sandbox</groupId>
             <artifactId>sandbox-provider-api</artifactId>
         </dependency>
         <dependency>
@@ -167,6 +171,12 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>18.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.31</version>
         </dependency>
 
     </dependencies>

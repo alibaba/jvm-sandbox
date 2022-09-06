@@ -20,6 +20,7 @@ mvn clean cobertura:cobertura package -Dmaven.test.skip=false -f ../pom.xml \
 # reset the target dir
 mkdir -p ${SANDBOX_TARGET_DIR}/bin
 mkdir -p ${SANDBOX_TARGET_DIR}/lib
+mkdir -p ${SANDBOX_TARGET_DIR}/lib/jni
 mkdir -p ${SANDBOX_TARGET_DIR}/module
 mkdir -p ${SANDBOX_TARGET_DIR}/cfg
 mkdir -p ${SANDBOX_TARGET_DIR}/provider
@@ -31,6 +32,9 @@ cp ../sandbox-core/target/sandbox-core-*-jar-with-dependencies.jar ${SANDBOX_TAR
     && cp ../sandbox-spy/target/sandbox-spy-*-jar-with-dependencies.jar ${SANDBOX_TARGET_DIR}/lib/sandbox-spy.jar \
     && cp sandbox-logback.xml ${SANDBOX_TARGET_DIR}/cfg/sandbox-logback.xml \
     && cp sandbox.properties ${SANDBOX_TARGET_DIR}/cfg/sandbox.properties \
+    && cp ../lib/libSandboxJniLibrary-darwin.dylib ${SANDBOX_TARGET_DIR}/lib/jni/libSandboxJniLibrary-darwin.dylib \
+    && cp ../lib/libSandboxJniLibrary-linux.so ${SANDBOX_TARGET_DIR}/lib/jni/libSandboxJniLibrary-linux.so \
+    && cp ../lib/libSandboxJniLibrary-win32.dll ${SANDBOX_TARGET_DIR}/lib/jni/libSandboxJniLibrary-win32.dll \
     && cp sandbox.sh ${SANDBOX_TARGET_DIR}/bin/sandbox.sh \
     && cp install-local.sh ${SANDBOX_TARGET_DIR}/install-local.sh
 
