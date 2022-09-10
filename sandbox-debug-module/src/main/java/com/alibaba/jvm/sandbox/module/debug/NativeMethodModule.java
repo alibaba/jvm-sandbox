@@ -1,17 +1,15 @@
 package com.alibaba.jvm.sandbox.module.debug;
 
-import javax.annotation.Resource;
-
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
-import com.alibaba.jvm.sandbox.api.ProcessController;
 import com.alibaba.jvm.sandbox.api.annotation.Command;
 import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
-
 import org.kohsuke.MetaInfServices;
+
+import javax.annotation.Resource;
 
 /**
  *

@@ -1,7 +1,6 @@
 package com.alibaba.jvm.sandbox.qatest.core.util;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
-import com.alibaba.jvm.sandbox.api.event.Event.Type;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
@@ -17,7 +16,6 @@ import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedAdviceAdapterListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.transformer.TestThirdEnhance;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;

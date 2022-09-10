@@ -1,7 +1,6 @@
 package com.alibaba.jvm.sandbox.qatest.core.util;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ClassUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

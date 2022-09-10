@@ -1,12 +1,12 @@
 package com.alibaba.jvm.sandbox.core.enhance.weaver.asm;
 
-import java.com.alibaba.jvm.sandbox.spy.Spy;
-
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
+
+import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 /**
  * 方法重写

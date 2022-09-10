@@ -3,7 +3,6 @@ package com.alibaba.jvm.sandbox.core.enhance.weaver.asm;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.CodeLock;
 import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
-
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
@@ -17,7 +16,6 @@ import java.util.Set;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
 import static org.apache.commons.lang3.ArrayUtils.contains;
-import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.join;
 
 /**

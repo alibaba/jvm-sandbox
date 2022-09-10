@@ -1,33 +1,17 @@
 package com.alibaba.jvm.sandbox.qatest.core.enhance;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-
-import com.alibaba.jvm.sandbox.api.event.Event;
-import com.alibaba.jvm.sandbox.api.event.Event.Type;
 import com.alibaba.jvm.sandbox.api.util.GaStringUtils;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingEventListener;
-import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.NativeClass;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper.Transformer;
-
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Test;
 
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.BEFORE;
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.CALL_BEFORE;
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.CALL_RETURN;
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.CALL_THROWS;
+import java.lang.reflect.InvocationTargetException;
 
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.RETURN;
-import static com.alibaba.jvm.sandbox.api.event.Event.Type.THROWS;
-import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.ERROR_EXCEPTION_MESSAGE;
-import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.NATIVECLASS_PARAM1;
-import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.NATIVECLASS_PARAM2;
-import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.NATIVECLASS_PARAM3;
-import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.NATIVECLASS_PARAM4;
-import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.NATIVECLASS_SYSTEM;
+import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
+import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
 import static org.junit.Assert.assertEquals;
 
 /**

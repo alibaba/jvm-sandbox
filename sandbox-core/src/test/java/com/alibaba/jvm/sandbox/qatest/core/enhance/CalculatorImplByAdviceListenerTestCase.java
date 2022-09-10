@@ -5,7 +5,6 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingAdviceListene
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper.ThirdTransformer;
-
 import org.junit.Test;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
