@@ -221,7 +221,7 @@ class ModuleJarLoader {
 
     private boolean isSelfClassloader(ClassLoader classLoader) {
         return  classLoader instanceof RoutingURLClassLoader
-                || (classLoader != null && "SandboxClassLoader".equals(classLoader.getClass().getCanonicalName()));
+                || (classLoader != null && "SandboxClassLoader".equals(classLoader.getClass().getSimpleName()));
     }
 
 

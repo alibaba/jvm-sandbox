@@ -105,20 +105,7 @@ public class LogServletAccessModule implements Module, LoadCompleted {
                             return;
                         }
 
-                        // 俘虏HttpServletRequest参数为傀儡
-                        final IHttpServletRequest httpServletRequest = puppet(
-                                IHttpServletRequest.class,
-                                advice.getParameterArray()[0]
-                        );
-
-                        // 初始化HttpAccess
-                        final HttpAccess httpAccess = new HttpAccess(
-                                httpServletRequest.getRemoteAddress(),
-                                httpServletRequest.getMethod(),
-                                httpServletRequest.getRequestURI(),
-                                httpServletRequest.getParameterMap(),
-                                httpServletRequest.getHeader("User-Agent")
-                        );
+                        final HttpAccess httpAccess = wrapperHttpAccess(advice);
 
                         // 附加到advice上，以便在onReturning()和onThrowing()中取出
                         advice.attach(httpAccess);
@@ -190,6 +177,34 @@ public class LogServletAccessModule implements Module, LoadCompleted {
 
                 });
 
+    }
+
+    /**
+     * 根据http请求包装一个HttpAccess模型
+     * <p>
+     * 通过代理模式{@link com.alibaba.jvm.sandbox.module.debug.util.InterfaceProxyUtils#puppet(Class, Object)} }调用
+     * 需要封装很多傀儡接口对象进行调用，对一些复杂场景（例如：序列化/反序列化一些业务模型）使用会有局限
+     *
+     * @param advice 事件行为通知
+     * @return 包装HttpAccess
+     */
+    protected HttpAccess wrapperHttpAccess(Advice advice) {
+
+        // 俘虏HttpServletRequest参数为傀儡
+        final IHttpServletRequest httpServletRequest = puppet(
+                IHttpServletRequest.class,
+                advice.getParameterArray()[0]);
+
+        // 初始化HttpAccess
+        final HttpAccess httpAccess = new HttpAccess(
+                httpServletRequest.getRemoteAddress(),
+                httpServletRequest.getMethod(),
+                httpServletRequest.getRequestURI(),
+                httpServletRequest.getParameterMap(),
+                httpServletRequest.getHeader("User-Agent")
+        );
+
+        return httpAccess;
     }
 
     // 格式化ParameterMap

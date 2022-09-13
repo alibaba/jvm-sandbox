@@ -59,7 +59,7 @@ public class SpecialRoutingHandlerTest {
 
         assertEquals(Type.TARGET_CLASS_LOADER_NAME, routingInfos.get(2).getType());
         assertEquals("org.apache.catalina.loader.WebappClassLoader", routingInfos.get(2).getTargetClassLoaderName());
-        assertEquals(1, routingInfos.get(1).getPattern().length);
+        assertEquals(1, routingInfos.get(2).getPattern().length);
         assertEquals("^org.apache.dubbo..*", routingInfos.get(2).getPattern()[0]);
 
     }

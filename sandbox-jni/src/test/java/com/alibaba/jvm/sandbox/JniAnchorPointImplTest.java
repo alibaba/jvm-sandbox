@@ -25,5 +25,7 @@ public class JniAnchorPointImplTest extends TestCase {
         JniAnchorPoint jniAnchorPointImpl = initJniAnchorPoint();
         JniAnchorPointImplTest[] instances = jniAnchorPointImpl.getInstances(JniAnchorPointImplTest.class);
         Assert.assertNotNull(instances);
+        Assert.assertEquals(1, instances.length);
+        Assert.assertEquals(this, instances[0]);
     }
 }
