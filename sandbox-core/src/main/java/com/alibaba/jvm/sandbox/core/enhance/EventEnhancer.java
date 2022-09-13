@@ -30,10 +30,10 @@ public class EventEnhancer implements Enhancer {
 
     private static final Logger logger = LoggerFactory.getLogger(EventEnhancer.class);
 
-    private Instrumentation inst;
+    private final boolean isNativeMethodEnhanceSupported;
 
-    public EventEnhancer(Instrumentation inst) {
-        this.inst = inst;
+    public EventEnhancer(boolean isNativeMethodEnhanceSupported) {
+        this.isNativeMethodEnhanceSupported = isNativeMethodEnhanceSupported;
     }
 
     /**
@@ -106,7 +106,7 @@ public class EventEnhancer implements Enhancer {
         final ClassWriter cw = createClassWriter(targetClassLoader, cr);
         final int targetClassLoaderObjectID = ObjectIDs.instance.identity(targetClassLoader);
         cr.accept(
-                new EventWeaver(inst,
+                new EventWeaver(isNativeMethodEnhanceSupported,
                         ASM7, cw, namespace, listenerId,
                         targetClassLoaderObjectID,
                         cr.getClassName(),

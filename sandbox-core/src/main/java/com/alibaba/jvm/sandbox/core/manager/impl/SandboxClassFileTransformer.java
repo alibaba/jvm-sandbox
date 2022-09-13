@@ -45,6 +45,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer{
     private final String namespace;
     private final int listenerId;
     private final AffectStatistic affectStatistic = new AffectStatistic();
+    private final boolean isNativeMethodEnhanceSupported;
 
     SandboxClassFileTransformer(Instrumentation inst, final int watchId,
         final String uniqueId,
@@ -62,6 +63,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer{
         this.eventTypeArray = eventTypeArray;
         this.namespace = namespace;
         this.listenerId = ObjectIDs.instance.identity(eventListener);
+        this.isNativeMethodEnhanceSupported = inst.isNativeMethodPrefixSupported();
     }
 
     // 获取当前类结构
@@ -134,7 +136,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer{
 
         // 开始进行类匹配
         try {
-            final byte[] toByteCodeArray = new EventEnhancer(inst).toByteCodeArray(
+            final byte[] toByteCodeArray = new EventEnhancer(isNativeMethodEnhanceSupported).toByteCodeArray(
                     loader,
                     srcByteCodeArray,
                     behaviorSignCodes,

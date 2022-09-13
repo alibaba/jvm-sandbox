@@ -73,7 +73,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final Set<String> signCodes;
     private final Event.Type[] eventTypeArray;
     private final List<Method> addMethodNodes = new ArrayList();
-    private final Instrumentation inst;
+    private final boolean isNativeMethodEnhanceSupported;
 
     // 是否支持LINE_EVENT
     // LINE_EVENT需要对Class做特殊的增强，所以需要在这里做特殊的判断
@@ -87,7 +87,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final boolean isCallEnable;
 
     public EventWeaver(
-        final Instrumentation inst,
+        final boolean isNativeMethodEnhanceSupported,
         final int api,
         final ClassVisitor cv,
         final String namespace,
@@ -97,7 +97,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         final Set<String/*BehaviorStructure#getSignCode()*/> signCodes,
         final Event.Type[] eventTypeArray) {
         super(api, cv);
-        this.inst = inst;
+        this.isNativeMethodEnhanceSupported = isNativeMethodEnhanceSupported;
         this.targetClassLoaderObjectID = targetClassLoaderObjectID;
         this.namespace = namespace;
         this.listenerId = listenerId;
@@ -151,7 +151,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         );
 
         if((access & Opcodes.ACC_NATIVE) != 0){
-            if(null != inst && !inst.isNativeMethodPrefixSupported()) {
+            if(!isNativeMethodEnhanceSupported) {
                 throw new UnsupportedOperationException("Native Method Prefix Unsupported");
             }
             //native 方法插桩策略：
