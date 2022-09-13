@@ -38,7 +38,7 @@ public class TimeTravelModule implements Module {
     /**
      * 时间穿越的起点, 2019/10/10 0:0:0
      */
-    private long baseMockTime = 1570636800000L;
+    private final long baseMockTime = 1570636800000L;
 
     /**
      * baseTime 为穿越一刻的时间,举例2020/11/11 0:0:0 发起穿越,baseTime即为这一刻的Unix时间戳

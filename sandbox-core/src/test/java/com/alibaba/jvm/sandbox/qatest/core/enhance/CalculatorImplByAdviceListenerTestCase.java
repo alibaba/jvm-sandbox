@@ -448,7 +448,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        calculatorClass.getMethod("settCaseInStatic",
+        calculatorClass.getMethod("setCaseInStatic",
                 Calculator.TestCase.ADD$EXCEPTION.getClass()).invoke(null,Calculator.TestCase.ADD$EXCEPTION);
         int value=(Integer) calculatorClass.getMethod("addInStatic",int.class,int.class).invoke(null,10,20);
         assertEquals(100, value);

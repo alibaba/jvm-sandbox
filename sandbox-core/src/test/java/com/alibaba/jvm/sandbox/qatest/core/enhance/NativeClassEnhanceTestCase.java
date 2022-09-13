@@ -6,13 +6,13 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.target.NativeClass;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper.Transformer;
 import org.apache.commons.lang3.reflect.MethodUtils;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
 
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.*;
 import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author zhuangpeng
@@ -75,7 +75,7 @@ public class NativeClassEnhanceTestCase {
             .loadClass(GaStringUtils.getJavaClassName(NativeClass.class));
     }
 
-    @Test
+    @Test(expected = UnsatisfiedLinkError.class)
     public void call$param4() throws Throwable {
         final TracingEventListener listener;
         final Class<?> calculatorClass = JvmHelper
@@ -92,13 +92,13 @@ public class NativeClassEnhanceTestCase {
         try {
             MethodUtils.invokeMethod(nativeClass,"param4","test","test");
         } catch (InvocationTargetException e) {
-            assertEquals(e.getTargetException().getClass(), UnsatisfiedLinkError.class);
-        } catch (Exception e) {
-            e.getCause();
+            throw e.getTargetException();
+            // assertEquals(e.getTargetException().getClass(), UnsatisfiedLinkError.class);
         }
+        Assert.assertTrue("not arrive", false);
     }
 
-    @Test
+    @Test(expected = UnsatisfiedLinkError.class)
     public void callDoubleWrapper$param1() throws Throwable {
         final TracingEventListener listener1 = new TracingEventListener();
         final TracingEventListener listener2 = new TracingEventListener();
@@ -117,17 +117,9 @@ public class NativeClassEnhanceTestCase {
         try {
             MethodUtils.invokeMethod(nativeClass,"currentTimeMillis");
         } catch (InvocationTargetException e) {
-            assertEquals(e.getTargetException().getClass(), UnsatisfiedLinkError.class);
-        } catch (Exception e) {
-            e.getCause();
+            throw e.getTargetException();
+            // assertEquals(e.getTargetException().getClass(), UnsatisfiedLinkError.class);
         }
-        listener1.assertEventTracing(
-            BEFORE,
-            THROWS
-        );
-        listener2.assertEventTracing(
-            BEFORE,
-            THROWS
-        );
+        Assert.assertTrue("not arrive", false);
     }
 }

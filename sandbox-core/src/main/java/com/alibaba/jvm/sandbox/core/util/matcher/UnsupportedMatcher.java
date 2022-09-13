@@ -106,11 +106,7 @@ public class UnsupportedMatcher implements Matcher {
             return true;
         }
 
-        if(null != behaviorStructure.getName() && behaviorStructure.getName().startsWith(EventWeaver.NATIVE_PREFIX)){
-            return true;
-        }
-
-        return false;
+        return null != behaviorStructure.getName() && behaviorStructure.getName().startsWith(EventWeaver.NATIVE_PREFIX);
     }
 
     @Override

@@ -29,13 +29,9 @@ public class SandboxClassUtils {
         }
 
         // 类被com.alibaba.jvm.sandbox开头的ClassLoader所加载
-        if (null != loader
+        return null != loader
                 // fix issue #267
-                && isSandboxPrefix(normalizeClass(loader.getClass().getName()))) {
-            return true;
-        }
-
-        return false;
+                && isSandboxPrefix(normalizeClass(loader.getClass().getName()));
 
     }
 

@@ -29,7 +29,7 @@ public class EventEnhancer implements Enhancer {
 
     private static final Logger logger = LoggerFactory.getLogger(EventEnhancer.class);
 
-    private NativeMethodEnhanceAware nativeMethodEnhanceAware;
+    private final NativeMethodEnhanceAware nativeMethodEnhanceAware;
 
     public EventEnhancer(NativeMethodEnhanceAware nativeMethodEnhanceAware) {
         this.nativeMethodEnhanceAware = nativeMethodEnhanceAware;

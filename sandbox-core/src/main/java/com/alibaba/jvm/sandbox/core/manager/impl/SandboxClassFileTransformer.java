@@ -45,7 +45,6 @@ public class SandboxClassFileTransformer implements ClassFileTransformer, Native
     private final String namespace;
     private final int listenerId;
     private final AffectStatistic affectStatistic = new AffectStatistic();
-    private boolean nativePrefix = false;
 
     SandboxClassFileTransformer(Instrumentation inst, final int watchId,
         final String uniqueId,
