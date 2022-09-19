@@ -72,7 +72,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final String targetJavaClassName;
     private final Set<String> signCodes;
     private final Event.Type[] eventTypeArray;
-    private final List<Method> addMethodNodes = new ArrayList();
+    private final List<Method> addMethodNodes = new ArrayList<Method>();
     private final boolean isNativeMethodEnhanceSupported;
 
     // 是否支持LINE_EVENT
