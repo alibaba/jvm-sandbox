@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.instrument.Instrumentation;
 import java.util.Set;
 
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
@@ -29,10 +30,10 @@ public class EventEnhancer implements Enhancer {
 
     private static final Logger logger = LoggerFactory.getLogger(EventEnhancer.class);
 
-    private final NativeMethodEnhanceAware nativeMethodEnhanceAware;
+    private final boolean isNativeMethodEnhanceSupported;
 
-    public EventEnhancer(NativeMethodEnhanceAware nativeMethodEnhanceAware) {
-        this.nativeMethodEnhanceAware = nativeMethodEnhanceAware;
+    public EventEnhancer(boolean isNativeMethodEnhanceSupported) {
+        this.isNativeMethodEnhanceSupported = isNativeMethodEnhanceSupported;
     }
 
     /**
@@ -105,7 +106,7 @@ public class EventEnhancer implements Enhancer {
         final ClassWriter cw = createClassWriter(targetClassLoader, cr);
         final int targetClassLoaderObjectID = ObjectIDs.instance.identity(targetClassLoader);
         cr.accept(
-                new EventWeaver(nativeMethodEnhanceAware,
+                new EventWeaver(isNativeMethodEnhanceSupported,
                         ASM7, cw, namespace, listenerId,
                         targetClassLoaderObjectID,
                         cr.getClassName(),

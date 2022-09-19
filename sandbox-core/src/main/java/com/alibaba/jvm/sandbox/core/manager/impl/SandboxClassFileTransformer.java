@@ -29,7 +29,7 @@ import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure
  *
  * @author luanjia@taobao.com
  */
-public class SandboxClassFileTransformer implements ClassFileTransformer, NativeMethodEnhanceAware {
+public class SandboxClassFileTransformer implements ClassFileTransformer{
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -45,6 +45,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer, Native
     private final String namespace;
     private final int listenerId;
     private final AffectStatistic affectStatistic = new AffectStatistic();
+    private final boolean isNativeMethodEnhanceSupported;
 
     SandboxClassFileTransformer(Instrumentation inst, final int watchId,
         final String uniqueId,
@@ -62,6 +63,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer, Native
         this.eventTypeArray = eventTypeArray;
         this.namespace = namespace;
         this.listenerId = ObjectIDs.instance.identity(eventListener);
+        this.isNativeMethodEnhanceSupported = inst.isNativeMethodPrefixSupported();
     }
 
     // 获取当前类结构
@@ -134,7 +136,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer, Native
 
         // 开始进行类匹配
         try {
-            final byte[] toByteCodeArray = new EventEnhancer(this).toByteCodeArray(
+            final byte[] toByteCodeArray = new EventEnhancer(isNativeMethodEnhanceSupported).toByteCodeArray(
                     loader,
                     srcByteCodeArray,
                     behaviorSignCodes,
@@ -211,21 +213,5 @@ public class SandboxClassFileTransformer implements ClassFileTransformer, Native
      */
     public AffectStatistic getAffectStatistic() {
         return affectStatistic;
-    }
-
-    @Override
-    public String getNativeMethodPrefix() {
-        return EventWeaver.NATIVE_PREFIX;
-    }
-
-    @Override
-    public void markNativeMethodEnhance() {
-        if(setNativeMethodPrefix.compareAndSet(false,true)){
-            if(inst.isNativeMethodPrefixSupported()){
-                inst.setNativeMethodPrefix(this,getNativeMethodPrefix());
-            }else{
-                throw new UnsupportedOperationException("Native Method Prefix Unsupported");
-            }
-        }
     }
 }

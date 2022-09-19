@@ -9,6 +9,7 @@ import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -72,7 +73,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final Set<String> signCodes;
     private final Event.Type[] eventTypeArray;
     private final List<Method> addMethodNodes = new ArrayList();
-    NativeMethodEnhanceAware nativeMethodEnhanceAware = null;
+    private final boolean isNativeMethodEnhanceSupported;
 
     // 是否支持LINE_EVENT
     // LINE_EVENT需要对Class做特殊的增强，所以需要在这里做特殊的判断
@@ -86,7 +87,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final boolean isCallEnable;
 
     public EventWeaver(
-        final NativeMethodEnhanceAware nativeMethodEnhanceAware,
+        final boolean isNativeMethodEnhanceSupported,
         final int api,
         final ClassVisitor cv,
         final String namespace,
@@ -96,7 +97,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         final Set<String/*BehaviorStructure#getSignCode()*/> signCodes,
         final Event.Type[] eventTypeArray) {
         super(api, cv);
-        this.nativeMethodEnhanceAware = nativeMethodEnhanceAware;
+        this.isNativeMethodEnhanceSupported = isNativeMethodEnhanceSupported;
         this.targetClassLoaderObjectID = targetClassLoaderObjectID;
         this.namespace = namespace;
         this.listenerId = listenerId;
@@ -150,7 +151,9 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         );
 
         if((access & Opcodes.ACC_NATIVE) != 0){
-            nativeMethodEnhanceAware.markNativeMethodEnhance();
+            if(!isNativeMethodEnhanceSupported) {
+                throw new UnsupportedOperationException("Native Method Prefix Unsupported");
+            }
             //native 方法插桩策略：
             //1.原始的native变为非native方法，并增加AOP式方法体
             //2.在AOP中增加调用wrapper后的native方法

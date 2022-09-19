@@ -128,7 +128,7 @@ public class JvmHelper {
             );
 
             if (matchingResult.isMatched()) {
-                return new EventEnhancer(this).toByteCodeArray(
+                return new EventEnhancer(true).toByteCodeArray(
                         loader,
                         byteCodes,
                         matchingResult.getBehaviorSignCodes(),
