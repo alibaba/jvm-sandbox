@@ -154,7 +154,6 @@
         <module>sandbox-mgr-provider</module>
         <module>sandbox-module-starter</module>
         <module>sandbox-debug-module</module>
-        <module>sandbox-jni</module>
     </modules>
 
     <dependencyManagement>
@@ -168,11 +167,6 @@
             <dependency>
                 <groupId>com.alibaba.jvm.sandbox</groupId>
                 <artifactId>sandbox-api</artifactId>
-                <version>${sandbox.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba.jvm.sandbox</groupId>
-                <artifactId>sandbox-jni</artifactId>
                 <version>${sandbox.version}</version>
             </dependency>
             <dependency>

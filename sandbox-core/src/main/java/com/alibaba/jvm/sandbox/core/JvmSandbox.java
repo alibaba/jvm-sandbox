@@ -1,7 +1,6 @@
 package com.alibaba.jvm.sandbox.core;
 
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
-import com.alibaba.jvm.sandbox.core.jni.DefaultJniAnchorManager;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreModuleManager;
@@ -39,8 +38,7 @@ public class JvmSandbox {
                 cfg,
                 inst,
                 new DefaultCoreLoadedClassDataSource(inst, cfg.isEnableUnsafe()),
-                new DefaultProviderManager(cfg),
-                new DefaultJniAnchorManager(cfg.getJvmSandboxHome())
+                new DefaultProviderManager(cfg)
         ));
 
         init();

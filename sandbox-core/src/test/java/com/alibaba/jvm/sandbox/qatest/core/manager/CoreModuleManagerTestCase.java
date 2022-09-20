@@ -5,7 +5,6 @@ import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.ModuleException;
 import com.alibaba.jvm.sandbox.core.CoreConfigure;
 import com.alibaba.jvm.sandbox.core.CoreModule;
-import com.alibaba.jvm.sandbox.core.jni.DefaultJniAnchorManager;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreModuleManager;
 import com.alibaba.jvm.sandbox.core.util.FeatureCodec;
@@ -152,8 +151,7 @@ public class CoreModuleManagerTestCase {
                 buildingCoreConfigureWithUserModuleLib(moduleJarFiles),
                 new EmptyInstrumentation(),
                 new EmptyCoreLoadedClassDataSource(),
-                new EmptyProviderManager(),
-                new DefaultJniAnchorManager(null)
+                new EmptyProviderManager()
         )).reset();
     }
 

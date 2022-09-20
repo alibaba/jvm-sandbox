@@ -44,8 +44,6 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     private final CoreLoadedClassDataSource classDataSource;
     private final ProviderManager providerManager;
 
-    private final JniAnchorManager jniAnchorManager;
-
     // 模块目录&文件集合
     private final File[] moduleLibDirArray;
 
@@ -63,13 +61,11 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     public DefaultCoreModuleManager(final CoreConfigure cfg,
                                     final Instrumentation inst,
                                     final CoreLoadedClassDataSource classDataSource,
-                                    final ProviderManager providerManager,
-                                    final JniAnchorManager jniAnchorManager) {
+                                    final ProviderManager providerManager) {
         this.cfg = cfg;
         this.inst = inst;
         this.classDataSource = classDataSource;
         this.providerManager = providerManager;
-        this.jniAnchorManager = jniAnchorManager;
 
         // 初始化模块目录
         this.moduleLibDirArray = mergeFileArray(
@@ -305,16 +301,6 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                                     };
                                 }
                             },
-                            true
-                    );
-                }
-
-                // JniAnchorManager注入
-                else if (JniAnchorManager.class.isAssignableFrom(fieldType)) {
-                    writeField(
-                            resourceField,
-                            module,
-                            jniAnchorManager,
                             true
                     );
                 }

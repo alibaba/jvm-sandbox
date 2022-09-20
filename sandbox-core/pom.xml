@@ -95,10 +95,6 @@
         </dependency>
         <dependency>
             <groupId>com.alibaba.jvm.sandbox</groupId>
-            <artifactId>sandbox-jni</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.jvm.sandbox</groupId>
             <artifactId>sandbox-provider-api</artifactId>
         </dependency>
         <dependency>
