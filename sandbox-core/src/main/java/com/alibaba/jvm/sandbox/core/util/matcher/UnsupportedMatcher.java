@@ -7,6 +7,7 @@ import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
 import org.apache.commons.lang3.StringUtils;
 
+import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,8 +75,8 @@ public class UnsupportedMatcher implements Matcher {
         if (null == loader) {
             return !isEnableUnsafe;
         }
-        return takeJavaClassNames(createClassStructure(loader.getClass()).getFamilyTypeClassStructures())
-                .contains(Stealth.class.getName());
+        // FIX 292
+        return loader.getClass().isAnnotationPresent(Stealth.class);
     }
 
     /*
@@ -102,7 +103,7 @@ public class UnsupportedMatcher implements Matcher {
     private boolean isUnsupportedBehavior(final BehaviorStructure behaviorStructure) {
         //TODO unSupportMethodName
         final Access access = behaviorStructure.getAccess();
-        if(access.isAbstract()){
+        if (access.isAbstract()) {
             return true;
         }
 
@@ -115,7 +116,8 @@ public class UnsupportedMatcher implements Matcher {
         if (isUnsupportedClass(classStructure)
                 || isJvmSandboxClass(classStructure)
                 || isFromStealthClassLoader()
-                || isStealthClass(classStructure)) {
+                // || isStealthClass(classStructure) FIX #292
+        ) {
             return result;
         }
         for (final BehaviorStructure behaviorStructure : classStructure.getBehaviorStructures()) {
