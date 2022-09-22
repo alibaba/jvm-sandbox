@@ -7,12 +7,8 @@ import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.annotation.Annotation;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
-import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory.createClassStructure;
 
 /**
  * 不支持的类匹配
@@ -52,21 +48,21 @@ public class UnsupportedMatcher implements Matcher {
         return classStructure.getJavaClassName().startsWith("com.alibaba.jvm.sandbox.");
     }
 
-    private Set<String> takeJavaClassNames(final Set<ClassStructure> classStructures) {
-        final Set<String> javaClassNames = new LinkedHashSet<String>();
-        for (final ClassStructure classStructure : classStructures) {
-            javaClassNames.add(classStructure.getJavaClassName());
-        }
-        return javaClassNames;
-    }
+//    private Set<String> takeJavaClassNames(final Set<ClassStructure> classStructures) {
+//        final Set<String> javaClassNames = new LinkedHashSet<String>();
+//        for (final ClassStructure classStructure : classStructures) {
+//            javaClassNames.add(classStructure.getJavaClassName());
+//        }
+//        return javaClassNames;
+//    }
 
-    /*
-     * 判断是否隐形类
-     */
-    private boolean isStealthClass(final ClassStructure classStructure) {
-        return takeJavaClassNames(classStructure.getFamilyAnnotationTypeClassStructures())
-                .contains(Stealth.class.getName());
-    }
+//    /*
+//     * 判断是否隐形类
+//     */
+//    private boolean isStealthClass(final ClassStructure classStructure) {
+//        return takeJavaClassNames(classStructure.getFamilyAnnotationTypeClassStructures())
+//                .contains(Stealth.class.getName());
+//    }
 
     /*
      * 判断是否ClassLoader家族中是否有隐形基因
@@ -116,7 +112,7 @@ public class UnsupportedMatcher implements Matcher {
         if (isUnsupportedClass(classStructure)
                 || isJvmSandboxClass(classStructure)
                 || isFromStealthClassLoader()
-                // || isStealthClass(classStructure) FIX #292
+            // || isStealthClass(classStructure) FIX #292
         ) {
             return result;
         }
