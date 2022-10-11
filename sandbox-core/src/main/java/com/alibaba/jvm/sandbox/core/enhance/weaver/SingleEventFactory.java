@@ -196,7 +196,7 @@ class SingleEventFactory {
         return callThrowsEvent;
     }
 
-    private final static Field throwableFieldInThrowsEvent = unCaughtGetClassDeclaredJavaField(ThrowsEvent.class, "throwalbe");
+    private final static Field throwableFieldInThrowsEvent = unCaughtGetClassDeclaredJavaField(ThrowsEvent.class, "throwable");
     private final static Field objectFieldInReturnEvent = unCaughtGetClassDeclaredJavaField(ReturnEvent.class, "object");
 
     static {
