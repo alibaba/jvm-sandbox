@@ -69,7 +69,12 @@ public class SandboxProtector {
      * @return TRUE:在守护区域中；FALSE：非守护区域中
      */
     public boolean isInProtecting() {
-        return isInProtectingThreadLocal.get().get() > 0;
+        // fix for #384
+        final boolean res = isInProtectingThreadLocal.get().get() > 0;
+        if(!res) {
+            isInProtectingThreadLocal.remove();
+        }
+        return res;
     }
 
     /**
