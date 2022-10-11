@@ -73,7 +73,7 @@ public class EventWatchBuilder {
         IBuildingForClass includeSubClasses();
 
         /**
-         * 是否包含被Bootstrap所加载的类
+         * 是否包含被子类或实现类
          *
          * @param isIncludeSubClasses TRUE:包含子类（实现类）;FALSE:不包含子类（实现类）;
          * @return IBuildingForClass
