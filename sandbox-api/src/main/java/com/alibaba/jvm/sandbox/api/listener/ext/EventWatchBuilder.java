@@ -774,10 +774,28 @@ public class EventWatchBuilder {
                 bfClass.isIncludeBootstrap
         );
 
+        boolean isBehaviorHasWithParameterTypes = false;
+        boolean isBehaviorHasExceptionTypes = false;
+        boolean isBehaviorHasAnnotationTypes = false;
+        for(final BuildingForBehavior bfBehavior : bfClass.bfBehaviors) {
+            if(!bfBehavior.withParameterTypes.isEmpty()) {
+                isBehaviorHasWithParameterTypes = true;
+            }
+            if(!bfBehavior.hasExceptionTypes.isEmpty()) {
+                isBehaviorHasExceptionTypes = true;
+            }
+            if(!bfBehavior.hasAnnotationTypes.isEmpty()) {
+                isBehaviorHasAnnotationTypes = true;
+            }
+        }
+
         return new ExtFilterImplByV140(
                 extFilter,
                 !bfClass.hasInterfaceTypes.isEmpty(),
-                !bfClass.hasAnnotationTypes.isEmpty()
+                !bfClass.hasAnnotationTypes.isEmpty(),
+                isBehaviorHasWithParameterTypes,
+                isBehaviorHasExceptionTypes,
+                isBehaviorHasAnnotationTypes
         );
     }
 

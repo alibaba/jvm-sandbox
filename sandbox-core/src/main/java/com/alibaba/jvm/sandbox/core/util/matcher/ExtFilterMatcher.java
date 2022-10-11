@@ -132,14 +132,39 @@ public class ExtFilterMatcher implements Matcher {
             return result;
         }
 
+        final boolean isBehaviorHasWithParameterTypes, isBehaviorHasExceptionTypes, isBehaviorHasAnnotationTypes;
+        if(extFilter instanceof ExtFilterImplByV140) {
+            final ExtFilterImplByV140 v140 = (ExtFilterImplByV140)extFilter;
+            isBehaviorHasWithParameterTypes = v140.isBehaviorHasWithParameterTypes();
+            isBehaviorHasExceptionTypes = v140.isBehaviorHasExceptionTypes();
+            isBehaviorHasAnnotationTypes = v140.isBehaviorHasAnnotationTypes();
+        } else {
+            isBehaviorHasWithParameterTypes = true;
+            isBehaviorHasExceptionTypes = true;
+            isBehaviorHasAnnotationTypes = true;
+        }
+
         // 匹配BehaviorStructure
         for (final BehaviorStructure behaviorStructure : classStructure.getBehaviorStructures()) {
+
+            final String[] parameterTypeArrays = isBehaviorHasWithParameterTypes
+                    ? toJavaClassNameArray(behaviorStructure.getParameterTypeClassStructures())
+                    : new String[0];
+
+            final String[] exceptionTypeArrays = isBehaviorHasExceptionTypes
+                    ? toJavaClassNameArray(behaviorStructure.getExceptionTypeClassStructures())
+                    : new String[0];
+
+            final String[] annotationTypeArrays = isBehaviorHasAnnotationTypes
+                    ? toJavaClassNameArray(behaviorStructure.getAnnotationTypeClassStructures())
+                    : new String[0];
+
             if (extFilter.doMethodFilter(
                     toFilterAccess(behaviorStructure.getAccess()),
                     behaviorStructure.getName(),
-                    toJavaClassNameArray(behaviorStructure.getParameterTypeClassStructures()),
-                    toJavaClassNameArray(behaviorStructure.getExceptionTypeClassStructures()),
-                    toJavaClassNameArray(behaviorStructure.getAnnotationTypeClassStructures())
+                    parameterTypeArrays,
+                    exceptionTypeArrays,
+                    annotationTypeArrays
             )) {
                 result.getBehaviorStructures().add(behaviorStructure);
             }
