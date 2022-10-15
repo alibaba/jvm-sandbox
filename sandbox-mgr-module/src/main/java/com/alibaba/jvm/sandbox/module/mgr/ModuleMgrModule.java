@@ -234,9 +234,8 @@ public class ModuleMgrModule implements Module {
         if (clz == null) {
             return Collections.emptyList();
         }
-        List<Method> methods = MethodUtils.getMethodsListWithAnnotation(clz, Command.class);
-        List<String> commands = new ArrayList<String>();
-        for (Method method : methods) {
+        final List<String> commands = new ArrayList<String>();
+        for (final Method method : MethodUtils.getMethodsListWithAnnotation(clz, Command.class)) {
             final Command commandAnnotation = method.getAnnotation(Command.class);
             if (null == commandAnnotation) {
                 continue;
