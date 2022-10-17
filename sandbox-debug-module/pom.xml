@@ -78,5 +78,11 @@
             <version>1.2.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 </project>

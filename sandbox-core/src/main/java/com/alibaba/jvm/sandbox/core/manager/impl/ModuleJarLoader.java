@@ -2,7 +2,14 @@ package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
+import com.alibaba.jvm.sandbox.api.routing.RoutingInfo;
+import com.alibaba.jvm.sandbox.api.util.ClassloaderUtil;
 import com.alibaba.jvm.sandbox.core.classloader.ModuleJarClassLoader;
+import com.alibaba.jvm.sandbox.core.classloader.RoutingURLClassLoader;
+import com.alibaba.jvm.sandbox.core.classloader.RoutingURLClassLoader.Routing;
+import com.alibaba.jvm.sandbox.core.classloader.SpecialRoutingHandler;
+import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -10,8 +17,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 
@@ -25,10 +34,14 @@ class ModuleJarLoader {
     // 沙箱加载模式
     private final Information.Mode mode;
 
+    private final CoreLoadedClassDataSource classDataSource;
+
     ModuleJarLoader(final File moduleJarFile,
-                    final Information.Mode mode) {
+                    final Information.Mode mode,
+                    final CoreLoadedClassDataSource classDataSource) {
         this.moduleJarFile = moduleJarFile;
         this.mode = mode;
+        this.classDataSource = classDataSource;
     }
 
 
@@ -113,11 +126,18 @@ class ModuleJarLoader {
 
     void load(final ModuleLoadCallback mCb) throws IOException {
 
+        Routing[] specialRouting = null;
+        try {
+            specialRouting = getSpecialRouting();
+        } catch (Throwable throwable) {
+            // ignore or block ?
+            logger.warn("get special routing occurred unexpected exception", throwable);
+        }
         boolean hasModuleLoadedSuccessFlag = false;
         ModuleJarClassLoader moduleJarClassLoader = null;
         logger.info("prepare loading module-jar={};", moduleJarFile);
         try {
-            moduleJarClassLoader = new ModuleJarClassLoader(moduleJarFile);
+            moduleJarClassLoader = new ModuleJarClassLoader(moduleJarFile, specialRouting);
 
             final ClassLoader preTCL = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(moduleJarClassLoader);
@@ -137,6 +157,74 @@ class ModuleJarLoader {
         }
 
     }
+
+
+    Routing[] getSpecialRouting() throws IOException {
+        final List<RoutingInfo> routingInfos = SpecialRoutingHandler.resolve(moduleJarFile);
+        List<Routing> routingList = new ArrayList<Routing>(routingInfos.size());
+        for (RoutingInfo routingInfo : routingInfos) {
+            routingList.add(toRoutingRule(routingInfo));
+        }
+        return routingList.toArray(new Routing[0]);
+    }
+
+    /**
+     * 转换成真正的路由表
+     *
+     * @param routingInfo 模块传递的路由
+     * @return
+     */
+    private Routing toRoutingRule(final RoutingInfo routingInfo) {
+        if (routingInfo == null) {
+            return null;
+        }
+        Routing routing = null;
+        switch (routingInfo.getType()) {
+            case TARGET_CLASS:
+                String className = routingInfo.getTargetClass();
+                for (Class<?> clazz : classDataSource.list()) {
+                    if (!(isSelfClassloader(clazz.getClassLoader())) && StringUtils.equals(className, clazz.getName())) {
+                        logger.info("find target routing rule,class={},classloader={},pattern={}", className, clazz.getClassLoader(), routingInfo.getPattern());
+                        routing = new Routing(clazz.getClassLoader(), routingInfo.getPattern());
+                        break;
+                    }
+                }
+                break;
+            case TARGET_CLASS_LOADER:
+                ClassLoader classLoader = routingInfo.getTargetClassloader();
+                if (classLoader != null) {
+                    logger.info("use target classloader routing rule,classloader={},pattern={}", classLoader, routingInfo.getPattern());
+                    routing = new Routing(classLoader, routingInfo.getPattern());
+                }
+                break;
+            case TARGET_CLASS_LOADER_NAME:
+                String classloaderName = routingInfo.getTargetClassLoaderName();
+                for (Class<?> clazz : classDataSource.list()) {
+                    String targetName = ClassloaderUtil.wrapperName(clazz.getClassLoader());
+                    if (clazz.getClassLoader() != null && StringUtils.equals(classloaderName, targetName)) {
+                        logger.info("find target routing rule,classloaderName={},classloader={},pattern={}", classloaderName, clazz.getClassLoader(), routingInfo.getPattern());
+                        routing = new Routing(clazz.getClassLoader(), routingInfo.getPattern());
+                        break;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+        if (routing == null) {
+            logger.info("no suitable target classloader found,targetClass={},targetClassloader={},pattern={},",
+                    routingInfo.getTargetClass(), routingInfo.getTargetClassLoaderName(), routingInfo.getPattern());
+        }
+        return routing;
+    }
+
+
+    private boolean isSelfClassloader(ClassLoader classLoader) {
+        return  classLoader instanceof RoutingURLClassLoader
+                || (classLoader != null && "SandboxClassLoader".equals(classLoader.getClass().getSimpleName()));
+    }
+
+
 
     /**
      * 模块加载回调

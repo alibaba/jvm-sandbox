@@ -17,12 +17,12 @@ public @interface Information {
     /**
      * 未知版本
      */
-    String UNKNOW_VERSION = "UNKNOW_VERSION";
+    String UNKNOWN_VERSION = "UNKNOWN_VERSION";
 
     /**
      * 未知作者
      */
-    String UNKNOW_AUTHOR = "UNKNOW_AUTHOR";
+    String UNKNOWN_AUTHOR = "UNKNOWN_AUTHOR";
 
     /**
      * 模块ID
@@ -56,14 +56,14 @@ public @interface Information {
      *
      * @return 模块版本号
      */
-    String version() default UNKNOW_VERSION;
+    String version() default UNKNOWN_VERSION;
 
     /**
      * 定义模块作者
      *
      * @return 模块作者
      */
-    String author() default UNKNOW_AUTHOR;
+    String author() default UNKNOWN_AUTHOR;
 
     /**
      * 加载方式
