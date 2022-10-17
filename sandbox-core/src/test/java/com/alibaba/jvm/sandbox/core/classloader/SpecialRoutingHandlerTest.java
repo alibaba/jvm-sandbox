@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
  */
 public class SpecialRoutingHandlerTest {
 
-    private final static Pattern API_JAR_FILE_PATTERN = Pattern.compile("sandbox-api-[\\w.+]*.jar");
+    private final static Pattern API_JAR_FILE_PATTERN = Pattern.compile("sandbox-api-.*.jar");
 
     File jarFile = null;
 
@@ -32,7 +32,9 @@ public class SpecialRoutingHandlerTest {
         File path = new File(
                 RoutingExt.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile();
         assertNotNull(path);
-        for (File file : path.listFiles()) {
+        File[] files = path.listFiles();
+        assertNotNull(files);
+        for (File file : files) {
             if (API_JAR_FILE_PATTERN.matcher(file.getName()).matches()) {
                 jarFile = file;
                 break;

@@ -17,6 +17,7 @@ public class HttpRoutingTest {
     @Test
     public void testUsingSecondary() {
         HttpRouting httpRouting = new HttpRouting();
+        System.setProperty("sun.java.command", "");
         assertNull(httpRouting.appRouting());
         RoutingInfo specialRouting = httpRouting.getSpecialRouting();
         assertNotNull(specialRouting);
