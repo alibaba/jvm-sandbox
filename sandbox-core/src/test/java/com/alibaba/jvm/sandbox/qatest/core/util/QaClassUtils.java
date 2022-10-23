@@ -17,7 +17,11 @@ public class QaClassUtils {
      * @throws IOException 转换出错
      */
     public static byte[] toByteArray(final Class<?> targetClass) throws IOException {
-        final InputStream is = targetClass.getClassLoader().getResourceAsStream(toResourceName(targetClass.getName()));
+        ClassLoader classLoaser = targetClass.getClassLoader();
+        if(null == classLoaser){
+            classLoaser = Thread.currentThread().getContextClassLoader();
+        }
+        final InputStream is = classLoaser.getResourceAsStream(toResourceName(targetClass.getName()));
         try {
             return IOUtils.toByteArray(is);
         } finally {

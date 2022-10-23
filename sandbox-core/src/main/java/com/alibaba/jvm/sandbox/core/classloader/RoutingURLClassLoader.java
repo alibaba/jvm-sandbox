@@ -1,5 +1,6 @@
 package com.alibaba.jvm.sandbox.core.classloader;
 
+import com.alibaba.jvm.sandbox.core.classloader.BusinessClassLoaderHolder.DelegateBizClassLoader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
-
-import com.alibaba.jvm.sandbox.core.classloader.BusinessClassLoaderHolder.DelegateBizClassLoader;
 
 /**
  * 可路由的URLClassLoader
@@ -123,7 +122,7 @@ public class RoutingURLClassLoader extends URLClassLoader {
          * @param classLoader       目标ClassLoader
          * @param regexExpressArray 匹配规则表达式数组
          */
-        Routing(final ClassLoader classLoader, final String... regexExpressArray) {
+        public Routing(final ClassLoader classLoader, final String... regexExpressArray) {
             if (ArrayUtils.isNotEmpty(regexExpressArray)) {
                 regexExpresses.addAll(Arrays.asList(regexExpressArray));
             }

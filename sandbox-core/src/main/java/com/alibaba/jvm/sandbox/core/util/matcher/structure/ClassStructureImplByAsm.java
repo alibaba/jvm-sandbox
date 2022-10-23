@@ -273,11 +273,22 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
 
     // 获取资源数据流
     // 一般而言可以从loader直接获取，如果获取不到那么这个类也会能加载成功
-    // 但如果遇到来自BootstrapClassLoader的类就必须从java.lang.Object来获取
-    private InputStream getResourceAsStream(final String resourceName) {
-        return isBootstrapClassLoader()
-                ? Object.class.getResourceAsStream("/" + resourceName)
-                : loader.getResourceAsStream(resourceName);
+    // 但如果遇到来自BootstrapClassLoader的类就必须从java.lang.Object来获取，但是该方法仅限于jdk8
+    // 对于jdk >= 9的版本来说，需要先获取到相关类，然后通过这个类获取自己的resource
+    private InputStream getResourceAsStream(final String javaClassName) {
+        final String resourceName = internalClassNameToResourceName(toInternalClassName(javaClassName));
+        InputStream ins = null;
+        if(isBootstrapClassLoader()) {
+            try {
+                Class<?> clz = Class.forName(javaClassName, false, null);
+                ins = clz.getResourceAsStream("/" + resourceName);
+            } catch (ClassNotFoundException e) {
+                // pass
+            }
+        } else {
+            ins = loader.getResourceAsStream(resourceName);
+        }
+        return ins;
     }
 
     // 将内部类名称转换为资源名称
@@ -315,8 +326,8 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         if (null != existClassStructure) {
             return existClassStructure;
         } else {
-
-            final InputStream is = getResourceAsStream(internalClassNameToResourceName(toInternalClassName(javaClassName)));
+            // fix for #385
+            final InputStream is = getResourceAsStream(toJavaClassName(javaClassName));
             if (null != is) {
                 try {
                     final ClassStructure classStructure = new ClassStructureImplByAsm(is, loader);

@@ -203,7 +203,7 @@ check_permission() {
   [[ ! -x "${SANDBOX_JAVA_HOME}" ]] &&
     exit_on_err 1 "permission denied, ${SANDBOX_JAVA_HOME} is not accessible! please set JAVA_HOME"
 
-  # check java command is executeable
+  # check java command is executable
   [[ ! -x "${SANDBOX_JAVA_HOME}/bin/java" ]] &&
     exit_on_err 1 "permission denied, ${SANDBOX_JAVA_HOME}/bin/java is not executable!"
 
@@ -253,7 +253,7 @@ function attach_jvm() {
 
   # attach target jvm
   "${SANDBOX_JAVA_HOME}/bin/java" \
-    ${SANDBOX_JVM_OPS} \
+    "${SANDBOX_JVM_OPS}" \
     -jar "${SANDBOX_LIB_DIR}/sandbox-core.jar" \
     "${TARGET_JVM_PID}" \
     "${SANDBOX_LIB_DIR}/sandbox-agent.jar" \

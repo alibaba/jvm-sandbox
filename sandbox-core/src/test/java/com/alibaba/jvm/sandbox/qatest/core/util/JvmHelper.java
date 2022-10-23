@@ -1,12 +1,13 @@
 package com.alibaba.jvm.sandbox.qatest.core.util;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
-import com.alibaba.jvm.sandbox.api.event.Event.Type;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
+import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
@@ -15,7 +16,6 @@ import com.alibaba.jvm.sandbox.core.util.matcher.MatchingResult;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.InterruptedAdviceAdapterListener;
 import com.alibaba.jvm.sandbox.qatest.core.enhance.transformer.TestThirdEnhance;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -88,7 +88,7 @@ public class JvmHelper {
         }
     }
 
-    public static class Transformer {
+    public static class Transformer implements NativeMethodEnhanceAware {
 
         protected final Filter filter;
         private final EventListener listener;
@@ -128,7 +128,7 @@ public class JvmHelper {
             );
 
             if (matchingResult.isMatched()) {
-                return new EventEnhancer().toByteCodeArray(
+                return new EventEnhancer(true).toByteCodeArray(
                         loader,
                         byteCodes,
                         matchingResult.getBehaviorSignCodes(),
@@ -141,6 +141,15 @@ public class JvmHelper {
             }
         }
 
+        @Override
+        public String getNativeMethodPrefix() {
+            return EventWeaver.NATIVE_PREFIX;
+        }
+
+        @Override
+        public void markNativeMethodEnhance() {
+
+        }
     }
 
     public JvmHelper defineClass(final Class<?> clazz,

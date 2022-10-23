@@ -143,7 +143,8 @@ public class Calculator {
      * 通过静态方法设置异常变量信息
      * @param tCase 异常信息
      */
-    public static void settCaseInStatic(TestCase tCase){
+
+    public static void setCaseInStatic(TestCase tCase){
         tCaseInStatic=tCase;
     }
 

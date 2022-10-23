@@ -1,8 +1,11 @@
 package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
+import com.alibaba.jvm.sandbox.api.event.Event.Type;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
+import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxClassUtils;
 import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
@@ -14,8 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory.createClassStructure;
 
@@ -24,10 +29,12 @@ import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure
  *
  * @author luanjia@taobao.com
  */
-public class SandboxClassFileTransformer implements ClassFileTransformer {
+public class SandboxClassFileTransformer implements ClassFileTransformer{
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final AtomicBoolean setNativeMethodPrefix = new AtomicBoolean(false);
+    private final Instrumentation inst;
     private final int watchId;
     private final String uniqueId;
     private final Matcher matcher;
@@ -38,14 +45,16 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
     private final String namespace;
     private final int listenerId;
     private final AffectStatistic affectStatistic = new AffectStatistic();
+    private final boolean isNativeMethodEnhanceSupported;
 
-    SandboxClassFileTransformer(final int watchId,
-                                final String uniqueId,
-                                final Matcher matcher,
-                                final EventListener eventListener,
-                                final boolean isEnableUnsafe,
-                                final Event.Type[] eventTypeArray,
-                                final String namespace) {
+    SandboxClassFileTransformer(Instrumentation inst, final int watchId,
+        final String uniqueId,
+        final Matcher matcher,
+        final EventListener eventListener,
+        final boolean isEnableUnsafe,
+        final Type[] eventTypeArray,
+        final String namespace) {
+        this.inst = inst;
         this.watchId = watchId;
         this.uniqueId = uniqueId;
         this.matcher = matcher;
@@ -54,6 +63,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
         this.eventTypeArray = eventTypeArray;
         this.namespace = namespace;
         this.listenerId = ObjectIDs.instance.identity(eventListener);
+        this.isNativeMethodEnhanceSupported = inst.isNativeMethodPrefixSupported();
     }
 
     // 获取当前类结构
@@ -126,7 +136,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
 
         // 开始进行类匹配
         try {
-            final byte[] toByteCodeArray = new EventEnhancer().toByteCodeArray(
+            final byte[] toByteCodeArray = new EventEnhancer(isNativeMethodEnhanceSupported).toByteCodeArray(
                     loader,
                     srcByteCodeArray,
                     behaviorSignCodes,
@@ -204,5 +214,4 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
     public AffectStatistic getAffectStatistic() {
         return affectStatistic;
     }
-
 }

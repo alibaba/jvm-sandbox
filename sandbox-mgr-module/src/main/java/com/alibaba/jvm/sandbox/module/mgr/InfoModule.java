@@ -30,18 +30,18 @@ public class InfoModule implements Module {
     @Command("version")
     public void version(final PrintWriter writer) throws IOException {
 
-        final StringBuilder versionSB = new StringBuilder()
-                .append("                    NAMESPACE : ").append(configInfo.getNamespace()).append("\n")
-                .append("                      VERSION : ").append(configInfo.getVersion()).append("\n")
-                .append("                         MODE : ").append(configInfo.getMode()).append("\n")
-                .append("                  SERVER_ADDR : ").append(configInfo.getServerAddress().getHostName()).append("\n")
-                .append("                  SERVER_PORT : ").append(configInfo.getServerAddress().getPort()).append("\n")
-                .append("               UNSAFE_SUPPORT : ").append(configInfo.isEnableUnsafe() ? "ENABLE" : "DISABLE").append("\n")
-                .append("                 SANDBOX_HOME : ").append(configInfo.getHome()).append("\n")
-                .append("            SYSTEM_MODULE_LIB : ").append(configInfo.getSystemModuleLibPath()).append("\n")
-                .append("              USER_MODULE_LIB : ").append(configInfo.getUserModuleLibPath()).append("\n")
-                .append("          SYSTEM_PROVIDER_LIB : ").append(configInfo.getSystemProviderLibPath()).append("\n")
-                .append("           EVENT_POOL_SUPPORT : ").append(configInfo.isEnableEventPool() ? "ENABLE" : "DISABLE");
+        String versionSB =
+                "                    NAMESPACE : " + configInfo.getNamespace() + "\n" +
+                "                      VERSION : " + configInfo.getVersion() + "\n" +
+                "                         MODE : " + configInfo.getMode() + "\n" +
+                "                  SERVER_ADDR : " + configInfo.getServerAddress().getHostName() + "\n" +
+                "                  SERVER_PORT : " + configInfo.getServerAddress().getPort() + "\n" +
+                "               UNSAFE_SUPPORT : " + (configInfo.isEnableUnsafe() ? "ENABLE" : "DISABLE") + "\n" +
+                "                 SANDBOX_HOME : " + configInfo.getHome() + "\n" +
+                "            SYSTEM_MODULE_LIB : " + configInfo.getSystemModuleLibPath() + "\n" +
+                "              USER_MODULE_LIB : " + configInfo.getUserModuleLibPath() + "\n" +
+                "          SYSTEM_PROVIDER_LIB : " + configInfo.getSystemProviderLibPath() + "\n" +
+                "           EVENT_POOL_SUPPORT : " + (configInfo.isEnableEventPool() ? "ENABLE" : "DISABLE");
 //                       /*############################# : */
 //        if (configInfo.isEnableEventPool()) {
 //            versionSB
@@ -54,7 +54,7 @@ public class InfoModule implements Module {
 //            ;
 //        }
 
-        writer.println(versionSB.toString());
+        writer.println(versionSB);
         writer.flush();
 
     }

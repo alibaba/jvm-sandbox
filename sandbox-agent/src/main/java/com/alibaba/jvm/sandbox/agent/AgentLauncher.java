@@ -74,7 +74,7 @@ public class AgentLauncher {
             + File.separator + ".sandbox.token";
 
     // 全局持有ClassLoader用于隔离sandbox实现
-    private static volatile Map<String/*NAMESPACE*/, SandboxClassLoader> sandboxClassLoaderMap
+    private static final Map<String/*NAMESPACE*/, SandboxClassLoader> sandboxClassLoaderMap
             = new ConcurrentHashMap<String, SandboxClassLoader>();
 
     private static final String CLASS_OF_CORE_CONFIGURE = "com.alibaba.jvm.sandbox.core.CoreConfigure";
@@ -347,7 +347,7 @@ public class AgentLauncher {
                 : defaultValue;
     }
 
-    private static String OS = System.getProperty("os.name").toLowerCase();
+    private static final String OS = System.getProperty("os.name").toLowerCase();
 
     private static boolean isWindows() {
         return OS.contains("win");

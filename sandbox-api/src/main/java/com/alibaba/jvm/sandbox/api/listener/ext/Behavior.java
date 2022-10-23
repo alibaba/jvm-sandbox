@@ -1,10 +1,7 @@
 package com.alibaba.jvm.sandbox.api.listener.ext;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 
 /**
  * 类行为，主要用来封装构造函数cinit/init/method
@@ -33,6 +30,11 @@ public interface Behavior {
     Class<?> getDeclaringClass();
 
     Class<?> getReturnType();
+
+    /**
+     * @since {@code sandbox-api:1.4.0}
+     */
+    Type getGenericReturnType();
 
     Class<?>[] getExceptionTypes();
 
@@ -104,6 +106,11 @@ public interface Behavior {
         }
 
         @Override
+        public Type getGenericReturnType() {
+            return target.getGenericReturnType();
+        }
+
+        @Override
         public Class<?>[] getExceptionTypes() {
             return target.getExceptionTypes();
         }
@@ -125,7 +132,10 @@ public interface Behavior {
 
         @Override
         public boolean equals(Object obj) {
-            return target.equals(obj);
+            if (obj instanceof Method) {
+                return target.equals(obj);
+            }
+            return false;
         }
     }
 
@@ -188,6 +198,11 @@ public interface Behavior {
         }
 
         @Override
+        public Type getGenericReturnType() {
+            return target.getDeclaringClass();
+        }
+
+        @Override
         public Class<?>[] getExceptionTypes() {
             return target.getExceptionTypes();
         }
@@ -209,7 +224,10 @@ public interface Behavior {
 
         @Override
         public boolean equals(Object obj) {
-            return target.equals(obj);
+            if (obj instanceof Constructor<?>) {
+                return target.equals(obj);
+            }
+            return false;
         }
 
     }

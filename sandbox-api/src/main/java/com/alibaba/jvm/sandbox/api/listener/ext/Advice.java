@@ -29,7 +29,7 @@ public class Advice implements Attachment {
     private Throwable throwable;
 
     private Object attachment;
-    private Set<String> marks = new HashSet<String>();
+    private final Set<String> marks = new HashSet<String>();
 
     private Advice top = this;
     private Advice parent = this;
@@ -38,12 +38,12 @@ public class Advice implements Attachment {
     /**
      * 构造通知
      *
-     * @param processId      {@link InvokeEvent#processId}
-     * @param invokeId       {@link InvokeEvent#invokeId}
+     * @param processId       {@link InvokeEvent#processId}
+     * @param invokeId        {@link InvokeEvent#invokeId}
      * @param behaviorLazyGet 触发事件的行为(懒加载)
-     * @param loader         触发事件的行为所在ClassLoader
-     * @param parameterArray 触发事件的行为入参
-     * @param target         触发事件所归属的对象实例
+     * @param loader          触发事件的行为所在ClassLoader
+     * @param parameterArray  触发事件的行为入参
+     * @param target          触发事件所归属的对象实例
      */
     Advice(final int processId,
            final int invokeId,
@@ -66,6 +66,7 @@ public class Advice implements Attachment {
      * @param parent 集联上一个调用的通知
      * @return this
      */
+    @SuppressWarnings("UnusedReturnValue")
     Advice applyBefore(final Advice top,
                        final Advice parent) {
         this.top = top;
@@ -199,6 +200,7 @@ public class Advice implements Attachment {
         this.attachment = attachment;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <E> E attachment() {
         return (E) attachment;

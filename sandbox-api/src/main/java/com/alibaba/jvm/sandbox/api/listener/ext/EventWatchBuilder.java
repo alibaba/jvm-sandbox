@@ -3,6 +3,7 @@ package com.alibaba.jvm.sandbox.api.listener.ext;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.AccessFlags;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
+import com.alibaba.jvm.sandbox.api.filter.ExtFilterImplByV140;
 import com.alibaba.jvm.sandbox.api.filter.Filter;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
@@ -72,7 +73,7 @@ public class EventWatchBuilder {
         IBuildingForClass includeSubClasses();
 
         /**
-         * 是否包含被Bootstrap所加载的类
+         * 是否包含被子类或实现类
          *
          * @param isIncludeSubClasses TRUE:包含子类（实现类）;FALSE:不包含子类（实现类）;
          * @return IBuildingForClass
@@ -313,7 +314,7 @@ public class EventWatchBuilder {
 
     private final ModuleEventWatcher moduleEventWatcher;
     private final PatternType patternType;
-    private List<BuildingForClass> bfClasses = new ArrayList<BuildingForClass>();
+    private final List<BuildingForClass> bfClasses = new ArrayList<BuildingForClass>();
 
     /**
      * 构造事件观察者构造器(通配符匹配模式)
@@ -767,10 +768,34 @@ public class EventWatchBuilder {
 
     private Filter makeExtFilter(final Filter filter,
                                  final BuildingForClass bfClass) {
-        return ExtFilter.ExtFilterFactory.make(
+        final ExtFilter extFilter = ExtFilter.ExtFilterFactory.make(
                 filter,
                 bfClass.isIncludeSubClasses,
                 bfClass.isIncludeBootstrap
+        );
+
+        boolean isBehaviorHasWithParameterTypes = false;
+        boolean isBehaviorHasExceptionTypes = false;
+        boolean isBehaviorHasAnnotationTypes = false;
+        for(final BuildingForBehavior bfBehavior : bfClass.bfBehaviors) {
+            if(!bfBehavior.withParameterTypes.isEmpty()) {
+                isBehaviorHasWithParameterTypes = true;
+            }
+            if(!bfBehavior.hasExceptionTypes.isEmpty()) {
+                isBehaviorHasExceptionTypes = true;
+            }
+            if(!bfBehavior.hasAnnotationTypes.isEmpty()) {
+                isBehaviorHasAnnotationTypes = true;
+            }
+        }
+
+        return new ExtFilterImplByV140(
+                extFilter,
+                !bfClass.hasInterfaceTypes.isEmpty(),
+                !bfClass.hasAnnotationTypes.isEmpty(),
+                isBehaviorHasWithParameterTypes,
+                isBehaviorHasExceptionTypes,
+                isBehaviorHasAnnotationTypes
         );
     }
 
@@ -870,6 +895,13 @@ public class EventWatchBuilder {
          */
         void add(String... patternArray) {
             groups.add(new Group(patternArray));
+        }
+
+        /*
+         * 是否为空
+         */
+        boolean isEmpty() {
+            return groups.isEmpty();
         }
 
         /*

@@ -1,0 +1,33 @@
+# 路由启用总开关: true - 打开 | false - 关闭
+classRoutingEnable: true
+
+# 路由配置读取方式:
+# 方式一: yaml - 通过yaml方式配置，比较纯净轻量级方式，通过文件读取生成配置，不支持targetClassLoader模式
+# 方式二: spi  - 通过SPI方式配置，支持targetClassLoader（指定classloader）路由，该方式会多一次模块jar的加载，有额外内存开销
+routingConfigType: yaml
+
+# yaml方式配置列表，配置参数如下:
+# usingApp: 是否优先使用业务容器类加载器
+# type: 路由匹配类型
+# targetName: 匹配器目标类型
+# pattern: 路由匹配表达式，{@link RoutingURLClassLoader$Routing }, 支持多个匹配表达式
+routingConfigs:
+ # dubbo 目标类名方式路由参考
+ -
+  usingApp: true
+  type: 'targetClass'
+  targetName: 'org.apache.dubbo.rpc.model.ApplicationModel'
+  pattern: ['^org.apache.dubbo..*']
+
+ # http 目标类名方式路由参考
+ -
+  usingApp: true
+  type: 'targetClass'
+  targetName: 'javax.servlet.http.HttpServlet'
+  pattern: [ '^javax.servlet..*' ]
+
+ # dubbo 目标类加载器模式路由参考
+ -
+  type: 'targetClassloaderName'
+  targetName: 'org.apache.catalina.loader.WebappClassLoader'
+  pattern: ['^org.apache.dubbo..*']

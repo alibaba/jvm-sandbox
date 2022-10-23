@@ -5,7 +5,6 @@ import com.alibaba.jvm.sandbox.qatest.core.enhance.listener.TracingAdviceListene
 import com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper;
 import com.alibaba.jvm.sandbox.qatest.core.util.JvmHelper.ThirdTransformer;
-
 import org.junit.Test;
 
 import static com.alibaba.jvm.sandbox.api.ProcessController.returnImmediately;
@@ -449,7 +448,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                                 }
                         )
                 ).loadClass(CALCULATOR_CLASS_NAME);
-        calculatorClass.getMethod("settCaseInStatic",
+        calculatorClass.getMethod("setCaseInStatic",
                 Calculator.TestCase.ADD$EXCEPTION.getClass()).invoke(null,Calculator.TestCase.ADD$EXCEPTION);
         int value=(Integer) calculatorClass.getMethod("addInStatic",int.class,int.class).invoke(null,10,20);
         assertEquals(100, value);

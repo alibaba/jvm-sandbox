@@ -29,13 +29,9 @@ public class SandboxClassUtils {
         }
 
         // 类被com.alibaba.jvm.sandbox开头的ClassLoader所加载
-        if (null != loader
+        return null != loader
                 // fix issue #267
-                && isSandboxPrefix(normalizeClass(loader.getClass().getName()))) {
-            return true;
-        }
-
-        return false;
+                && isSandboxPrefix(normalizeClass(loader.getClass().getName()));
 
     }
 
@@ -50,7 +46,8 @@ public class SandboxClassUtils {
      * @return 标准化类名
      */
     private static String normalizeClass(String className) {
-        return className.replace(".", "/");
+        // #302
+        return className.replace('.', '/');
     }
 
     /**

@@ -1,16 +1,14 @@
 package com.alibaba.jvm.sandbox.core.util.matcher;
 
 import com.alibaba.jvm.sandbox.api.annotation.Stealth;
+import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.Access;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
-import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory.createClassStructure;
 
 /**
  * 不支持的类匹配
@@ -50,21 +48,21 @@ public class UnsupportedMatcher implements Matcher {
         return classStructure.getJavaClassName().startsWith("com.alibaba.jvm.sandbox.");
     }
 
-    private Set<String> takeJavaClassNames(final Set<ClassStructure> classStructures) {
-        final Set<String> javaClassNames = new LinkedHashSet<String>();
-        for (final ClassStructure classStructure : classStructures) {
-            javaClassNames.add(classStructure.getJavaClassName());
-        }
-        return javaClassNames;
-    }
+//    private Set<String> takeJavaClassNames(final Set<ClassStructure> classStructures) {
+//        final Set<String> javaClassNames = new LinkedHashSet<String>();
+//        for (final ClassStructure classStructure : classStructures) {
+//            javaClassNames.add(classStructure.getJavaClassName());
+//        }
+//        return javaClassNames;
+//    }
 
-    /*
-     * 判断是否隐形类
-     */
-    private boolean isStealthClass(final ClassStructure classStructure) {
-        return takeJavaClassNames(classStructure.getFamilyAnnotationTypeClassStructures())
-                .contains(Stealth.class.getName());
-    }
+//    /*
+//     * 判断是否隐形类
+//     */
+//    private boolean isStealthClass(final ClassStructure classStructure) {
+//        return takeJavaClassNames(classStructure.getFamilyAnnotationTypeClassStructures())
+//                .contains(Stealth.class.getName());
+//    }
 
     /*
      * 判断是否ClassLoader家族中是否有隐形基因
@@ -73,8 +71,8 @@ public class UnsupportedMatcher implements Matcher {
         if (null == loader) {
             return !isEnableUnsafe;
         }
-        return takeJavaClassNames(createClassStructure(loader.getClass()).getFamilyTypeClassStructures())
-                .contains(Stealth.class.getName());
+        // FIX 292
+        return loader.getClass().isAnnotationPresent(Stealth.class);
     }
 
     /*
@@ -99,9 +97,13 @@ public class UnsupportedMatcher implements Matcher {
      * 2. native的方法暂时无法支持
      */
     private boolean isUnsupportedBehavior(final BehaviorStructure behaviorStructure) {
+        //TODO unSupportMethodName
         final Access access = behaviorStructure.getAccess();
-        return access.isAbstract()
-                || access.isNative();
+        if (access.isAbstract()) {
+            return true;
+        }
+
+        return null != behaviorStructure.getName() && behaviorStructure.getName().startsWith(EventWeaver.NATIVE_PREFIX);
     }
 
     @Override
@@ -110,7 +112,8 @@ public class UnsupportedMatcher implements Matcher {
         if (isUnsupportedClass(classStructure)
                 || isJvmSandboxClass(classStructure)
                 || isFromStealthClassLoader()
-                || isStealthClass(classStructure)) {
+            // || isStealthClass(classStructure) FIX #292
+        ) {
             return result;
         }
         for (final BehaviorStructure behaviorStructure : classStructure.getBehaviorStructures()) {

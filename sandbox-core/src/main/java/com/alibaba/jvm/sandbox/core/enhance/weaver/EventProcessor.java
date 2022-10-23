@@ -231,7 +231,7 @@ class EventProcessor {
             }
 
             if (process.isIgnoreProcess) {
-                throw new IllegalStateException(String.format("process isIgnoreProcess is not false!"));
+                throw new IllegalStateException("process isIgnoreProcess is not false!");
             }
 
 

@@ -24,11 +24,9 @@ public class AffectStatistic {
 
     // 计算唯一编码
     private String computeUniqueCode(final ClassLoader loader, final String javaClassName) {
-        return new StringBuilder()
-                .append(ObjectIDs.instance.identity(loader))
-                .append("_c_")
-                .append(javaClassName)
-                .toString();
+        return ObjectIDs.instance.identity(loader) +
+                "_c_" +
+                javaClassName;
     }
 
     private Set<String> computeUniqueCode(final ClassLoader loader,
