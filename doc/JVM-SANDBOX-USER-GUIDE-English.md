@@ -173,7 +173,7 @@ Then the sandbox has been successfully implanted in the target JVM, and opened a
                
            - onFreeze
 
-               After the module enters the frozen state, all the sandbox events that are listening before will be blocked. It should be noted that the frozen module will not return the event to listen to the code plug, only `delete ()`, `wathcing ()` or module is unloaded when the plug code will be cleared.
+               After the module enters the frozen state, all the sandbox events that are listening before will be blocked. It should be noted that the frozen module will not return the event to listen to the code plug, only `delete ()`, `watching ()` or module is unloaded when the plug code will be cleared.
 
 ### Configuration file
 
