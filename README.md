@@ -113,10 +113,10 @@ try {
 
   ```shell
   # 下载最新版本的JVM-SANDBOX
-  wget http://ompc.oss-cn-hangzhou.aliyuncs.com/jvm-sandbox/release/sandbox-stable-bin.zip
+  wget https://ompc.oss-cn-hangzhou.aliyuncs.com/jvm-sandbox/release/sandbox-1.3.3-bin.zip
 
   # 解压
-  unzip sandbox-stable-bin.zip
+  unzip sandbox-1.3.3-bin.zip
   ```
 
 - **挂载目标应用**
