@@ -108,6 +108,12 @@ try {
 ![jvm-sandbox-architecture](https://github.com/alibaba/jvm-sandbox/wiki/img/jvm-sandbox-architecture.png)
 
 ## 快速安装
+- **自行打包**
+```shell
+   cd bin
+   ./sandbox-packages.sh
+   cd ../target
+```
 
 - **下载并安装**
 
