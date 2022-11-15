@@ -2,10 +2,9 @@ package com.alibaba.jvm.sandbox.core.classloader;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
-import java.util.regex.Pattern;
 
-import com.alibaba.jvm.sandbox.api.routing.RoutingExt;
 import com.alibaba.jvm.sandbox.api.routing.RoutingInfo;
 import com.alibaba.jvm.sandbox.api.routing.RoutingInfo.Type;
 import com.alibaba.jvm.sandbox.core.classloader.SpecialRoutingHandler.RoutingYaml;
@@ -23,23 +22,13 @@ import static org.junit.Assert.*;
  */
 public class SpecialRoutingHandlerTest {
 
-    private final static Pattern API_JAR_FILE_PATTERN = Pattern.compile("sandbox-api-.*.jar");
-
     File jarFile = null;
 
     @Before
     public void before() {
-        File path = new File(
-                RoutingExt.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParentFile();
-        assertNotNull(path);
-        File[] files = path.listFiles();
-        assertNotNull(files);
-        for (File file : files) {
-            if (API_JAR_FILE_PATTERN.matcher(file.getName()).matches()) {
-                jarFile = file;
-                break;
-            }
-        }
+        URL resource = SpecialRoutingHandler.class.getResource("/lib/sandbox-api-1.4.0-for-qatest.jar");
+        assertNotNull(resource);
+        jarFile = new File(resource.getPath());
         assertNotNull(jarFile);
     }
 
