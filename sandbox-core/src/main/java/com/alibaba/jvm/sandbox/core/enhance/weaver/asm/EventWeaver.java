@@ -1,18 +1,21 @@
 package com.alibaba.jvm.sandbox.core.enhance.weaver.asm;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.CodeLock;
-import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
-import org.objectweb.asm.*;
+
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.instrument.Instrumentation;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalClassName;
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
@@ -168,8 +171,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 private final Label startCatchBlock = new Label();
                 private final Label endCatchBlock = new Label();
                 private int newLocal = -1;
-                // 代码锁
-                private final CodeLock codeLockForTracing = new CallAsmCodeLock(this);
 
                 // 加载ClassLoader
                 private void loadClassLoader() {
@@ -258,11 +259,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 // 所以这里需要用一个标记为告知后续的代码编织，绕开super()和this()
                 private boolean isMethodEnter = false;
 
-                // 代码锁
-                private final CodeLock codeLockForTracing = new CallAsmCodeLock(this);
-
-
-
                 // 加载ClassLoader
                 private void loadClassLoader() {
                     push(targetClassLoaderObjectID);
@@ -338,7 +334,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
                 @Override
                 protected void onMethodExit(final int opcode) {
-                    if (!isThrow(opcode)) {
+                    if (!isThrow(opcode) && !codeLockForTracing.isLock()) {
                         codeLockForTracing.lock(new CodeLock.Block() {
                             @Override
                             public void code() {

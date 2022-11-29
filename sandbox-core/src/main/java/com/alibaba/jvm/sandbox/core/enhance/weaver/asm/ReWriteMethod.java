@@ -1,12 +1,14 @@
 package com.alibaba.jvm.sandbox.core.enhance.weaver.asm;
 
+import java.com.alibaba.jvm.sandbox.spy.Spy;
+
+import com.alibaba.jvm.sandbox.core.enhance.weaver.CodeLock;
+
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
-
-import java.com.alibaba.jvm.sandbox.spy.Spy;
 
 /**
  * 方法重写
@@ -17,6 +19,8 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
 
     private final Type[] argumentTypeArray;
 
+    // 代码锁
+    protected final CodeLock codeLockForTracing = new CallAsmCodeLock(this);
     /**
      * Creates a new {@link AdviceAdapter}.
      *
@@ -189,6 +193,48 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
                 break;
             }
         }
+    }
+
+    @Override
+    public void visitIntInsn(final int opcode, final int operand) {
+        super.visitIntInsn(opcode,operand);
+        codeLockForTracing.code(opcode);
+    }
+
+    @Override
+    public void visitVarInsn(final int opcode, final int var) {
+        super.visitVarInsn(opcode,var);
+        codeLockForTracing.code(opcode);
+    }
+
+    @Override
+    public void visitTypeInsn(final int opcode, final String type) {
+        super.visitTypeInsn(opcode,type);
+        codeLockForTracing.code(opcode);
+    }
+
+    @Override
+    public void visitFieldInsn(
+        final int opcode, final String owner, final String name, final String descriptor) {
+        super.visitFieldInsn(opcode,owner,name,descriptor);
+        codeLockForTracing.code(opcode);
+    }
+
+    @Override
+    public void visitJumpInsn(final int opcode, final Label label) {
+        super.visitJumpInsn(opcode,label);
+        codeLockForTracing.code(opcode);
+    }
+
+    public void visitLdcInsn(final Object value) {
+        super.visitLdcInsn(value);
+        codeLockForTracing.code(Opcodes.LDC);
+    }
+
+    @Override
+    public void visitIincInsn(final int var, final int increment) {
+        super.visitIincInsn(var,increment);
+        codeLockForTracing.code(Opcodes.IINC);
     }
 
     final protected void processControl(String desc) {
