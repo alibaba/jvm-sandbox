@@ -280,9 +280,12 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
         InputStream ins = null;
         if(isBootstrapClassLoader()) {
             try {
-                Class<?> clz = Class.forName(javaClassName, false, null);
-                ins = clz.getResourceAsStream("/" + resourceName);
-            } catch (ClassNotFoundException e) {
+                ins = Object.class.getResourceAsStream("/" + resourceName);
+                if(null == ins) {
+                    Class<?> clz = Class.forName(javaClassName, false, null);
+                    ins = clz.getResourceAsStream("/" + resourceName);
+                }
+            } catch (Throwable e) {
                 // pass
             }
         } else {
