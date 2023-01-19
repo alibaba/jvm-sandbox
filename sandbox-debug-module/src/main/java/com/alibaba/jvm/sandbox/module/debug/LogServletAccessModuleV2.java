@@ -1,12 +1,11 @@
 package com.alibaba.jvm.sandbox.module.debug;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
-
 import org.kohsuke.MetaInfServices;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * {@link LogServletAccessModuleV2}

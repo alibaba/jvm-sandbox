@@ -4,8 +4,6 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.event.Event.Type;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
-import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxClassUtils;
 import com.alibaba.jvm.sandbox.core.util.SandboxProtector;

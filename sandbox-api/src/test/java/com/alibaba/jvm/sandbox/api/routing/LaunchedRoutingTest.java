@@ -1,7 +1,6 @@
 package com.alibaba.jvm.sandbox.api.routing;
 
 import com.alibaba.jvm.sandbox.api.routing.RoutingInfo.Type;
-
 import org.junit.Test;
 
 import static org.junit.Assert.*;

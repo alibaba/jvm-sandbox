@@ -1,16 +1,15 @@
 package com.alibaba.jvm.sandbox.core.classloader;
 
+import com.alibaba.jvm.sandbox.api.routing.RoutingInfo;
+import com.alibaba.jvm.sandbox.api.routing.RoutingInfo.Type;
+import com.alibaba.jvm.sandbox.core.classloader.SpecialRoutingHandler.RoutingYaml;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-
-import com.alibaba.jvm.sandbox.api.routing.RoutingInfo;
-import com.alibaba.jvm.sandbox.api.routing.RoutingInfo.Type;
-import com.alibaba.jvm.sandbox.core.classloader.SpecialRoutingHandler.RoutingYaml;
-
-import org.junit.Before;
-import org.junit.Test;
 
 import static org.junit.Assert.*;
 

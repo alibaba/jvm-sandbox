@@ -9,7 +9,6 @@ import com.alibaba.jvm.sandbox.core.classloader.RoutingURLClassLoader;
 import com.alibaba.jvm.sandbox.core.classloader.RoutingURLClassLoader.Routing;
 import com.alibaba.jvm.sandbox.core.classloader.SpecialRoutingHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -17,12 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.util.*;
 
 class ModuleJarLoader {
 
