@@ -1,7 +1,6 @@
 package com.alibaba.jvm.sandbox.core.manager.impl;
 
 import com.alibaba.jvm.sandbox.api.Information;
-import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,14 +67,13 @@ class ModuleLibLoader {
      * @param mCb  模块加载回掉
      */
     void load(final ModuleJarLoadCallback mjCb,
-              final ModuleJarLoader.ModuleLoadCallback mCb,
-              final CoreLoadedClassDataSource classDataSource) {
+              final ModuleJarLoader.ModuleLoadCallback mCb) {
 
         // 开始逐条加载
         for (final File moduleJarFile : listModuleJarFileInLib()) {
             try {
                 mjCb.onLoad(moduleJarFile);
-                new ModuleJarLoader(moduleJarFile, mode, classDataSource).load(mCb);
+                new ModuleJarLoader(moduleJarFile, mode).load(mCb);
             } catch (Throwable cause) {
                 logger.warn("loading module-jar occur error! module-jar={};", moduleJarFile, cause);
             }
