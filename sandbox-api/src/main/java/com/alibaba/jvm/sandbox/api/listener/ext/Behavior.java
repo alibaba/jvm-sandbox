@@ -32,6 +32,7 @@ public interface Behavior {
     Class<?> getReturnType();
 
     /**
+     * @see Method#getGenericReturnType()
      * @since {@code sandbox-api:1.4.0}
      */
     Type getGenericReturnType();

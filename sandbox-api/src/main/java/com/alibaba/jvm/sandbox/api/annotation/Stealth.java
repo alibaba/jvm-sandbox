@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 /**
  * 隐形屏障
  * <ul>
- * <li><s>被标注的类及其子类将不会被Sandbox所感知</s></li>
+ * <li>被标注的类及其子类将不会被Sandbox所感知</li>
  * <li>被标注的ClassLoader所加载的类都不会被Sandbox所感知</li>
  * </ul>
  *
