@@ -128,10 +128,6 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         }
     }
 
-    final protected void visitFieldInsn(int opcode, Type owner, String name, Type type) {
-        super.visitFieldInsn(opcode, owner.getInternalName(), name, type.getDescriptor());
-    }
-
     /**
      * 保存参数数组
      */
@@ -236,10 +232,6 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         codeLockForTracing.code(Opcodes.IINC);
     }
 
-    final protected void processControl(String desc) {
-        processControl(desc, false);
-    }
-
     final protected void processControl(String desc, boolean isPopRawRespond) {
         final Label finishLabel = new Label();
         final Label returnLabel = new Label();
@@ -253,7 +245,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         /*
          * [Ret, Ret, {rawRespond}]
          */
-        visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "state", ASM_TYPE_INT);
+        visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET.getInternalName(), "state", ASM_TYPE_INT.getDescriptor());
         /*
          * [I, Ret, {rawRespond}]
          */
@@ -294,7 +286,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         /*
          * [Ret]
          */
-        visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
+        visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET.getInternalName(), "respond", ASM_TYPE_OBJECT.getDescriptor());
         /*
          *  [spyRespond] ,execute XReturn
          */
@@ -313,7 +305,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         /*
          * [Ret]
          */
-        visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET, "respond", ASM_TYPE_OBJECT);
+        visitFieldInsn(GETFIELD, ASM_TYPE_SPY_RET.getInternalName(), "respond", ASM_TYPE_OBJECT.getDescriptor());
         /*
          * [Object]
          */
