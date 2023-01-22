@@ -25,7 +25,7 @@ public class AdviceAdapterListener implements EventListener {
         this.adviceListener = adviceListener;
     }
 
-    private final ThreadLocal<OpStack> opStackRef = ThreadLocal.withInitial(() -> new OpStack());
+    private final ThreadLocal<OpStack> opStackRef = ThreadLocal.withInitial(OpStack::new);
 
     @Override
     final public void onEvent(final Event event) throws Throwable {
@@ -243,7 +243,7 @@ public class AdviceAdapterListener implements EventListener {
      */
     private static class OpStack {
 
-        private final Stack<WrapAdvice> adviceStack = new Stack<WrapAdvice>();
+        private final Stack<WrapAdvice> adviceStack = new Stack<>();
 
         boolean isEmpty() {
             return adviceStack.isEmpty();

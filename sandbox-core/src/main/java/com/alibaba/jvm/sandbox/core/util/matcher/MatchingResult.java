@@ -11,7 +11,7 @@ import java.util.LinkedHashSet;
  */
 public class MatchingResult {
 
-    private final LinkedHashSet<BehaviorStructure> behaviorStructures = new LinkedHashSet<BehaviorStructure>();
+    private final LinkedHashSet<BehaviorStructure> behaviorStructures = new LinkedHashSet<>();
 
     /**
      * 是否匹配成功
@@ -37,7 +37,7 @@ public class MatchingResult {
      * @return 行为签名列表
      */
     public LinkedHashSet<String> getBehaviorSignCodes() {
-        final LinkedHashSet<String> behaviorSignCodes = new LinkedHashSet<String>();
+        final LinkedHashSet<String> behaviorSignCodes = new LinkedHashSet<>();
         for (BehaviorStructure behaviorStructure : behaviorStructures) {
             behaviorSignCodes.add(behaviorStructure.getSignCode());
         }

@@ -33,11 +33,11 @@ public class CoreModule {
 
     // 模块的类转换器
     private final Set<SandboxClassFileTransformer> sandboxClassFileTransformers
-            = new LinkedHashSet<SandboxClassFileTransformer>();
+            = new LinkedHashSet<>();
 
     // 模块所持有的可释放资源
     private final List<ReleaseResource<?>> releaseResources
-            = new ArrayList<ReleaseResource<?>>();
+            = new ArrayList<>();
 
     // 是否已经激活
     private boolean isActivated;
@@ -280,7 +280,7 @@ public class CoreModule {
          * @param resource 资源目标
          */
         public ReleaseResource(T resource) {
-            this.reference = new WeakReference<T>(resource);
+            this.reference = new WeakReference<>(resource);
         }
 
         /**

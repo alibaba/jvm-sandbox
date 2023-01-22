@@ -61,8 +61,7 @@ public class TTree implements TComponent {
                 treeSB.append(costPrefix);
             }
 
-            final Scanner scanner = new Scanner(new StringReader(node.data.toString()));
-            try {
+            try (Scanner scanner = new Scanner(new StringReader(node.data.toString()))) {
                 boolean isFirst = true;
                 while (scanner.hasNextLine()) {
                     if (isFirst) {
@@ -78,8 +77,6 @@ public class TTree implements TComponent {
                                 .append("\n");
                     }
                 }
-            } finally {
-                scanner.close();
             }
 
         });
@@ -176,7 +173,7 @@ public class TTree implements TComponent {
         /**
          * 子节点
          */
-        final List<Node> children = new ArrayList<Node>();
+        final List<Node> children = new ArrayList<>();
 
         /**
          * 开始时间戳

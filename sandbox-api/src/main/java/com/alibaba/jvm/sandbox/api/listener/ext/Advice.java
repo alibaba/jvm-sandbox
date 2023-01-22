@@ -29,7 +29,7 @@ public class Advice implements Attachment {
     private Throwable throwable;
 
     private Object attachment;
-    private final Set<String> marks = new HashSet<String>();
+    private final Set<String> marks = new HashSet<>();
 
     private Advice top = this;
     private Advice parent = this;
@@ -288,7 +288,7 @@ public class Advice implements Attachment {
      * @return 调用链路上所有拥有期待标记的调用通知
      */
     public List<Advice> listHasMarkOnChain(final String exceptMark) {
-        final List<Advice> advices = new ArrayList<Advice>();
+        final List<Advice> advices = new ArrayList<>();
         if (hasMark(exceptMark)) {
             advices.add(this);
         }

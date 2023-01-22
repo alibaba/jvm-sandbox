@@ -31,7 +31,7 @@ public class ParamSupported {
     }
 
     // 转换器集合
-    final static Map<Class<?>, Converter<?>> converterMap = new HashMap<Class<?>, Converter<?>>();
+    final static Map<Class<?>, Converter<?>> converterMap = new HashMap<>();
 
     static {
 
@@ -39,13 +39,13 @@ public class ParamSupported {
         regConverter(string -> string, String.class);
 
         // 转换为Long
-        regConverter(string -> Long.valueOf(string), long.class, Long.class);
+        regConverter(Long::valueOf, long.class, Long.class);
 
         // 转换为Double
-        regConverter(string -> Double.valueOf(string), double.class, Double.class);
+        regConverter(Double::valueOf, double.class, Double.class);
 
         // 转换为Integer
-        regConverter(string -> Integer.valueOf(string), int.class, Integer.class);
+        regConverter(Integer::valueOf, int.class, Integer.class);
 
     }
 
@@ -80,7 +80,7 @@ public class ParamSupported {
         if (isEmpty(stringArray)) {
             return asList(defaultValueArray);
         }
-        final List<T> values = new ArrayList<T>();
+        final List<T> values = new ArrayList<>();
         for (final String string : stringArray) {
             values.add(converter.convert(string));
         }

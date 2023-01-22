@@ -47,7 +47,7 @@ public class ModuleMgrModule implements Module {
 
     // 搜索模块
     private Collection<Module> search(final String idsStringPattern) {
-        final Collection<Module> foundModules = new ArrayList<Module>();
+        final Collection<Module> foundModules = new ArrayList<>();
         for (Module module : moduleManager.list()) {
             final Information moduleInfo = module.getClass().getAnnotation(Information.class);
             if (!matching(moduleInfo.id(), idsStringPattern)) {
@@ -234,7 +234,7 @@ public class ModuleMgrModule implements Module {
         if (clz == null) {
             return Collections.emptyList();
         }
-        final List<String> commands = new ArrayList<String>();
+        final List<String> commands = new ArrayList<>();
         for (final Method method : MethodUtils.getMethodsListWithAnnotation(clz, Command.class)) {
             final Command commandAnnotation = method.getAnnotation(Command.class);
             if (null == commandAnnotation) {

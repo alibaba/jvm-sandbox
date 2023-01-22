@@ -314,7 +314,7 @@ public class EventWatchBuilder {
 
     private final ModuleEventWatcher moduleEventWatcher;
     private final PatternType patternType;
-    private final List<BuildingForClass> bfClasses = new ArrayList<BuildingForClass>();
+    private final List<BuildingForClass> bfClasses = new ArrayList<>();
 
     /**
      * 构造事件观察者构造器(通配符匹配模式)
@@ -444,7 +444,7 @@ public class EventWatchBuilder {
         private boolean isIncludeBootstrap = false;
         private final PatternGroupList hasInterfaceTypes = new PatternGroupList();
         private final PatternGroupList hasAnnotationTypes = new PatternGroupList();
-        private final List<BuildingForBehavior> bfBehaviors = new ArrayList<BuildingForBehavior>();
+        private final List<BuildingForBehavior> bfBehaviors = new ArrayList<>();
 
         /**
          * 构造类构建器
@@ -667,8 +667,8 @@ public class EventWatchBuilder {
 
     private class BuildingForWatching implements IBuildingForWatching {
 
-        private final Set<Event.Type> eventTypeSet = new HashSet<Event.Type>();
-        private final List<Progress> progresses = new ArrayList<Progress>();
+        private final Set<Event.Type> eventTypeSet = new HashSet<>();
+        private final List<Progress> progresses = new ArrayList<>();
 
         @Override
         public IBuildingForWatching withProgress(Progress progress) {
@@ -714,7 +714,7 @@ public class EventWatchBuilder {
     }
 
     private EventWatchCondition toEventWatchCondition() {
-        final List<Filter> filters = new ArrayList<Filter>();
+        final List<Filter> filters = new ArrayList<>();
         for (final BuildingForClass bfClass : bfClasses) {
             final Filter filter = new Filter() {
                 @Override
@@ -814,7 +814,7 @@ public class EventWatchBuilder {
 
         return new EventWatcher() {
 
-            final List<Progress> progresses = new ArrayList<Progress>();
+            final List<Progress> progresses = new ArrayList<>();
 
             @Override
             public int getWatchId() {
@@ -883,7 +883,7 @@ public class EventWatchBuilder {
      */
     private class PatternGroupList {
 
-        final List<Group> groups = new ArrayList<Group>();
+        final List<Group> groups = new ArrayList<>();
 
         /*
          * 添加模式匹配组

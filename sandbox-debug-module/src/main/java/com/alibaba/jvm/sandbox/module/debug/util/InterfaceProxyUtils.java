@@ -37,7 +37,7 @@ public class InterfaceProxyUtils {
      */
     static abstract class WrapInvocationHandler implements InvocationHandler {
 
-        final Map<Method, Method> mappingOfWrapMethods = new ConcurrentHashMap<Method, Method>();
+        final Map<Method, Method> mappingOfWrapMethods = new ConcurrentHashMap<>();
 
         String getInterfaceMethodName(final Method interfaceMethod) {
             final ProxyMethod proxyMethod = interfaceMethod.getAnnotation(ProxyMethod.class);

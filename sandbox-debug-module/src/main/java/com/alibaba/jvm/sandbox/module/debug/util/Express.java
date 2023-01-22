@@ -128,8 +128,7 @@ public interface Express {
         public boolean is(String express) throws ExpressException {
             try {
                 final Object ret = get(express);
-                return null != ret
-                        && ret instanceof Boolean
+                return ret instanceof Boolean
                         && (Boolean) ret;
             } catch (Throwable t) {
                 return false;

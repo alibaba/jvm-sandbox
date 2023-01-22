@@ -124,7 +124,7 @@ class EmptyClassStructure implements ClassStructure {
 
     @Override
     public LinkedHashSet<ClassStructure> getFamilySuperClassStructures() {
-        return new LinkedHashSet<ClassStructure>();
+        return new LinkedHashSet<>();
     }
 
     @Override
@@ -350,7 +350,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
 
     // 构造一个类结构实例数组
     private List<ClassStructure> newInstances(final String[] javaClassNameArray) {
-        final List<ClassStructure> classStructures = new ArrayList<ClassStructure>();
+        final List<ClassStructure> classStructures = new ArrayList<>();
         if (null == javaClassNameArray) {
             return classStructures;
         }
@@ -412,7 +412,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
             = new LazyGet<List<ClassStructure>>() {
         @Override
         protected List<ClassStructure> initialValue() {
-            final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
+            final List<ClassStructure> annotationTypeClassStructures = new ArrayList<>();
             accept(new ClassVisitor(ASM7) {
 
                 @Override
@@ -441,7 +441,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
             = new LazyGet<List<BehaviorStructure>>() {
         @Override
         protected List<BehaviorStructure> initialValue() {
-            final List<BehaviorStructure> behaviorStructures = new ArrayList<BehaviorStructure>();
+            final List<BehaviorStructure> behaviorStructures = new ArrayList<>();
             accept(new ClassVisitor(ASM7) {
 
                 @Override
@@ -460,10 +460,10 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
                     return new MethodVisitor(ASM7, super.visitMethod(access, name, desc, signature, exceptions)) {
 
                         private final Type methodType = Type.getMethodType(desc);
-                        private final List<ClassStructure> annotationTypeClassStructures = new ArrayList<ClassStructure>();
+                        private final List<ClassStructure> annotationTypeClassStructures = new ArrayList<>();
 
                         private String[] typeArrayToJavaClassNameArray(final Type[] typeArray) {
-                            final List<String> javaClassNames = new ArrayList<String>();
+                            final List<String> javaClassNames = new ArrayList<>();
                             if (null != typeArray) {
                                 for (Type type : typeArray) {
                                     javaClassNames.add(type.getClassName());

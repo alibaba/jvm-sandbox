@@ -26,7 +26,7 @@ public class Spy {
     public static volatile boolean isSpyThrowException = false;
 
     private static final ConcurrentHashMap<String, SpyHandler> namespaceSpyHandlerMap
-            = new ConcurrentHashMap<String, SpyHandler>();
+            = new ConcurrentHashMap<>();
 
     /**
      * 判断间谍类是否已经完成初始化

@@ -205,7 +205,7 @@ public class LogServletAccessModule implements Module, LoadCompleted {
         if (MapUtils.isEmpty(parameterMap)) {
             return StringUtils.EMPTY;
         }
-        final Set<String> kvPairs = new LinkedHashSet<String>();
+        final Set<String> kvPairs = new LinkedHashSet<>();
         for (final Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
             kvPairs.add(String.format("%s=%s",
                     entry.getKey(),

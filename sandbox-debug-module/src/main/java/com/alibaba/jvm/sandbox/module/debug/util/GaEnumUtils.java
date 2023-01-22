@@ -16,7 +16,7 @@ import java.util.Set;
 public class GaEnumUtils {
 
     public static <T extends Enum<T>> Set<T> valuesOf(Class<T> enumClass, String[] enumNameArray, T[] defaultEnumArray) {
-        final Set<T> enumSet = new LinkedHashSet<T>();
+        final Set<T> enumSet = new LinkedHashSet<>();
         if (ArrayUtils.isNotEmpty(enumNameArray)) {
             for (final String enumName : enumNameArray) {
                 final T enumValue = EnumUtils.getEnum(enumClass, enumName);
