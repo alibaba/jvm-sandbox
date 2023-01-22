@@ -196,15 +196,13 @@ public class LogServletAccessModule implements Module, LoadCompleted {
                 advice.getParameterArray()[0]);
 
         // 初始化HttpAccess
-        final HttpAccess httpAccess = new HttpAccess(
+        return new HttpAccess(
                 httpServletRequest.getRemoteAddress(),
                 httpServletRequest.getMethod(),
                 httpServletRequest.getRequestURI(),
                 httpServletRequest.getParameterMap(),
                 httpServletRequest.getHeader("User-Agent")
         );
-
-        return httpAccess;
     }
 
     // 格式化ParameterMap

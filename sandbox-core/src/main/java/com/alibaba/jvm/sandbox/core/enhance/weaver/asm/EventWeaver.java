@@ -59,8 +59,6 @@ class AsmTryCatchBlock {
  */
 public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmMethods {
 
-    public final static String NATIVE_PREFIX = "$$SANDBOX$$";
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final int targetClassLoaderObjectID;
@@ -69,8 +67,8 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final String targetJavaClassName;
     private final Set<String> signCodes;
     private final Event.Type[] eventTypeArray;
+    private final String nativePrefix;
     private final List<Method> proxyNativeAsmMethods = new ArrayList<>();
-    private final boolean isNativeMethodEnhanceSupported;
 
     // 是否支持LINE_EVENT
     // LINE_EVENT需要对Class做特殊的增强，所以需要在这里做特殊的判断
@@ -83,24 +81,23 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final boolean hasCallReturn;
     private final boolean isCallEnable;
 
-    public EventWeaver(
-            final boolean isNativeMethodEnhanceSupported,
-            final int api,
-            final ClassVisitor cv,
-            final String namespace,
-            final int listenerId,
-            final int targetClassLoaderObjectID,
-            final String targetClassInternalName,
-            final Set<String/*BehaviorStructure#getSignCode()*/> signCodes,
-            final Event.Type[] eventTypeArray) {
+    public EventWeaver(final int api,
+                       final ClassVisitor cv,
+                       final String namespace,
+                       final int listenerId,
+                       final int targetClassLoaderObjectID,
+                       final String targetClassInternalName,
+                       final Set<String/*BehaviorStructure#getSignCode()*/> signCodes,
+                       final Event.Type[] eventTypeArray,
+                       final String nativePrefix) {
         super(api, cv);
-        this.isNativeMethodEnhanceSupported = isNativeMethodEnhanceSupported;
         this.targetClassLoaderObjectID = targetClassLoaderObjectID;
         this.namespace = namespace;
         this.listenerId = listenerId;
         this.targetJavaClassName = toJavaClassName(targetClassInternalName);
         this.signCodes = signCodes;
         this.eventTypeArray = eventTypeArray;
+        this.nativePrefix = nativePrefix;
 
         this.isLineEnable = contains(eventTypeArray, Event.Type.LINE);
         this.hasCallBefore = contains(eventTypeArray, Event.Type.CALL_BEFORE);
@@ -134,9 +131,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     }
 
     private MethodVisitor rewriteNativeMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
-        if (!isNativeMethodEnhanceSupported) {
-            throw new UnsupportedOperationException("Native Method Prefix Unsupported");
-        }
         //native 方法插桩策略：
         //1.原始的native变为非native方法，并增加AOP式方法体
         //2.在AOP中增加调用wrapper后的native方法
@@ -163,7 +157,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
             @Override
             public void visitEnd() {
-                if (!name.startsWith(NATIVE_PREFIX)) {
+                if (!name.startsWith(nativePrefix)) {
                     codeLockForTracing.lock(() -> {
                         mark(beginLabel);
                         loadArgArray();
@@ -180,7 +174,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                         storeArgArray();
                         pop();
                         processControl(desc, false);
-                        final String proxyNativeMethodName = NATIVE_PREFIX + name;
+                        final String proxyNativeMethodName = nativePrefix + name;
                         final Method proxyMethod = new Method(access, proxyNativeMethodName, desc);
                         final String owner = toInternalClassName(targetJavaClassName);
                         if (!isStaticMethod()) {

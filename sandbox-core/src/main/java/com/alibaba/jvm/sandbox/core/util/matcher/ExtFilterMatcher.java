@@ -35,7 +35,7 @@ public class ExtFilterMatcher implements Matcher {
     // 获取需要匹配的类结构
     // 如果要匹配子类就需要将这个类的所有家族成员找出
     private Collection<ClassStructure> getWaitingMatchClassStructures(final ClassStructure classStructure) {
-        final Collection<ClassStructure> waitingMatchClassStructures = new ArrayList<ClassStructure>();
+        final Collection<ClassStructure> waitingMatchClassStructures = new ArrayList<>();
         waitingMatchClassStructures.add(classStructure);
         if (extFilter.isIncludeSubClasses()) {
             waitingMatchClassStructures.addAll(classStructure.getFamilyTypeClassStructures());
@@ -47,7 +47,7 @@ public class ExtFilterMatcher implements Matcher {
         if (null == classStructures) {
             return null;
         }
-        final List<String> javaClassNames = new ArrayList<String>();
+        final List<String> javaClassNames = new ArrayList<>();
         for (final ClassStructure classStructure : classStructures) {
             javaClassNames.add(classStructure.getJavaClassName());
         }
@@ -77,12 +77,12 @@ public class ExtFilterMatcher implements Matcher {
                     toJavaClassNameArray(
                             isHasInterfaceTypes
                                     ? wmCs.getFamilyInterfaceClassStructures()
-                                    : Collections.<ClassStructure>emptySet()
+                                    : Collections.emptySet()
                     ),
                     toJavaClassNameArray(
                             isHasAnnotationTypes
                                     ? wmCs.getFamilyAnnotationTypeClassStructures()
-                                    : Collections.<ClassStructure>emptySet()
+                                    : Collections.emptySet()
                     )
             )) {
                 return true;

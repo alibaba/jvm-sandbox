@@ -3,8 +3,6 @@ package com.alibaba.jvm.sandbox.core.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,12 +18,7 @@ public class SandboxProtector {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ThreadLocal<AtomicInteger> isInProtectingThreadLocal = new ThreadLocal<AtomicInteger>() {
-        @Override
-        protected AtomicInteger initialValue() {
-            return new AtomicInteger(0);
-        }
-    };
+    private final ThreadLocal<AtomicInteger> isInProtectingThreadLocal = ThreadLocal.withInitial(() -> new AtomicInteger(0));
 
     /**
      * 进入守护区域
@@ -88,26 +81,21 @@ public class SandboxProtector {
     @SuppressWarnings("unchecked")
     public <T> T protectProxy(final Class<T> protectTargetInterface,
                               final T protectTarget) {
-        return (T) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{protectTargetInterface}, new InvocationHandler() {
-
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                final int enterReferenceCount = enterProtecting();
-                try {
-                    return method.invoke(protectTarget, args);
-                } finally {
-                    final int exitReferenceCount = exitProtecting();
-                    // assert enterReferenceCount == exitReferenceCount;
-                    if (enterReferenceCount != exitReferenceCount) {
-                        logger.warn("thread:{} exit protecting with error!, expect:{} actual:{}",
-                                Thread.currentThread(),
-                                enterReferenceCount,
-                                exitReferenceCount
-                        );
-                    }
+        return (T) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{protectTargetInterface}, (proxy, method, args) -> {
+            final int enterReferenceCount = enterProtecting();
+            try {
+                return method.invoke(protectTarget, args);
+            } finally {
+                final int exitReferenceCount = exitProtecting();
+                // assert enterReferenceCount == exitReferenceCount;
+                if (enterReferenceCount != exitReferenceCount) {
+                    logger.warn("thread:{} exit protecting with error!, expect:{} actual:{}",
+                            Thread.currentThread(),
+                            enterReferenceCount,
+                            exitReferenceCount
+                    );
                 }
             }
-
         });
     }
 

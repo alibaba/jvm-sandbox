@@ -75,10 +75,9 @@ public class AgentLauncher {
 
     // 全局持有ClassLoader用于隔离sandbox实现
     private static final Map<String/*NAMESPACE*/, SandboxClassLoader> sandboxClassLoaderMap
-            = new ConcurrentHashMap<String, SandboxClassLoader>();
+            = new ConcurrentHashMap<>();
 
     private static final String CLASS_OF_CORE_CONFIGURE = "com.alibaba.jvm.sandbox.core.CoreConfigure";
-    // private static final String CLASS_OF_JETTY_CORE_SERVER = "com.alibaba.jvm.sandbox.core.server.jetty.JettyCoreServer";
     private static final String CLASS_OF_PROXY_CORE_SERVER = "com.alibaba.jvm.sandbox.core.server.ProxyCoreServer";
 
 
@@ -130,9 +129,7 @@ public class AgentLauncher {
                 || !file.canWrite())) {
             throw new RuntimeException("write to result file : " + file + " failed.");
         } else {
-            FileWriter fw = null;
-            try {
-                fw = new FileWriter(file, true);
+            try (final FileWriter fw = new FileWriter(file, true)) {
                 fw.append(
                         format("%s;%s;%s;%s\n",
                                 namespace,
@@ -144,15 +141,8 @@ public class AgentLauncher {
                 fw.flush();
             } catch (IOException e) {
                 throw new RuntimeException(e);
-            } finally {
-                if (null != fw) {
-                    try {
-                        fw.close();
-                    } catch (IOException e) {
-                        // ignore
-                    }
-                }
             }
+            // ignore
         }
     }
 
@@ -311,7 +301,7 @@ public class AgentLauncher {
     }
 
     private static Map<String, String> toFeatureMap(final String featureString) {
-        final Map<String, String> featureMap = new LinkedHashMap<String, String>();
+        final Map<String, String> featureMap = new LinkedHashMap<>();
 
         // 不对空字符串进行解析
         if (isBlankString(featureString)) {
@@ -381,7 +371,6 @@ public class AgentLauncher {
                 featureMap,
                 KEY_PROPERTIES_FILE_PATH,
                 getSandboxPropertiesPath(getSandboxHome(featureMap))
-                // SANDBOX_PROPERTIES_PATH
         );
     }
 

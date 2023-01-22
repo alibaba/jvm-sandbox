@@ -80,21 +80,20 @@ This clock has two implementation classes，
 
 ```java
     /**
-     * One is normal to achieve
-     */
-    static class NormalClock extends Clock {
+ * One is normal to achieve
+ */
+static class NormalClock extends Clock {
 
-        @Override
-        void checkState() {
-            return;
-        }
-
-        @Override
-        void delay() throws InterruptedException {
-            Thread.sleep(1000L);
-        }
-
+    @Override
+    void checkState() {
     }
+
+    @Override
+    void delay() throws InterruptedException {
+        Thread.sleep(1000L);
+    }
+
+}
 ```
 
   Run up to once every second

@@ -64,19 +64,16 @@ public class JettyCoreServer implements CoreServer {
     public void unbind() throws IOException {
         try {
 
-            initializer.destroyProcess(new Initializer.Processor() {
-                @Override
-                public void process() throws Throwable {
+            initializer.destroyProcess(() -> {
 
-                    if (null != httpServer) {
+                if (null != httpServer) {
 
-                        // stop http server
-                        logger.info("{} is stopping", JettyCoreServer.this);
-                        httpServer.stop();
-
-                    }
+                    // stop http server
+                    logger.info("{} is stopping", JettyCoreServer.this);
+                    httpServer.stop();
 
                 }
+
             });
 
             // destroy http server
@@ -177,19 +174,16 @@ public class JettyCoreServer implements CoreServer {
     public synchronized void bind(final CoreConfigure cfg, final Instrumentation inst) throws IOException {
         this.cfg = cfg;
         try {
-            initializer.initProcess(new Initializer.Processor() {
-                @Override
-                public void process() throws Throwable {
-                    LogbackUtils.init(
-                            cfg.getNamespace(),
-                            cfg.getCfgLibPath() + File.separator + "sandbox-logback.xml"
-                    );
-                    logger.info("initializing server. cfg={}", cfg);
-                    jvmSandbox = new JvmSandbox(cfg, inst);
-                    initHttpServer();
-                    initJettyContextHandler();
-                    httpServer.start();
-                }
+            initializer.initProcess(() -> {
+                LogbackUtils.init(
+                        cfg.getNamespace(),
+                        cfg.getCfgLibPath() + File.separator + "sandbox-logback.xml"
+                );
+                logger.info("initializing server. cfg={}", cfg);
+                jvmSandbox = new JvmSandbox(cfg, inst);
+                initHttpServer();
+                initJettyContextHandler();
+                httpServer.start();
             });
 
             // 初始化加载所有的模块

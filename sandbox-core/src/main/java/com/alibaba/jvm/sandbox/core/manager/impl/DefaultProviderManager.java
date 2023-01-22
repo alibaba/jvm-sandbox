@@ -29,8 +29,8 @@ import java.util.ServiceLoader;
 public class DefaultProviderManager implements ProviderManager {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Collection<ModuleJarLoadingChain> moduleJarLoadingChains = new ArrayList<ModuleJarLoadingChain>();
-    private final Collection<ModuleLoadingChain> moduleLoadingChains = new ArrayList<ModuleLoadingChain>();
+    private final Collection<ModuleJarLoadingChain> moduleJarLoadingChains = new ArrayList<>();
+    private final Collection<ModuleLoadingChain> moduleLoadingChains = new ArrayList<>();
     private final CoreConfigure cfg;
 
     public DefaultProviderManager(final CoreConfigure cfg) {

@@ -142,7 +142,7 @@ public class ObjectIDs {
      * @param <T>      映射回的对象类型
      * @return Java对象
      */
-
+    @SuppressWarnings("unchecked")
     public <T> T getObject(final int objectID) {
 
         if (NULL_ID == objectID) {

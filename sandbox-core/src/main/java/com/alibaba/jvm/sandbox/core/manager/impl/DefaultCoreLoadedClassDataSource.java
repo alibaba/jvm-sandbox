@@ -27,17 +27,20 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Instrumentation inst;
     private final boolean isEnableUnsafe;
+    private final boolean isNativeSupported;
 
     public DefaultCoreLoadedClassDataSource(final Instrumentation inst,
-                                            final boolean isEnableUnsafe) {
+                                            final boolean isEnableUnsafe,
+                                            final boolean isNativeSupported) {
         this.inst = inst;
         this.isEnableUnsafe = isEnableUnsafe;
+        this.isNativeSupported = isNativeSupported;
     }
 
     @Override
     public Set<Class<?>> list() {
-        final Set<Class<?>> classes = new LinkedHashSet<Class<?>>();
-        for (Class<?> clazz : inst.getAllLoadedClasses()) {
+        final Set<Class<?>> classes = new LinkedHashSet<>();
+        for(final Class<?> clazz : inst.getAllLoadedClasses()) {
             classes.add(clazz);
         }
         return classes;
@@ -79,7 +82,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
         SandboxProtector.instance.enterProtecting();
         try {
 
-            final List<Class<?>> classes = new ArrayList<Class<?>>();
+            final List<Class<?>> classes = new ArrayList<>();
             if (null == matcher) {
                 return classes;
             }
@@ -101,7 +104,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
                 }
                 try {
                     if (isRemoveUnsupported) {
-                        if (new UnsupportedMatcher(clazz.getClassLoader(), isEnableUnsafe)
+                        if (new UnsupportedMatcher(clazz.getClassLoader(), isEnableUnsafe, isNativeSupported)
                                 .and(matcher)
                                 .matching(ClassStructureFactory.createClassStructure(clazz))
                                 .isMatched()) {
@@ -139,7 +142,7 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
      */
     @Override
     public Set<Class<?>> find(Filter filter) {
-        return new LinkedHashSet<Class<?>>(find(new ExtFilterMatcher(make(filter)), false));
+        return new LinkedHashSet<>(find(new ExtFilterMatcher(make(filter)), false));
     }
 
 }

@@ -1,6 +1,5 @@
 package com.alibaba.jvm.sandbox.core;
 
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreModuleManager;
@@ -20,11 +19,12 @@ public class JvmSandbox {
     /**
      * 需要提前加载的sandbox工具类
      */
-    private final static List<String> earlyLoadSandboxClassNameList = new ArrayList<String>();
+    private final static List<String> earlyLoadSandboxClassNameList = new ArrayList<>();
 
     static {
         earlyLoadSandboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.SandboxClassUtils");
         earlyLoadSandboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByAsm");
+        earlyLoadSandboxClassNameList.add("com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler");
     }
 
     private final CoreConfigure cfg;
@@ -32,12 +32,12 @@ public class JvmSandbox {
 
     public JvmSandbox(final CoreConfigure cfg,
                       final Instrumentation inst) {
-        EventListenerHandler.getSingleton();
         this.cfg = cfg;
+        cfg.setNativeSupported(inst.isNativeMethodPrefixSupported());
         this.coreModuleManager = SandboxProtector.instance.protectProxy(CoreModuleManager.class, new DefaultCoreModuleManager(
                 cfg,
                 inst,
-                new DefaultCoreLoadedClassDataSource(inst, cfg.isEnableUnsafe()),
+                new DefaultCoreLoadedClassDataSource(inst, cfg.isEnableUnsafe(), cfg.isNativeSupported()),
                 new DefaultProviderManager(cfg)
         ));
 

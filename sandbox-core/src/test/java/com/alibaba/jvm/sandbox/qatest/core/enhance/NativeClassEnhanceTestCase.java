@@ -95,7 +95,7 @@ public class NativeClassEnhanceTestCase {
             throw e.getTargetException();
             // assertEquals(e.getTargetException().getClass(), UnsatisfiedLinkError.class);
         }
-        Assert.assertTrue("not arrive", false);
+        Assert.fail("not arrive");
     }
 
     @Test(expected = UnsatisfiedLinkError.class)
@@ -120,6 +120,6 @@ public class NativeClassEnhanceTestCase {
             throw e.getTargetException();
             // assertEquals(e.getTargetException().getClass(), UnsatisfiedLinkError.class);
         }
-        Assert.assertTrue("not arrive", false);
+        Assert.fail("not arrive");
     }
 }

@@ -14,7 +14,7 @@ import static com.alibaba.jvm.sandbox.qatest.core.util.AssertUtils.assertArrayEq
  */
 public class TracingEventListener extends InterruptedEventListener {
 
-    private final List<Event.Type> eventTracing = new ArrayList<Event.Type>();
+    private final List<Event.Type> eventTracing = new ArrayList<>();
 
     @Override
     public void onEvent(Event event) throws Throwable {
@@ -39,7 +39,7 @@ public class TracingEventListener extends InterruptedEventListener {
         assertEventProcessor();
         assertArrayEquals(
                 exceptEventTypes,
-                getEventTracing().toArray(new Event.Type[]{})
+                getEventTracing().toArray(Event.Type.EMPTY)
         );
     }
 

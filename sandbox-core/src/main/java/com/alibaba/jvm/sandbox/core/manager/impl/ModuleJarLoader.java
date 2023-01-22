@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.ServiceLoader;
+import java.util.Set;
 
 class ModuleJarLoader {
 
