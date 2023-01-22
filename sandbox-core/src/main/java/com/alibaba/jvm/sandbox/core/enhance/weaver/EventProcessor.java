@@ -28,7 +28,7 @@ class EventProcessor {
 
         // 调用堆栈
         private final GaStack<Integer> stack
-                = new ThreadUnsafeGaStack<Integer>();
+                = new ThreadUnsafeGaStack<>();
 
         // 是否需要忽略整个调用过程
         private boolean isIgnoreProcess = false;
@@ -173,7 +173,7 @@ class EventProcessor {
     final int listenerId;
     final EventListener listener;
     final Event.Type[] eventTypes;
-    final ThreadLocal<Process> processRef = ThreadLocal.withInitial(() -> new java.lang.Process());
+    final ThreadLocal<Process> processRef = ThreadLocal.withInitial(Process::new);
 
     EventProcessor(final int listenerId,
                    final EventListener listener,

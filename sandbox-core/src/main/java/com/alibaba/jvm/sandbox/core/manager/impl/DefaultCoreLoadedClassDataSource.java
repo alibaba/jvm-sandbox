@@ -40,7 +40,9 @@ public class DefaultCoreLoadedClassDataSource implements CoreLoadedClassDataSour
     @Override
     public Set<Class<?>> list() {
         final Set<Class<?>> classes = new LinkedHashSet<>();
-        Collections.addAll(classes, inst.getAllLoadedClasses());
+        for(final Class<?> clazz : inst.getAllLoadedClasses()) {
+            classes.add(clazz);
+        }
         return classes;
     }
 
