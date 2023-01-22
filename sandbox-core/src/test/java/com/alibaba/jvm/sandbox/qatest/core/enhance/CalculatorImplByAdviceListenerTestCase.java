@@ -14,7 +14,8 @@ import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.ERRO
 import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.TestCase.ADD$EXCEPTION;
 import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.TestCase.SUM$EXCEPTION;
 import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * AdviceListener相关测试用例

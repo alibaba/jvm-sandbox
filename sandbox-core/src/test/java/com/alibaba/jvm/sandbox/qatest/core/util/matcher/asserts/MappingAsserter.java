@@ -4,7 +4,8 @@ import java.util.*;
 
 import static com.alibaba.jvm.sandbox.qatest.core.util.matcher.asserts.MappingAsserter.Mode.FULL;
 import static org.apache.commons.lang3.StringUtils.join;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
 public abstract class MappingAsserter<K, T> implements Asserter<Collection<T>> {
 

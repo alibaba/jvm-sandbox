@@ -8,7 +8,6 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.http.printer.ConcurrentLinkedQueuePrinter;
 import com.alibaba.jvm.sandbox.api.http.printer.Printer;
-import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
 import org.kohsuke.MetaInfServices;
