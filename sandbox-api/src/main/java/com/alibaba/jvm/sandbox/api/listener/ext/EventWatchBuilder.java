@@ -758,12 +758,7 @@ public class EventWatchBuilder {
 
             filters.add(makeExtFilter(filter, bfClass));
         }
-        return new EventWatchCondition() {
-            @Override
-            public Filter[] getOrFilterArray() {
-                return filters.toArray(new Filter[0]);
-            }
-        };
+        return () -> filters.toArray(new Filter[0]);
     }
 
     private Filter makeExtFilter(final Filter filter,

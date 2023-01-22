@@ -10,6 +10,12 @@
     </parent>
     <artifactId>sandbox-mgr-provider</artifactId>
     <name>sandbox-mgr-provider ${sandbox.version}</name>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+    </properties>
+
     <build>
         <finalName>sandbox-mgr-provider-${project.version}</finalName>
         <plugins>

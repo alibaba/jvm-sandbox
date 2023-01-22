@@ -37,15 +37,12 @@ public class LogExceptionModule implements Module, LoadCompleted {
                 .onClass(Exception.class)
                 .includeBootstrap()
                 .onBehavior("<init>")
-                .onWatch(new EventListener() {
-                    @Override
-                    public void onEvent(Event event) throws Throwable {
-                        final BeforeEvent bEvent = (BeforeEvent) event;
-                        exLogger.info("{} occur an exception: {}",
-                                getJavaClassName(bEvent.target.getClass()),
-                                bEvent.target
-                        );
-                    }
+                .onWatch(event -> {
+                    final BeforeEvent bEvent = (BeforeEvent) event;
+                    exLogger.info("{} occur an exception: {}",
+                            getJavaClassName(bEvent.target.getClass()),
+                            bEvent.target
+                    );
                 }, BEFORE);
     }
 

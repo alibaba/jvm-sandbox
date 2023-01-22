@@ -120,19 +120,16 @@ public class LogServletAccessModule implements Module, LoadCompleted {
                                 classOfHttpServletResponse,
                                 advice.getTarget().getClass().getClassLoader(),
                                 advice.getParameterArray()[1],
-                                new MethodInterceptor() {
-                                    @Override
-                                    public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-                                        if (contains(
-                                                new String[]{
-                                                        "setStatus",
-                                                        "sendError"
-                                                },
-                                                methodInvocation.getMethod().getName())) {
-                                            httpAccess.setStatus((Integer) methodInvocation.getArguments()[0]);
-                                        }
-                                        return methodInvocation.proceed();
+                                methodInvocation -> {
+                                    if (contains(
+                                            new String[]{
+                                                    "setStatus",
+                                                    "sendError"
+                                            },
+                                            methodInvocation.getMethod().getName())) {
+                                        httpAccess.setStatus((Integer) methodInvocation.getArguments()[0]);
                                     }
+                                    return methodInvocation.proceed();
                                 }));
 
                     }

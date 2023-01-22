@@ -134,37 +134,32 @@ public class InterfaceProxyUtils {
         return Proxy.newProxyInstance(
                 targetClassLoader,
                 new Class<?>[]{interfaceClassInTargetClassLoader},
-                new InvocationHandler() {
+                (proxy, method, args) -> interceptor.invoke(new MethodInvocation() {
                     @Override
-                    public Object invoke(Object proxy, final Method method, final Object[] args) throws Throwable {
-                        return interceptor.invoke(new MethodInvocation() {
-                            @Override
-                            public Method getMethod() {
-                                return method;
-                            }
-
-                            @Override
-                            public Object[] getArguments() {
-                                return args;
-                            }
-
-                            @Override
-                            public Object proceed() throws Throwable {
-                                return method.invoke(target, args);
-                            }
-
-                            @Override
-                            public Object getThis() {
-                                return target;
-                            }
-
-                            @Override
-                            public AccessibleObject getStaticPart() {
-                                return method;
-                            }
-                        });
+                    public Method getMethod() {
+                        return method;
                     }
-                }
+
+                    @Override
+                    public Object[] getArguments() {
+                        return args;
+                    }
+
+                    @Override
+                    public Object proceed() throws Throwable {
+                        return method.invoke(target, args);
+                    }
+
+                    @Override
+                    public Object getThis() {
+                        return target;
+                    }
+
+                    @Override
+                    public AccessibleObject getStaticPart() {
+                        return method;
+                    }
+                })
         );
     }
 

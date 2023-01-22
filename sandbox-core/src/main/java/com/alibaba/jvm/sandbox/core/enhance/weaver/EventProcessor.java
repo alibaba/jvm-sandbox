@@ -173,12 +173,7 @@ class EventProcessor {
     final int listenerId;
     final EventListener listener;
     final Event.Type[] eventTypes;
-    final ThreadLocal<Process> processRef = new ThreadLocal<Process>() {
-        @Override
-        protected Process initialValue() {
-            return new Process();
-        }
-    };
+    final ThreadLocal<Process> processRef = ThreadLocal.withInitial(() -> new java.lang.Process());
 
     EventProcessor(final int listenerId,
                    final EventListener listener,

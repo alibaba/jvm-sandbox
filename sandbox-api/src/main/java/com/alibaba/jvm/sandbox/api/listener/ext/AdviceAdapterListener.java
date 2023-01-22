@@ -25,12 +25,7 @@ public class AdviceAdapterListener implements EventListener {
         this.adviceListener = adviceListener;
     }
 
-    private final ThreadLocal<OpStack> opStackRef = new ThreadLocal<OpStack>() {
-        @Override
-        protected OpStack initialValue() {
-            return new OpStack();
-        }
-    };
+    private final ThreadLocal<OpStack> opStackRef = ThreadLocal.withInitial(() -> new OpStack());
 
     @Override
     final public void onEvent(final Event event) throws Throwable {

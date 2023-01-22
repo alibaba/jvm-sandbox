@@ -155,6 +155,10 @@ try {
 
 ## 项目构建
 
+当你修改了sandbox的代码后，想打包成自己需要的发行版，可以执行以下命令
+
+> 脚本执行目录默认为项目主目录，后续不在另外说明
+
 ```shell
 cd bin
 ./sandbox-package.sh
@@ -166,6 +170,34 @@ cd bin
 
 1. 必须用JDK1.8进行构建，工程自身和maven插件中使用了tools.jar
 2. 必须在Linux/Mac/Unix下进行构建，有部分测试用例没有考虑好$USER_HOME的目录路径在windows下的特殊性，会导致测试用例跑不通过。
+
+### 修改sandbox版本号
+
+sandbox的版本号需要修改所有的pom文件以及`.//sandbox-core/src/main/resources/com/alibaba/jvm/sandbox/version`，这里有一个脚本方便执行
+
+```shell
+cd bin
+./set-version.sh -s 1.4.0
+```
+
+脚本第一个参数是`[s|r]`
+- **s** : SNAPSHOT版，会自动在版本号后边追加`-SNAPSHOT`
+- **r** : 正式版
+
+### 本地仓库安装api包
+
+如果本次你修改了sandbox-api、sandbox-common-api、sandbox-module-starter等本应该发布到中央仓库的包，但你需要本地测试验证，可以执行以下命令
+
+```shell
+mvn clean install
+```
+
+以下四个包将会安装到本地manven仓库
+- sandbox
+- sandbox-api
+- sandbox-common-api
+- sandbox-module-starter
+- sandbox-provider-api
 
 ## 项目背景
 

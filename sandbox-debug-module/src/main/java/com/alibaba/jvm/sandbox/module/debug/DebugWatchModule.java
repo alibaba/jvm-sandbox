@@ -46,12 +46,7 @@ public class DebugWatchModule extends ParamSupported implements Module {
         final List<Trigger> triggers = getParameters(
                 params,
                 "at",
-                new Converter<Trigger>() {
-                    @Override
-                    public Trigger convert(String string) {
-                        return EnumUtils.getEnum(Trigger.class, string);
-                    }
-                },
+                string -> EnumUtils.getEnum(Trigger.class, string),
                 Trigger.BEFORE);
         final Printer printer = new ConcurrentLinkedQueuePrinter(writer);
 

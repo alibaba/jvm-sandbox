@@ -11,6 +11,11 @@
     <artifactId>sandbox-agent</artifactId>
     <name>sandbox-agent ${sandbox.version}</name>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+    </properties>
+
     <build>
         <finalName>sandbox-agent-${project.version}</finalName>
         <plugins>

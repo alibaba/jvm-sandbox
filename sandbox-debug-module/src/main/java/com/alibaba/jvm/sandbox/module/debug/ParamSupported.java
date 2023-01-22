@@ -36,36 +36,16 @@ public class ParamSupported {
     static {
 
         // 转换为字符串
-        regConverter(new Converter<String>() {
-            @Override
-            public String convert(String string) {
-                return string;
-            }
-        }, String.class);
+        regConverter(string -> string, String.class);
 
         // 转换为Long
-        regConverter(new Converter<Long>() {
-            @Override
-            public Long convert(String string) {
-                return Long.valueOf(string);
-            }
-        }, long.class, Long.class);
+        regConverter(string -> Long.valueOf(string), long.class, Long.class);
 
         // 转换为Double
-        regConverter(new Converter<Double>() {
-            @Override
-            public Double convert(String string) {
-                return Double.valueOf(string);
-            }
-        }, double.class, Double.class);
+        regConverter(string -> Double.valueOf(string), double.class, Double.class);
 
         // 转换为Integer
-        regConverter(new Converter<Integer>() {
-            @Override
-            public Integer convert(String string) {
-                return Integer.valueOf(string);
-            }
-        }, int.class, Integer.class);
+        regConverter(string -> Integer.valueOf(string), int.class, Integer.class);
 
     }
 

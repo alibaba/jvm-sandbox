@@ -12,6 +12,11 @@
     <artifactId>sandbox-mgr-module</artifactId>
     <name>sandbox-mgr-module ${sandbox.version}</name>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+    </properties>
+
     <build>
         <finalName>sandbox-mgr-module-${project.version}</finalName>
         <plugins>

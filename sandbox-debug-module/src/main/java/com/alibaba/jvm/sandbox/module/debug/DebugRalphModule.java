@@ -224,29 +224,17 @@ public class DebugRalphModule extends ParamSupported implements Module {
      * 异常类型
      */
     enum ExceptionType {
-        IOException(new ExceptionFactory() {
-            @Override
-            public Exception newInstance(String message) {
-                return new IOException(message);
-            }
+        IOException(message -> {
+            return new IOException(message);
         }),
-        NullPointException(new ExceptionFactory() {
-            @Override
-            public Exception newInstance(String message) {
-                return new NullPointerException(message);
-            }
+        NullPointException(message -> {
+            return new NullPointerException(message);
         }),
-        RuntimeException(new ExceptionFactory() {
-            @Override
-            public Exception newInstance(String message) {
-                return new RuntimeException(message);
-            }
+        RuntimeException(message -> {
+            return new RuntimeException(message);
         }),
-        TimeoutException(new ExceptionFactory() {
-            @Override
-            public Exception newInstance(String message) {
-                return new TimeoutException(message);
-            }
+        TimeoutException(message -> {
+            return new TimeoutException(message);
         });
 
         private final ExceptionFactory factory;
@@ -277,12 +265,7 @@ public class DebugRalphModule extends ParamSupported implements Module {
         final ExceptionType exType = getParameter(
                 param,
                 "type",
-                new Converter<ExceptionType>() {
-                    @Override
-                    public ExceptionType convert(String string) {
-                        return EnumUtils.getEnum(ExceptionType.class, string);
-                    }
-                },
+                string -> EnumUtils.getEnum(ExceptionType.class, string),
                 ExceptionType.RuntimeException
         );
 
@@ -295,21 +278,18 @@ public class DebugRalphModule extends ParamSupported implements Module {
                 .onBehavior(mnPattern)
                 .onWatching()
                 .withProgress(new ProgressPrinter(printer))
-                .onWatch(new EventListener() {
-                    @Override
-                    public void onEvent(Event event) throws Throwable {
+                .onWatch(event -> {
 
-                        final BeforeEvent bEvent = (BeforeEvent) event;
-                        printer.println(String.format(
-                                "%s.%s will be wreck by exception: %s on %s",
-                                bEvent.javaClassName,
-                                bEvent.javaMethodName,
-                                exType.name(),
-                                Thread.currentThread().getName()
-                        ));
+                    final BeforeEvent bEvent = (BeforeEvent) event;
+                    printer.println(String.format(
+                            "%s.%s will be wreck by exception: %s on %s",
+                            bEvent.javaClassName,
+                            bEvent.javaMethodName,
+                            exType.name(),
+                            Thread.currentThread().getName()
+                    ));
 
-                        throwsImmediately(exType.throwIt("wreck-it by Ralph!!!"));
-                    }
+                    throwsImmediately(exType.throwIt("wreck-it by Ralph!!!"));
                 }, BEFORE);
 
         // --- 等待结束 ---
@@ -355,29 +335,26 @@ public class DebugRalphModule extends ParamSupported implements Module {
                 .onBehavior(mnPattern)
                 .onWatching()
                 .withProgress(new ProgressPrinter(printer))
-                .onWatch(new EventListener() {
-                    @Override
-                    public void onEvent(Event event) throws Throwable {
+                .onWatch(event -> {
 
-                        final BeforeEvent bEvent = (BeforeEvent) event;
-                        printer.println(String.format(
-                                "%s.%s will be delay %s(ms) on %s",
-                                bEvent.javaClassName,
-                                bEvent.javaMethodName,
-                                delayMs,
-                                Thread.currentThread().getName()
-                        ));
+                    final BeforeEvent bEvent = (BeforeEvent) event;
+                    printer.println(String.format(
+                            "%s.%s will be delay %s(ms) on %s",
+                            bEvent.javaClassName,
+                            bEvent.javaMethodName,
+                            delayMs,
+                            Thread.currentThread().getName()
+                    ));
 
-                        delayLock.lock();
-                        try {
-                            // 如果已经结束，则放弃本次请求
-                            if (isFinishRef.get()) {
-                                return;
-                            }
-                            delayCondition.await(delayMs, TimeUnit.MILLISECONDS);
-                        } finally {
-                            delayLock.unlock();
+                    delayLock.lock();
+                    try {
+                        // 如果已经结束，则放弃本次请求
+                        if (isFinishRef.get()) {
+                            return;
                         }
+                        delayCondition.await(delayMs, TimeUnit.MILLISECONDS);
+                    } finally {
+                        delayLock.unlock();
                     }
                 }, BEFORE);
 
