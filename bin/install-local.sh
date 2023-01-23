@@ -20,7 +20,7 @@ exit_on_err()
 # display usage
 function usage() {
 echo "
-usage: ${0} [h] [l:]
+usage: ${0} [h] [p:]
 
     -h : help
          Prints the ${0} help
@@ -36,6 +36,7 @@ function main() {
 
     while getopts "hp:" ARG
     do
+        # shellcheck disable=SC2220
         case ${ARG} in
             h)
                 usage
@@ -84,6 +85,7 @@ function main() {
         || exit_on_err 1 "permission denied, replace ${SANDBOX_INSTALL_LOCAL}/bin/sandbox.sh failed."
 
     # got sandbox's version
+    # shellcheck disable=SC2155
     local SANDBOX_VERSION=$(cat ${SANDBOX_INSTALL_LOCAL}/cfg/version)
 
     echo "VERSION=${SANDBOX_VERSION}"
