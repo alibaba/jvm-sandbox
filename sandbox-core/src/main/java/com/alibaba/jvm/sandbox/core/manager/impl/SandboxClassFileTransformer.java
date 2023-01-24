@@ -127,7 +127,6 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
 
         final ClassStructure classStructure = getClassStructure(loader, classBeingRedefined, srcByteCodeArray);
         final MatchingResult matchingResult = new UnsupportedMatcher(loader, isEnableUnsafe, isNativeSupported).and(matcher).matching(classStructure);
-        final Set<String> behaviorSignCodes = matchingResult.getBehaviorSignCodes();
 
         // 如果一个行为都没匹配上也不用继续了
         if (!matchingResult.isMatched()) {
@@ -135,6 +134,7 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
             return null;
         }
 
+        final Set<String> behaviorSignCodes = matchingResult.getBehaviorSignCodes();
         // 开始进行类匹配
         try {
             final byte[] toByteCodeArray = new EventEnhancer(nativePrefix).toByteCodeArray(
