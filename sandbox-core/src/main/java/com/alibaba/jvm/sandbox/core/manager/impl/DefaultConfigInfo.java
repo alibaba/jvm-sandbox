@@ -39,6 +39,11 @@ class DefaultConfigInfo implements ConfigInfo {
     }
 
     @Override
+    public boolean isNativeSupported() {
+        return cfg.isNativeSupported();
+    }
+
+    @Override
     public String getHome() {
         return cfg.getJvmSandboxHome();
     }
