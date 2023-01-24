@@ -2,10 +2,10 @@ package com.alibaba.jvm.sandbox.core.util.matcher;
 
 import com.alibaba.jvm.sandbox.api.annotation.Stealth;
 import com.alibaba.jvm.sandbox.core.manager.impl.SandboxClassFileTransformer;
+import com.alibaba.jvm.sandbox.core.util.CoreStringUtils;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.Access;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -31,7 +31,7 @@ public class UnsupportedMatcher implements Matcher {
 
     // 是否因sandbox容器本身缺陷所暂时无法支持的类
     private boolean isUnsupportedClass(final ClassStructure classStructure) {
-        return StringUtils.containsAny(
+        return CoreStringUtils.containsAny(
                 classStructure.getJavaClassName(),
 
                 /*
@@ -44,7 +44,7 @@ public class UnsupportedMatcher implements Matcher {
 
     // 是否已知的常用非必要增强类，常见的如CGLIB、Spring增强的类
     private boolean isNotNecessaryClass(final ClassStructure classStructure) {
-        return StringUtils.containsAny(
+        return CoreStringUtils.containsAny(
                 classStructure.getJavaClassName(),
                 "$$FastClassBySpringCGLIB$$",
                 "$$EnhancerBySpringCGLIB$$",
