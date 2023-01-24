@@ -29,13 +29,23 @@ public class UnsupportedMatcher implements Matcher {
         this.isNativeSupported = isNativeSupported;
     }
 
-    /*
-     * 是否因sandbox容器本身缺陷所暂时无法支持的类
-     */
+    // 是否因sandbox容器本身缺陷所暂时无法支持的类
     private boolean isUnsupportedClass(final ClassStructure classStructure) {
         return StringUtils.containsAny(
                 classStructure.getJavaClassName(),
-                // "$$Lambda$",
+
+                /*
+                 * Lambda的方法拦截是一个深坑，常规则做法是拦截LambdaMetaFactory，
+                 * 但这种做法相当不干净，而且无法实现ATTACH模式，所以这里选择性的放弃了对Lambda表达式的支持
+                 */
+                "$$Lambda$"
+        );
+    }
+
+    // 是否已知的常用非必要增强类，常见的如CGLIB、Spring增强的类
+    private boolean isNotNecessaryClass(final ClassStructure classStructure) {
+        return StringUtils.containsAny(
+                classStructure.getJavaClassName(),
                 "$$FastClassBySpringCGLIB$$",
                 "$$EnhancerBySpringCGLIB$$",
                 "$$EnhancerByCGLIB$$",
@@ -105,9 +115,9 @@ public class UnsupportedMatcher implements Matcher {
     public MatchingResult matching(final ClassStructure classStructure) {
         final MatchingResult result = new MatchingResult();
         if (isUnsupportedClass(classStructure)
+                || isNotNecessaryClass(classStructure)
                 || isJvmSandboxClass(classStructure)
                 || isFromStealthClassLoader()
-            // || isStealthClass(classStructure) FIX #292
         ) {
             return result;
         }
