@@ -30,7 +30,7 @@ import static org.apache.commons.lang3.ArrayUtils.contains;
  */
 @MetaInfServices(Module.class)
 @Information(id = "debug-servlet-access", version = "0.0.2", author = "luanjia@taobao.com")
-public class LogServletAccessModule implements Module, LoadCompleted {
+public class DebugLogServletAccessModule implements Module, LoadCompleted {
 
     private final Logger logger = LoggerFactory.getLogger("DEBUG-SERVLET-ACCESS");
 
