@@ -36,15 +36,19 @@ public class ParamSupported {
     static {
 
         // 转换为字符串
+        //noinspection unchecked
         regConverter(string -> string, String.class);
 
         // 转换为Long
+        //noinspection unchecked
         regConverter(Long::valueOf, long.class, Long.class);
 
         // 转换为Double
+        //noinspection unchecked
         regConverter(Double::valueOf, double.class, Double.class);
 
         // 转换为Integer
+        //noinspection unchecked
         regConverter(Integer::valueOf, int.class, Integer.class);
 
     }
@@ -56,6 +60,7 @@ public class ParamSupported {
      * @param typeArray 类型的Java类数组
      * @param <T>       类型
      */
+    @SuppressWarnings("unchecked")
     protected static <T> void regConverter(Converter<T> converter, Class<T>... typeArray) {
         for (final Class<T> type : typeArray) {
             converterMap.put(type, converter);
@@ -72,6 +77,7 @@ public class ParamSupported {
                 : defaultValue;
     }
 
+    @SuppressWarnings("unchecked")
     protected static <T> List<T> getParameters(final Map<String, String[]> param,
                                                final String name,
                                                final Converter<T> converter,
@@ -124,6 +130,7 @@ public class ParamSupported {
                                         final String name,
                                         final Class<T> type,
                                         final T defaultValue) {
+        //noinspection unchecked
         return getParameter(
                 param,
                 name,
@@ -132,10 +139,13 @@ public class ParamSupported {
         );
     }
 
+    @SuppressWarnings("unchecked")
+    @SafeVarargs
     protected static <T> List<T> getParameters(final Map<String, String[]> param,
                                                final String name,
                                                final Class<T> type,
                                                final T... defaultValueArray) {
+        //noinspection unchecked
         return getParameters(
                 param,
                 name,

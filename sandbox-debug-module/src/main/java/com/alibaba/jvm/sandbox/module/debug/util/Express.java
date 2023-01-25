@@ -89,13 +89,6 @@ public interface Express {
      */
     class ExpressFactory {
 
-//        private static final ThreadLocal<Express> expressRef = new ThreadLocal<Express>() {
-//            @Override
-//            protected Express initialValue() {
-//                return new OgnlExpress();
-//            }
-//        };
-
         /**
          * 构造表达式执行类
          *

@@ -274,10 +274,6 @@ public class Spy {
             private Node pre;
             private Node next;
 
-//            Node() {
-//                this(null);
-//            }
-
             Node(final Thread thread) {
                 this(thread, null);
             }

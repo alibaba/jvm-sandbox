@@ -237,12 +237,10 @@ public class FeatureCodec {
 
                 case ESCAPE_CHAR: {
                     state = ESCAPE_DECODE_STATE.READ_CHAR;
-                    if (isSpecialChar(c)) {
-                        segmentCharArray[segmentCharArrayIndex++] = c;
-                    } else {
+                    if (!isSpecialChar(c)) {
                         segmentCharArray[segmentCharArrayIndex++] = ESCAPE_PREFIX_CHAR;
-                        segmentCharArray[segmentCharArrayIndex++] = c;
                     }
+                    segmentCharArray[segmentCharArrayIndex++] = c;
                     break;
                 }
             }//switch

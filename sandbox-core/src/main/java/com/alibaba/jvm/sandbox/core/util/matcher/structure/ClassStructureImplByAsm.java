@@ -299,9 +299,6 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final static Cache<Pair, ClassStructure> classStructureCache
             = CacheBuilder.newBuilder().maximumSize(1024).build();
 
-//    private final static GaLRUCache<Pair, ClassStructure> classStructureCache
-//            = new GaLRUCache<Pair, ClassStructure>(1024);
-
     // 构造一个类结构实例
     private ClassStructure newInstance(final String javaClassName) {
 

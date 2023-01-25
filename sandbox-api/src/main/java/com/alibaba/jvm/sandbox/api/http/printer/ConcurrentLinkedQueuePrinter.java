@@ -108,13 +108,11 @@ public class ConcurrentLinkedQueuePrinter implements Printer {
     }
 
     private long computeDelayTimeMs() {
-        if (delayTimeMs >= delayMaxTimeMs) {
-            return delayTimeMs;
-        } else {
+        if (delayTimeMs < delayMaxTimeMs) {
             final long newDelayTime = delayTimeMs + delayStepTimeMs;
             delayTimeMs = min(newDelayTime, delayMaxTimeMs);
-            return delayTimeMs;
         }
+        return delayTimeMs;
     }
 
     private void resetDelayTimeMs() {

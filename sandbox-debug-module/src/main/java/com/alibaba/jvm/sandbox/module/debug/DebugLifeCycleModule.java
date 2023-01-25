@@ -86,15 +86,11 @@ public class DebugLifeCycleModule implements Module, ModuleLifecycle{
 
                     @Override
                     public boolean doClassFilter(int access, String javaClassName, String superClassTypeJavaClassName, String[] interfaceTypeJavaClassNameArray, String[] annotationTypeJavaClassNameArray) {
-//                        if (cnPattern != null || !mnPattern.isEmpty())
-//                            return javaClassName.matches(cnPattern);
                         return false;
                     }
 
                     @Override
                     public boolean doMethodFilter(int access, String javaMethodName, String[] parameterTypeJavaClassNameArray, String[] throwsTypeJavaClassNameArray, String[] annotationTypeJavaClassNameArray) {
-//                        if (mnPattern != null || !mnPattern.isEmpty())
-//                            return javaMethodName.matches(mnPattern);
                         return false;
                     }
 

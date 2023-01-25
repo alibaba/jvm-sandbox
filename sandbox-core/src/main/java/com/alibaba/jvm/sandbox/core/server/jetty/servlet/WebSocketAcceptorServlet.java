@@ -153,7 +153,7 @@ public class WebSocketAcceptorServlet extends WebSocketServlet {
 
     }
 
-    private class InnerOnTextMessage extends InnerWebSocket implements OnTextMessage {
+    private static class InnerOnTextMessage extends InnerWebSocket implements OnTextMessage {
 
         private final TextMessageListener textMessageListener;
 

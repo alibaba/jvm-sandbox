@@ -85,6 +85,7 @@ public class InterfaceProxyUtils {
      * @param <T>            目标接口类型
      * @return 被目标接口操纵的傀儡对象实例
      */
+    @SuppressWarnings("unchecked")
     public static <T> T puppet(final Class<T> interfaceClass,
                                final Object target) {
         return (T) Proxy.newProxyInstance(

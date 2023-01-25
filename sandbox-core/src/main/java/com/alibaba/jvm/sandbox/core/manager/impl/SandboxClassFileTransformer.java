@@ -92,10 +92,27 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                 return null;
             }
 
+            // 如果未开启unsafe开关，是不允许增强来自BootStrapClassLoader的类
+            if (!isEnableUnsafe
+                    && null == loader) {
+                logger.debug("transform ignore {}, class from bootstrap but unsafe.enable=false.", internalClassName);
+                return null;
+            }
+
+            // 匹配类是否符合要求，如果一个行为都没匹配上也不用继续了
+            final MatchingResult result = new UnsupportedMatcher(loader, isEnableUnsafe, isNativeSupported)
+                    .and(matcher)
+                    .matching(getClassStructure(loader, classBeingRedefined, srcByteCodeArray));
+            if (!result.isMatched()) {
+                logger.debug("transform ignore {}, no behaviors matched in loader={}", internalClassName, loader);
+                return null;
+            }
+
+            // 找到匹配的类和方法，开始增强
             return _transform(
+                    result,
                     loader,
                     internalClassName,
-                    classBeingRedefined,
                     srcByteCodeArray
             );
 
@@ -114,27 +131,14 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
         }
     }
 
-    private byte[] _transform(final ClassLoader loader,
+    private byte[] _transform(final MatchingResult result,
+                              final ClassLoader loader,
                               final String internalClassName,
-                              final Class<?> classBeingRedefined,
                               final byte[] srcByteCodeArray) {
-        // 如果未开启unsafe开关，是不允许增强来自BootStrapClassLoader的类
-        if (!isEnableUnsafe
-                && null == loader) {
-            logger.debug("transform ignore {}, class from bootstrap but unsafe.enable=false.", internalClassName);
-            return null;
-        }
 
-        final ClassStructure classStructure = getClassStructure(loader, classBeingRedefined, srcByteCodeArray);
-        final MatchingResult matchingResult = new UnsupportedMatcher(loader, isEnableUnsafe, isNativeSupported).and(matcher).matching(classStructure);
+        // 匹配到的方法签名
+        final Set<String> behaviorSignCodes = result.getBehaviorSignCodes();
 
-        // 如果一个行为都没匹配上也不用继续了
-        if (!matchingResult.isMatched()) {
-            logger.debug("transform ignore {}, no behaviors matched in loader={}", internalClassName, loader);
-            return null;
-        }
-
-        final Set<String> behaviorSignCodes = matchingResult.getBehaviorSignCodes();
         // 开始进行类匹配
         try {
             final byte[] toByteCodeArray = new EventEnhancer(nativePrefix).toByteCodeArray(

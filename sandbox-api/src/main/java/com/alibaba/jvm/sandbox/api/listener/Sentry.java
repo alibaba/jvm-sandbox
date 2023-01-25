@@ -65,6 +65,7 @@ public class Sentry<M> implements Attachment {
 
     @Override
     public <T> T attachment() {
+        //noinspection unchecked
         return (T) getData().attachment;
     }
 

@@ -89,15 +89,6 @@ public interface AsmMethods {
             String.class, String.class, int.class
     );
 
-//    /**
-//     * asm method of {@link Class#forName(String)}
-//     */
-//    Method ASM_METHOD_Class$forName = getAsmMethod(
-//            Class.class,
-//            "forName",
-//            String.class
-//    );
-
     Method ASM_METHOD_Class$getName = getAsmMethod(
             Class.class,
             "getName"
@@ -110,14 +101,5 @@ public interface AsmMethods {
             Object.class,
             "getClass"
     );
-
-//    /**
-//     * asm method of {@link Class#getClassLoader()}
-//     */
-//    Method ASM_METHOD_Class$getClassLoader = getAsmMethod(
-//            Class.class,
-//            "getClassLoader"
-//    );
-
 
 }

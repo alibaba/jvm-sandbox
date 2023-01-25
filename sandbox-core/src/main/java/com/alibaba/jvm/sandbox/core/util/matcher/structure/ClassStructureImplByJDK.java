@@ -88,7 +88,7 @@ class AccessImplByJDKBehavior extends ModifierAccess {
         super(method.getModifiers());
     }
 
-    AccessImplByJDKBehavior(Constructor constructor) {
+    AccessImplByJDKBehavior(Constructor<?> constructor) {
         super(constructor.getModifiers());
     }
 
@@ -208,7 +208,7 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
         );
     }
 
-    private BehaviorStructure newBehaviorStructure(final Constructor constructor) {
+    private BehaviorStructure newBehaviorStructure(final Constructor<?> constructor) {
         return new BehaviorStructure(
                 new AccessImplByJDKBehavior(constructor),
                 "<init>",

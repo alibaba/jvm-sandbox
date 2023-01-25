@@ -508,7 +508,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
      */
     private static class ProxyMethod extends org.objectweb.asm.commons.Method {
 
-        public int access;
+        public final int access;
 
         public ProxyMethod(int access , String name, String descriptor) {
             super(name, descriptor);

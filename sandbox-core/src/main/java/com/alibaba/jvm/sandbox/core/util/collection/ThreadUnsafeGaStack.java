@@ -86,6 +86,7 @@ public class ThreadUnsafeGaStack<E> implements GaStack<E> {
     @Override
     public E peekLast() {
         checkForPopOrPeek();
+        //noinspection unchecked
         return (E) elementArray[0];
     }
 
