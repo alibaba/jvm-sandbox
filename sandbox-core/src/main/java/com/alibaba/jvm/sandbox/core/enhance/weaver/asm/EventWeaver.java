@@ -2,7 +2,6 @@ package com.alibaba.jvm.sandbox.core.enhance.weaver.asm;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,43 +14,6 @@ import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toInternalCla
 import static com.alibaba.jvm.sandbox.core.util.SandboxStringUtils.toJavaClassName;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 import static org.apache.commons.lang3.StringUtils.join;
-
-/**
- * 用于Call的代码锁
- */
-class CallAsmCodeLock extends AsmCodeLock {
-
-    CallAsmCodeLock(AdviceAdapter aa) {
-        super(
-                aa,
-                new int[]{
-                        ICONST_2, POP
-                },
-                new int[]{
-                        ICONST_3, POP
-                }
-        );
-    }
-}
-
-/**
- * TryCatch块,用于ExceptionsTable重排序
- */
-class AsmTryCatchBlock {
-
-    final Label start;
-    final Label end;
-    final Label handler;
-    final String type;
-
-    AsmTryCatchBlock(Label start, Label end, Label handler, String type) {
-        this.start = start;
-        this.end = end;
-        this.handler = handler;
-        this.type = type;
-    }
-
-}
 
 /**
  * 方法事件编织者
@@ -68,7 +30,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
     private final Set<String> signCodes;
     private final Event.Type[] eventTypeArray;
     private final String nativePrefix;
-    private final List<Method> proxyNativeAsmMethods = new ArrayList<>();
+    private final List<ProxyMethod> proxyNativeAsmMethods = new ArrayList<>();
 
     // 是否支持LINE_EVENT
     // LINE_EVENT需要对Class做特殊的增强，所以需要在这里做特殊的判断
@@ -130,15 +92,19 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         return (access & Opcodes.ACC_NATIVE) != 0;
     }
 
+    /*
+     * native 方法插桩策略：
+     * 1.原始的native变为非native方法，并增加AOP式方法体
+     * 2.在AOP中增加调用wrapper后的native方法
+     * 3.增加proxy的native方法
+     */
     private MethodVisitor rewriteNativeMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
-        //native 方法插桩策略：
-        //1.原始的native变为非native方法，并增加AOP式方法体
-        //2.在AOP中增加调用wrapper后的native方法
-        //3.增加wrapper的native方法
+
         //去掉native
         int newAccess = access & ~ACC_NATIVE;
+
         final MethodVisitor mv = super.visitMethod(newAccess, name, desc, signature, exceptions);
-        return new ReWriteMethod(api, new JSRInlinerAdapter(mv, newAccess, name, desc, signature, exceptions), newAccess, name, desc) {
+        return new ReWriteAdapter(api, new JSRInlinerAdapter(mv, newAccess, name, desc, signature, exceptions), newAccess, name, desc) {
 
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
@@ -158,7 +124,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
             @Override
             public void visitEnd() {
                 if (!name.startsWith(nativePrefix)) {
-                    codeLockForTracing.lock(() -> {
+                    getCodeLock().lock(() -> {
                         mark(beginLabel);
                         loadArgArray();
                         dup();
@@ -174,8 +140,8 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                         storeArgArray();
                         pop();
                         processControl(desc, false);
-                        final String proxyNativeMethodName = nativePrefix + name;
-                        final Method proxyMethod = new Method(access, proxyNativeMethodName, desc);
+                        final String proxyMethodName = nativePrefix + name;
+                        final ProxyMethod proxyMethod = new ProxyMethod(access, proxyMethodName, desc);
                         final String owner = toInternalClassName(targetJavaClassName);
                         if (!isStaticMethod()) {
                             loadThis();
@@ -217,7 +183,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
     private MethodVisitor rewriteNormalMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
         final MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        return new ReWriteMethod(api, new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions), access, name, desc) {
+        return new ReWriteAdapter(api, new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions), access, name, desc) {
 
             private final Label beginLabel = new Label();
             private final Label endLabel = new Label();
@@ -242,7 +208,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 /*
                  * 触发Before事件并执行流程变更逻辑
                  */
-                codeLockForTracing.lock(() -> {
+                getCodeLock().lock(() -> {
                     mark(beginLabel);
                     loadArgArray();
                     dup();
@@ -258,8 +224,10 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                     storeArgArray();
                     pop();
                     processControl(desc, false);
-                    isMethodEnter = true;
                 });
+
+                // 标记方法体已进入
+                isMethodEnter = true;
 
             }
 
@@ -309,12 +277,12 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
             @Override
             protected void onMethodExit(final int opcode) {
 
-                if (!isThrow(opcode) && !codeLockForTracing.isLock()) {
+                if (!isThrow(opcode) && !getCodeLock().isLock()) {
 
                     /*
                      * 触发Return事件并执行流程变更逻辑
                      */
-                    codeLockForTracing.lock(() -> {
+                    getCodeLock().lock(() -> {
                         loadReturn(opcode);
                         push(namespace);
                         push(listenerId);
@@ -334,7 +302,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 /*
                  * 触发Throw事件并执行流程变更逻辑
                  */
-                codeLockForTracing.lock(() -> {
+                getCodeLock().lock(() -> {
                     newLocal = newLocal(ASM_TYPE_THROWABLE);
                     storeLocal(newLocal);
                     loadLocal(newLocal);
@@ -356,7 +324,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
             @Override
             public void visitLineNumber(final int lineNumber, Label label) {
                 if (isMethodEnter && isLineEnable) {
-                    codeLockForTracing.lock(() -> {
+                    getCodeLock().lock(() -> {
                         push(lineNumber);
                         push(namespace);
                         push(listenerId);
@@ -368,12 +336,6 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
             }
 
             @Override
-            public void visitInsn(int opcode) {
-                super.visitInsn(opcode);
-                codeLockForTracing.code(opcode);
-            }
-
-            @Override
             public void visitMethodInsn(final int opcode,
                                         final String owner,
                                         final String name,
@@ -382,14 +344,14 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
                 // 如果CALL事件没有启用，则不需要对CALL进行增强
                 // 如果正在CALL的方法来自于SANDBOX本身，则不需要进行追踪
-                if (!isMethodEnter || !isCallEnable || codeLockForTracing.isLock()) {
+                if (!isMethodEnter || !isCallEnable || getCodeLock().isLock()) {
                     super.visitMethodInsn(opcode, owner, name, desc, itf);
                     return;
                 }
 
                 if (hasCallBefore) {
                     // 方法调用前通知
-                    codeLockForTracing.lock(() -> {
+                    getCodeLock().lock(() -> {
                         push(tracingCurrentLineNumber);
                         push(toJavaClassName(owner));
                         push(name);
@@ -404,7 +366,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 // 这样可以节省大量的字节码
                 if (!hasCallThrows) {
                     super.visitMethodInsn(opcode, owner, name, desc, itf);
-                    codeLockForTracing.lock(() -> {
+                    getCodeLock().lock(() -> {
                         push(namespace);
                         push(listenerId);
                         invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnCallReturn);
@@ -427,7 +389,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
                 if (hasCallReturn) {
                     // 方法调用后通知
-                    codeLockForTracing.lock(() -> {
+                    getCodeLock().lock(() -> {
                         push(namespace);
                         push(listenerId);
                         invokeStatic(ASM_TYPE_SPY, ASM_METHOD_Spy$spyMethodOnCallReturn);
@@ -440,7 +402,7 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
                 // {
 
                 catchException(tracingBeginLabel, tracingEndLabel, ASM_TYPE_THROWABLE);
-                codeLockForTracing.lock(() -> {
+                getCodeLock().lock(() -> {
                     dup();
                     invokeVirtual(ASM_TYPE_OBJECT, ASM_METHOD_Object$getClass);
                     invokeVirtual(ASM_TYPE_CLASS, ASM_METHOD_Class$getName);
@@ -520,4 +482,38 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
 
         super.visitEnd();
     }
+
+    /**
+     * TryCatch块,用于ExceptionsTable重排序
+     */
+    private static class AsmTryCatchBlock {
+
+        final Label start;
+        final Label end;
+        final Label handler;
+        final String type;
+
+        AsmTryCatchBlock(Label start, Label end, Label handler, String type) {
+            this.start = start;
+            this.end = end;
+            this.handler = handler;
+            this.type = type;
+        }
+
+    }
+
+    /**
+     * @author zhuangpeng
+     * @since 2020/9/13
+     */
+    private static class ProxyMethod extends org.objectweb.asm.commons.Method {
+
+        public int access;
+
+        public ProxyMethod(int access , String name, String descriptor) {
+            super(name, descriptor);
+            this.access = access;
+        }
+    }
+
 }

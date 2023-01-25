@@ -1,6 +1,5 @@
 package com.alibaba.jvm.sandbox.core.enhance.weaver.asm;
 
-import com.alibaba.jvm.sandbox.core.enhance.weaver.CodeLock;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -14,12 +13,10 @@ import java.com.alibaba.jvm.sandbox.spy.Spy;
  * ReWriteJavaMethod
  * Created by luanjia@taobao.com on 16/5/20.
  */
-public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, AsmMethods {
+public class ReWriteAdapter extends CodeLockAdapter implements Opcodes, AsmTypes, AsmMethods {
 
     private final Type[] argumentTypeArray;
 
-    // 代码锁
-    protected final CodeLock codeLockForTracing = new CallAsmCodeLock(this);
     /**
      * Creates a new {@link AdviceAdapter}.
      *
@@ -30,7 +27,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
      * @param name   the method's name.
      * @param desc   the method's descriptor (see {@link Type Type}).
      */
-    protected ReWriteMethod(int api, MethodVisitor mv, int access, String name, String desc) {
+    protected ReWriteAdapter(int api, MethodVisitor mv, int access, String name, String desc) {
         super(api, mv, access, name, desc);
         this.argumentTypeArray = Type.getArgumentTypes(desc);
     }
@@ -62,7 +59,53 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         }
     }
 
-    final protected void checkCastReturn(Type returnType) {
+    /**
+     * 保存参数数组
+     */
+    final protected void storeArgArray() {
+        for (int i = 0; i < argumentTypeArray.length; i++) {
+            dup();
+            push(i);
+            arrayLoad(ASM_TYPE_OBJECT);
+            unbox(argumentTypeArray[i]);
+            storeArg(i);
+        }
+    }
+
+    /**
+     * 加载返回值
+     * @param returnType 返回值类型
+     */
+    final protected void loadReturn(Type returnType) {
+        final int sort = returnType.getSort();
+        switch (sort) {
+            case Type.VOID: {
+                pushNull();
+                break;
+            }
+            case Type.LONG:
+            case Type.DOUBLE: {
+                dup2();
+                box(Type.getReturnType(methodDesc));
+                break;
+            }
+            case Type.ARRAY:
+            case Type.OBJECT: {
+                dup();
+                break;
+            }
+            case Type.METHOD:
+            default: {
+                dup();
+                box(Type.getReturnType(methodDesc));
+                break;
+            }
+        }
+    }
+
+    // 拆箱返回
+    // 比如返回类型为double时，Ret#respond类型为Double，此时需要拆箱操作
+    private void unboxReturn(Type returnType) {
         /*
          * [respond]
          */
@@ -128,48 +171,8 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         }
     }
 
-    /**
-     * 保存参数数组
-     */
-    final protected void storeArgArray() {
-        for (int i = 0; i < argumentTypeArray.length; i++) {
-            dup();
-            push(i);
-            arrayLoad(ASM_TYPE_OBJECT);
-            unbox(argumentTypeArray[i]);
-            storeArg(i);
-        }
-    }
-
-    final protected void loadReturn(Type returnType) {
-        final int sort = returnType.getSort();
-        switch (sort) {
-            case Type.VOID: {
-                pushNull();
-                break;
-            }
-            case Type.LONG:
-            case Type.DOUBLE: {
-                dup2();
-                box(Type.getReturnType(methodDesc));
-                break;
-            }
-            case Type.ARRAY:
-            case Type.OBJECT: {
-                dup();
-                break;
-            }
-            case Type.METHOD:
-            default: {
-                dup();
-                box(Type.getReturnType(methodDesc));
-                break;
-            }
-        }
-    }
-
-
-    final protected void popRawRespond(Type returnType) {
+    // 销毁栈顶原有元素
+    private void popRawRespond(Type returnType) {
         final int sort = returnType.getSort();
         switch (sort) {
             case Type.VOID: {
@@ -190,48 +193,14 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         }
     }
 
-    @Override
-    public void visitIntInsn(final int opcode, final int operand) {
-        super.visitIntInsn(opcode,operand);
-        codeLockForTracing.code(opcode);
-    }
-
-    @Override
-    public void visitVarInsn(final int opcode, final int var) {
-        super.visitVarInsn(opcode,var);
-        codeLockForTracing.code(opcode);
-    }
-
-    @Override
-    public void visitTypeInsn(final int opcode, final String type) {
-        super.visitTypeInsn(opcode,type);
-        codeLockForTracing.code(opcode);
-    }
-
-    @Override
-    public void visitFieldInsn(
-        final int opcode, final String owner, final String name, final String descriptor) {
-        super.visitFieldInsn(opcode,owner,name,descriptor);
-        codeLockForTracing.code(opcode);
-    }
-
-    @Override
-    public void visitJumpInsn(final int opcode, final Label label) {
-        super.visitJumpInsn(opcode,label);
-        codeLockForTracing.code(opcode);
-    }
-
-    public void visitLdcInsn(final Object value) {
-        super.visitLdcInsn(value);
-        codeLockForTracing.code(Opcodes.LDC);
-    }
-
-    @Override
-    public void visitIincInsn(final int var, final int increment) {
-        super.visitIincInsn(var,increment);
-        codeLockForTracing.code(Opcodes.IINC);
-    }
-
+    /**
+     * 方法流程控制
+     *
+     * @param desc            方法ASM描述
+     * @param isPopRawRespond 是否需要弹出栈返回值
+     *                        在RETURN和THROWS的事件流程控制中，栈顶是有元素的。
+     *                        流程控制过程中如遇到需要改变现有流程情况需要销毁原有栈顶元素
+     */
     final protected void processControl(String desc, boolean isPopRawRespond) {
         final Label finishLabel = new Label();
         final Label returnLabel = new Label();
@@ -290,7 +259,7 @@ public class ReWriteMethod extends AdviceAdapter implements Opcodes, AsmTypes, A
         /*
          *  [spyRespond] ,execute XReturn
          */
-        checkCastReturn(type);
+        unboxReturn(type);
         /*
          * [spyRespond] Return Exit
          * [spyRespond]
