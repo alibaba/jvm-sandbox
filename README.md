@@ -108,16 +108,23 @@ try {
 ![jvm-sandbox-architecture](https://github.com/alibaba/jvm-sandbox/wiki/img/jvm-sandbox-architecture.png)
 
 ## 快速安装
-
-- **下载并安装**
+- **下载并安装或自行打包**
 
   ```shell
-  # 下载最新版本的JVM-SANDBOX
-  wget http://ompc.oss-cn-hangzhou.aliyuncs.com/jvm-sandbox/release/sandbox-stable-bin.zip
+  # 下载最新版本的JVM-SANDBOX，oss已到期，或者oss链接不可访问时，可选择自行打包
+  wget https://ompc.oss-cn-hangzhou.aliyuncs.com/jvm-sandbox/release/sandbox-1.3.3-bin.zip
 
   # 解压
-  unzip sandbox-stable-bin.zip
+  unzip sandbox-1.3.3-bin.zip
   ```
+  ```shell
+  #自行打包
+   cd bin
+   ./sandbox-packages.sh
+   #target路径下有多种构建件类型，选择一个合适的使用
+   cd ../target
+  ```
+
 
 - **挂载目标应用**
 
