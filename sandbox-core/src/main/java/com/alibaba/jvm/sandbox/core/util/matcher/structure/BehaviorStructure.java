@@ -79,7 +79,7 @@ public class BehaviorStructure extends MemberStructure {
     }
 
     private Collection<String> takeJavaClassNames(final Collection<ClassStructure> classStructures) {
-        final Collection<String> javaClassNames = new ArrayList<String>();
+        final Collection<String> javaClassNames = new ArrayList<>();
         for (final ClassStructure classStructure : classStructures) {
             javaClassNames.add(classStructure.getJavaClassName());
         }

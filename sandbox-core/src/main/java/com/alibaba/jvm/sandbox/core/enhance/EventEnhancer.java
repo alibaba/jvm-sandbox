@@ -2,7 +2,6 @@ package com.alibaba.jvm.sandbox.core.enhance;
 
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
-import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
 import com.alibaba.jvm.sandbox.core.util.AsmUtils;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import org.objectweb.asm.ClassReader;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.instrument.Instrumentation;
 import java.util.Set;
 
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
@@ -29,12 +27,12 @@ import static org.objectweb.asm.Opcodes.ASM7;
 public class EventEnhancer implements Enhancer {
 
     private static final Logger logger = LoggerFactory.getLogger(EventEnhancer.class);
+    private final String nativePrefix;
 
-    private final boolean isNativeMethodEnhanceSupported;
-
-    public EventEnhancer(boolean isNativeMethodEnhanceSupported) {
-        this.isNativeMethodEnhanceSupported = isNativeMethodEnhanceSupported;
+    public EventEnhancer(String nativePrefix) {
+        this.nativePrefix = nativePrefix;
     }
+
 
     /**
      * 创建ClassWriter for asm
@@ -106,12 +104,12 @@ public class EventEnhancer implements Enhancer {
         final ClassWriter cw = createClassWriter(targetClassLoader, cr);
         final int targetClassLoaderObjectID = ObjectIDs.instance.identity(targetClassLoader);
         cr.accept(
-                new EventWeaver(isNativeMethodEnhanceSupported,
-                        ASM7, cw, namespace, listenerId,
+                new EventWeaver(ASM7, cw, namespace, listenerId,
                         targetClassLoaderObjectID,
                         cr.getClassName(),
                         signCodes,
-                        eventTypeArray
+                        eventTypeArray,
+                        nativePrefix
                 ),
                 EXPAND_FRAMES
         );

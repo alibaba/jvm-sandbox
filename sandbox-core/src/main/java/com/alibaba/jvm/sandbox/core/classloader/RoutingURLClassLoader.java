@@ -1,6 +1,5 @@
 package com.alibaba.jvm.sandbox.core.classloader;
 
-import com.alibaba.jvm.sandbox.core.classloader.BusinessClassLoaderHolder.DelegateBizClassLoader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,19 +20,11 @@ import java.util.Enumeration;
 public class RoutingURLClassLoader extends URLClassLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(RoutingURLClassLoader.class);
-    private final ClassLoadingLock classLoadingLock = new ClassLoadingLock();
     private final Routing[] routingArray;
 
     public RoutingURLClassLoader(final URL[] urls,
                                  final Routing... routingArray) {
         super(urls);
-        this.routingArray = routingArray;
-    }
-
-    public RoutingURLClassLoader(final URL[] urls,
-                                 final ClassLoader parent,
-                                 final Routing... routingArray) {
-        super(urls, parent);
         this.routingArray = routingArray;
     }
 
@@ -60,51 +51,38 @@ public class RoutingURLClassLoader extends URLClassLoader {
 
     @Override
     protected Class<?> loadClass(final String javaClassName, final boolean resolve) throws ClassNotFoundException {
-        return classLoadingLock.loadingInLock(javaClassName, new ClassLoadingLock.ClassLoading() {
-            @Override
-            public Class<?> loadClass(String javaClassName) throws ClassNotFoundException {
-                // 优先查询类加载路由表,如果命中路由规则,则优先从路由表中的ClassLoader完成类加载
-                if (ArrayUtils.isNotEmpty(routingArray)) {
-                    for (final Routing routing : routingArray) {
-                        if (!routing.isHit(javaClassName)) {
-                            continue;
-                        }
-                        final ClassLoader routingClassLoader = routing.classLoader;
-                        try {
-                            return routingClassLoader.loadClass(javaClassName);
-                        } catch (Exception cause) {
-                            // 如果在当前routingClassLoader中找不到应该优先加载的类(应该不可能，但不排除有就是故意命名成同名类)
-                            // 此时应该忽略异常，继续往下加载
-                            // ignore...
-                        }
-                    }
+        // 优先查询类加载路由表,如果命中路由规则,则优先从路由表中的ClassLoader完成类加载
+        if (ArrayUtils.isNotEmpty(routingArray)) {
+            for (final Routing routing : routingArray) {
+                if (!routing.isHit(javaClassName)) {
+                    continue;
                 }
-
-                // 先走一次已加载类的缓存，如果没有命中，则继续往下加载
-                final Class<?> loadedClass = findLoadedClass(javaClassName);
-                if (loadedClass != null) {
-                    return loadedClass;
-                }
-
+                final ClassLoader routingClassLoader = routing.classLoader;
                 try {
-                    Class<?> aClass = findClass(javaClassName);
-                    if (resolve) {
-                        resolveClass(aClass);
-                    }
-                    return aClass;
+                    return routingClassLoader.loadClass(javaClassName);
                 } catch (Exception cause) {
-                    DelegateBizClassLoader delegateBizClassLoader = BusinessClassLoaderHolder.getBusinessClassLoader();
-                    try {
-                        if(null != delegateBizClassLoader){
-                            return delegateBizClassLoader.loadClass(javaClassName,resolve);
-                        }
-                    } catch (Exception e) {
-                        //忽略异常，继续往下加载
-                    }
-                    return RoutingURLClassLoader.super.loadClass(javaClassName, resolve);
+                    // 如果在当前routingClassLoader中找不到应该优先加载的类(应该不可能，但不排除有就是故意命名成同名类)
+                    // 此时应该忽略异常，继续往下加载
+                    // ignore...
                 }
             }
-        });
+        }
+
+        // 先走一次已加载类的缓存，如果没有命中，则继续往下加载
+        final Class<?> loadedClass = findLoadedClass(javaClassName);
+        if (loadedClass != null) {
+            return loadedClass;
+        }
+
+        try {
+            Class<?> aClass = findClass(javaClassName);
+            if (resolve) {
+                resolveClass(aClass);
+            }
+            return aClass;
+        } catch (Exception cause) {
+            return super.loadClass(javaClassName, resolve);
+        }
     }
 
 
@@ -113,7 +91,7 @@ public class RoutingURLClassLoader extends URLClassLoader {
      */
     public static class Routing {
 
-        private final Collection<String/*REGEX*/> regexExpresses = new ArrayList<String>();
+        private final Collection<String/*REGEX*/> regexExpresses = new ArrayList<>();
         private final ClassLoader classLoader;
 
         /**

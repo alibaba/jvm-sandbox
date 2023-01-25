@@ -4,8 +4,6 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.event.Event.Type;
 import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
-import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxClassUtils;
 import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
@@ -17,10 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureFactory.createClassStructure;
 
@@ -29,12 +25,15 @@ import static com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure
  *
  * @author luanjia@taobao.com
  */
-public class SandboxClassFileTransformer implements ClassFileTransformer{
+public class SandboxClassFileTransformer implements ClassFileTransformer {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final AtomicBoolean setNativeMethodPrefix = new AtomicBoolean(false);
-    private final Instrumentation inst;
+    /**
+     * SANDBOX限定前缀
+     */
+    public static final String SANDBOX_SPECIAL_PREFIX = "$$SANDBOX$";
+
     private final int watchId;
     private final String uniqueId;
     private final Matcher matcher;
@@ -45,16 +44,17 @@ public class SandboxClassFileTransformer implements ClassFileTransformer{
     private final String namespace;
     private final int listenerId;
     private final AffectStatistic affectStatistic = new AffectStatistic();
-    private final boolean isNativeMethodEnhanceSupported;
+    private final boolean isNativeSupported;
+    private final String nativePrefix;
 
-    SandboxClassFileTransformer(Instrumentation inst, final int watchId,
-        final String uniqueId,
-        final Matcher matcher,
-        final EventListener eventListener,
-        final boolean isEnableUnsafe,
-        final Type[] eventTypeArray,
-        final String namespace) {
-        this.inst = inst;
+    SandboxClassFileTransformer(final int watchId,
+                                final String uniqueId,
+                                final Matcher matcher,
+                                final EventListener eventListener,
+                                final boolean isEnableUnsafe,
+                                final Type[] eventTypeArray,
+                                final String namespace,
+                                final boolean isNativeSupported) {
         this.watchId = watchId;
         this.uniqueId = uniqueId;
         this.matcher = matcher;
@@ -63,7 +63,8 @@ public class SandboxClassFileTransformer implements ClassFileTransformer{
         this.eventTypeArray = eventTypeArray;
         this.namespace = namespace;
         this.listenerId = ObjectIDs.instance.identity(eventListener);
-        this.isNativeMethodEnhanceSupported = inst.isNativeMethodPrefixSupported();
+        this.isNativeSupported = isNativeSupported;
+        this.nativePrefix = String.format("%s$%s$%s", SANDBOX_SPECIAL_PREFIX, namespace, watchId);
     }
 
     // 获取当前类结构
@@ -91,10 +92,27 @@ public class SandboxClassFileTransformer implements ClassFileTransformer{
                 return null;
             }
 
+            // 如果未开启unsafe开关，是不允许增强来自BootStrapClassLoader的类
+            if (!isEnableUnsafe
+                    && null == loader) {
+                logger.debug("transform ignore {}, class from bootstrap but unsafe.enable=false.", internalClassName);
+                return null;
+            }
+
+            // 匹配类是否符合要求，如果一个行为都没匹配上也不用继续了
+            final MatchingResult result = new UnsupportedMatcher(loader, isEnableUnsafe, isNativeSupported)
+                    .and(matcher)
+                    .matching(getClassStructure(loader, classBeingRedefined, srcByteCodeArray));
+            if (!result.isMatched()) {
+                logger.debug("transform ignore {}, no behaviors matched in loader={}", internalClassName, loader);
+                return null;
+            }
+
+            // 找到匹配的类和方法，开始增强
             return _transform(
+                    result,
                     loader,
                     internalClassName,
-                    classBeingRedefined,
                     srcByteCodeArray
             );
 
@@ -113,30 +131,17 @@ public class SandboxClassFileTransformer implements ClassFileTransformer{
         }
     }
 
-    private byte[] _transform(final ClassLoader loader,
+    private byte[] _transform(final MatchingResult result,
+                              final ClassLoader loader,
                               final String internalClassName,
-                              final Class<?> classBeingRedefined,
                               final byte[] srcByteCodeArray) {
-        // 如果未开启unsafe开关，是不允许增强来自BootStrapClassLoader的类
-        if (!isEnableUnsafe
-                && null == loader) {
-            logger.debug("transform ignore {}, class from bootstrap but unsafe.enable=false.", internalClassName);
-            return null;
-        }
 
-        final ClassStructure classStructure = getClassStructure(loader, classBeingRedefined, srcByteCodeArray);
-        final MatchingResult matchingResult = new UnsupportedMatcher(loader, isEnableUnsafe).and(matcher).matching(classStructure);
-        final Set<String> behaviorSignCodes = matchingResult.getBehaviorSignCodes();
-
-        // 如果一个行为都没匹配上也不用继续了
-        if (!matchingResult.isMatched()) {
-            logger.debug("transform ignore {}, no behaviors matched in loader={}", internalClassName, loader);
-            return null;
-        }
+        // 匹配到的方法签名
+        final Set<String> behaviorSignCodes = result.getBehaviorSignCodes();
 
         // 开始进行类匹配
         try {
-            final byte[] toByteCodeArray = new EventEnhancer(isNativeMethodEnhanceSupported).toByteCodeArray(
+            final byte[] toByteCodeArray = new EventEnhancer(nativePrefix).toByteCodeArray(
                     loader,
                     srcByteCodeArray,
                     behaviorSignCodes,
@@ -214,4 +219,14 @@ public class SandboxClassFileTransformer implements ClassFileTransformer{
     public AffectStatistic getAffectStatistic() {
         return affectStatistic;
     }
+
+    /**
+     * 获取本次增强的native方法前缀，
+     * 根据JVM规范，每个ClassFileTransformer必须拥有自己的native方法前缀
+     * @return native方法前缀
+     */
+    public String getNativePrefix() {
+        return nativePrefix;
+    }
+
 }

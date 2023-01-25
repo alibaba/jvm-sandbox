@@ -26,8 +26,7 @@ public interface Filter {
     /**
      * 过滤出匹配的方法
      * <p>
-     * 严格意义上来说，方法{@link Filter#doMethodFilter(int, String, String[], String[], String[])}被调用的时候，
-     * 一定是{@link Filter#doClassFilter(int, String, String, String[], String[])}上一次返回true的调用。
+     * 严格意义上来说，该方法被调用的时候，一定是{@link Filter#doClassFilter(int, String, String, String[], String[])}上一次返回true的调用。
      * 所以可以通过简单的引用就可以在doMethodFilter执行的时候拿到doClassFilter的信息
      * </p>
      * <p>如果你需要综合对Class和Method做一个拉平之后的综合判断，可以考虑使用{@link OrGroupFilter}来实现</p>

@@ -37,6 +37,7 @@ public class CoreConfigure {
     private static final String VAL_LAUNCH_MODE_ATTACH = "attach";
 
     private static final String KEY_UNSAFE_ENABLE = "unsafe.enable";
+    private static final String KEY_NATIVE_SUPPORTED = "native.supported";
 
     // 受保护key数组，在保护key范围之内，以用户传递的配置为准，系统配置不允许覆盖
     private static final String[] PROTECT_KEY_ARRAY = {KEY_NAMESPACE, KEY_SANDBOX_HOME, KEY_LAUNCH_MODE, KEY_SERVER_IP, KEY_SERVER_PORT, KEY_SERVER_CHARSET};
@@ -46,7 +47,7 @@ public class CoreConfigure {
 
     private static final FeatureCodec codec = new FeatureCodec(';', '=');
 
-    private final Map<String, String> featureMap = new LinkedHashMap<String, String>();
+    private final Map<String, String> featureMap = new LinkedHashMap<>();
 
     private CoreConfigure(final String featureString,
                           final String propertiesFilePath) {
@@ -60,7 +61,7 @@ public class CoreConfigure {
     }
 
     private Map<String, String> toPropertiesMap(String propertiesFilePath) {
-        final Map<String, String> propertiesMap = new LinkedHashMap<String, String>();
+        final Map<String, String> propertiesMap = new LinkedHashMap<>();
 
         if(null == propertiesFilePath) {
             return propertiesMap;
@@ -96,28 +97,28 @@ public class CoreConfigure {
     private Map<String, String> merge(Map<String, String> featureMap, Map<String, String> propertiesMap) {
 
         // 以featureMap配置为准
-        final Map<String, String> mergeMap = new LinkedHashMap<String, String>(featureMap);
+        final Map<String, String> mergeMap = new LinkedHashMap<>(featureMap);
 
         // 合并propertiesMap
         for (final Map.Entry<String, String> propertiesEntry : propertiesMap.entrySet()) {
 
-            // 如果是受保护的KEY，则以featureMap中的非空值为准
-            if (mergeMap.containsKey(propertiesEntry.getKey())
-                    && ArrayUtils.contains(PROTECT_KEY_ARRAY, propertiesEntry.getKey())) {
-                continue;
-            }
-
-            // 如果是多值合并的KEY，则不进行覆盖，转为合并
-            else if (ArrayUtils.contains(MULTI_KEY_ARRAY, propertiesEntry.getKey())
+            // 如果是多值KEY，且featureMap中也存在，则进行合并
+            if (ArrayUtils.contains(MULTI_KEY_ARRAY, propertiesEntry.getKey())
                     && mergeMap.containsKey(propertiesEntry.getKey())) {
                 mergeMap.put(
                         propertiesEntry.getKey(),
                         mergeMap.get(propertiesEntry.getKey()) + ";" + propertiesEntry.getValue()
                 );
-                continue;
             }
 
-            // 合并K,V
+            // 如果是受保护KEY，只有在featureMap中为空值时才能合并入
+            else if(ArrayUtils.contains(PROTECT_KEY_ARRAY, propertiesEntry.getKey())) {
+                mergeMap.computeIfAbsent(propertiesEntry.getKey(), k -> propertiesEntry.getValue());
+            }
+
+
+
+            // 其他情况一律以propertiesMap为准
             else {
                 mergeMap.put(propertiesEntry.getKey(), propertiesEntry.getValue());
             }
@@ -198,7 +199,7 @@ public class CoreConfigure {
      */
     public synchronized File[] getUserModuleLibFiles() {
 
-        final Collection<File> foundModuleJarFiles = new LinkedHashSet<File>();
+        final Collection<File> foundModuleJarFiles = new LinkedHashSet<>();
         for (final String path : getUserModuleLibPaths()) {
             final File fileOfPath = new File(path);
             if (fileOfPath.isDirectory()) {
@@ -272,7 +273,7 @@ public class CoreConfigure {
         if (isLaunchByAgentMode()) {
             return Information.Mode.AGENT;
         }
-        if (isLaunchByAttachMode()) {
+        else if (isLaunchByAttachMode()) {
             return Information.Mode.ATTACH;
         }
         return Information.Mode.ATTACH;
@@ -336,6 +337,28 @@ public class CoreConfigure {
         } catch (Exception cause) {
             return Charset.defaultCharset();
         }
+    }
+
+
+    /**
+     * 设置是否支持观察native方法，
+     * 这个值不期望后续被改变，所以设置为default的访问类型
+     * @param isNativeSupported 是否支持观察native方法
+     */
+    void setNativeSupported(boolean isNativeSupported) {
+        featureMap.put(KEY_NATIVE_SUPPORTED, BooleanUtils.toString(
+                isNativeSupported,
+                "true",
+                "false"
+        ));
+    }
+
+    /**
+     * 是否支持观察native方法
+     * @return TRUE | FALSE
+     */
+    public boolean isNativeSupported() {
+        return BooleanUtils.toBoolean(featureMap.get(KEY_NATIVE_SUPPORTED));
     }
 
 }

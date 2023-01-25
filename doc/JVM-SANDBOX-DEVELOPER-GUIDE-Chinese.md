@@ -80,21 +80,20 @@ public abstract class Clock {
 
 ```java
     /**
-     * 一个正常的钟实现
-     */
-    static class NormalClock extends Clock {
+ * 一个正常的钟实现
+ */
+static class NormalClock extends Clock {
 
-        @Override
-        void checkState() {
-            return;
-        }
-
-        @Override
-        void delay() throws InterruptedException {
-            Thread.sleep(1000L);
-        }
-
+    @Override
+    void checkState() {
     }
+
+    @Override
+    void delay() throws InterruptedException {
+        Thread.sleep(1000L);
+    }
+
+}
 ```
 
   运行起来能每隔一秒进行一次报时

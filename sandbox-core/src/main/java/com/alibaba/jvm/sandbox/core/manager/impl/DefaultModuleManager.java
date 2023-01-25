@@ -52,7 +52,7 @@ public class DefaultModuleManager implements ModuleManager {
 
     @Override
     public Collection<Module> list() {
-        final Collection<Module> modules = new ArrayList<Module>();
+        final Collection<Module> modules = new ArrayList<>();
         for (final CoreModule coreModule : coreModuleManager.list()) {
             modules.add(coreModule.getModule());
         }

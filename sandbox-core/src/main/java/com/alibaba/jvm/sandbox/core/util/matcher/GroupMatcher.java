@@ -44,7 +44,7 @@ public abstract class GroupMatcher implements Matcher {
         public MatchingResult matching(ClassStructure classStructure) {
             boolean isFirst = true;
             final MatchingResult result = new MatchingResult();
-            final LinkedHashSet<BehaviorStructure> found = new LinkedHashSet<BehaviorStructure>();
+            final LinkedHashSet<BehaviorStructure> found = new LinkedHashSet<>();
             if (null == matcherArray) {
                 return result;
             }

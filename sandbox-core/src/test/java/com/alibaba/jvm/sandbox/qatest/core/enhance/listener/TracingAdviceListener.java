@@ -22,7 +22,7 @@ public class TracingAdviceListener extends AdviceListener {
     public static final boolean IS_TOP = true;
     public static final boolean IS_NOT_TOP = false;
 
-    private List<String> tracing = new ArrayList<String>();
+    private final List<String> tracing = new ArrayList<>();
 
     public static String generateTracing(final String prefix,
                                          final String javaClassName,

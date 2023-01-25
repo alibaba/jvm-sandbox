@@ -40,13 +40,13 @@ public class ObjectIDs {
 
     // 全局<对象:ID>映射表
     private final WeakHashMap<Object, Integer> objectIDMapping
-            = new WeakHashMap<Object, Integer>();
+            = new WeakHashMap<>();
 
 
     // --- ObjectID : Object 的映射关系维护 ----------------------------------------+
-    private final ReferenceQueue<Object> rQueue = new ReferenceQueue<Object>(); //|
+    private final ReferenceQueue<Object> rQueue = new ReferenceQueue<>(); //|
     private final HashMap<Integer, IdentityWeakReference> identityObjectMapping //|
-            = new HashMap<Integer, IdentityWeakReference>();                    //|
+            = new HashMap<>();                    //|
     // ---------------------------------------------------------------------------+
 
 
@@ -142,7 +142,7 @@ public class ObjectIDs {
      * @param <T>      映射回的对象类型
      * @return Java对象
      */
-
+    @SuppressWarnings("unchecked")
     public <T> T getObject(final int objectID) {
 
         if (NULL_ID == objectID) {

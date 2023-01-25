@@ -4,7 +4,7 @@ import java.util.*;
 
 import static com.alibaba.jvm.sandbox.qatest.core.util.matcher.asserts.MappingAsserter.Mode.FULL;
 import static org.apache.commons.lang3.StringUtils.join;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 public abstract class MappingAsserter<K, T> implements Asserter<Collection<T>> {
@@ -29,7 +29,7 @@ public abstract class MappingAsserter<K, T> implements Asserter<Collection<T>> {
 
 
     private final Mode mode;
-    private final Map<K, Asserter<T>> mappingOfAsserter = new HashMap<K, Asserter<T>>();
+    private final Map<K, Asserter<T>> mappingOfAsserter = new HashMap<>();
 
     public MappingAsserter(Mode mode) {
         this.mode = mode;
@@ -45,18 +45,15 @@ public abstract class MappingAsserter<K, T> implements Asserter<Collection<T>> {
 
     @Override
     public void assertThat(String message, Collection<T> targets) {
-        final Set<K> targetKeySet = new LinkedHashSet<K>();
+        final Set<K> targetKeySet = new LinkedHashSet<>();
         for (final T target : targets) {
             final K targetKey = takeKey(target);
             if (!mappingOfAsserter.containsKey(targetKey)) {
-                assertFalse(
-                        message + String.format(
-                                ":\"%s\" not contains in \n[\n\t%s\n]",
-                                targetKey,
-                                join(mappingOfAsserter.keySet().toArray(new String[]{}), ",\n\t")
-                        ),
-                        mode == FULL
-                );
+                assertNotSame(message + String.format(
+                        ":\"%s\" not contains in \n[\n\t%s\n]",
+                        targetKey,
+                        join(mappingOfAsserter.keySet().toArray(new String[]{}), ",\n\t")
+                ), mode, FULL);
                 continue;
             }
             targetKeySet.add(targetKey);

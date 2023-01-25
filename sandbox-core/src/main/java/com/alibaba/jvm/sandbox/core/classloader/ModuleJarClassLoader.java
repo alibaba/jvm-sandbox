@@ -15,14 +15,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessControlContext;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.jar.JarFile;
+import java.util.*;
 
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.*;
@@ -40,6 +33,13 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
     private final File tempModuleJarFile;
     private final long checksumCRC32;
 
+    /**
+     * 复制要加载的Jar文件为临时文件，这样做的目的是为了规避Jar文件在加载和使用过程中被破坏
+     *
+     * @param moduleJarFile 模块Jar文件
+     * @return 复制的临时文件
+     * @throws IOException 复制文件失败
+     */
     private static File copyToTempFile(final File moduleJarFile) throws IOException {
         File tempFile = File.createTempFile("sandbox_module_jar_", ".jar");
         tempFile.deleteOnExit();
@@ -48,19 +48,19 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
     }
 
     public ModuleJarClassLoader(final File moduleJarFile,
-            final Routing... specialRouting) throws IOException {
+                                final Routing... specialRouting) throws IOException {
         this(moduleJarFile, copyToTempFile(moduleJarFile), specialRouting);
     }
 
     private ModuleJarClassLoader(final File moduleJarFile,
-            final File tempModuleJarFile,
-            final Routing... specialRouting) throws IOException {
+                                 final File tempModuleJarFile,
+                                 final Routing... specialRouting) throws IOException {
         super(
-                new URL[] {new URL("file:" + tempModuleJarFile.getPath())},
+                new URL[]{new URL("file:" + tempModuleJarFile.getPath())},
                 assembleRouting(new Routing(
                         ModuleJarClassLoader.class.getClassLoader(),
-                        "^com\\.alibaba\\.jvm\\.sandbox\\.api\\..*",
-                        "^javax\\.servlet\\..*",
+                        "^com\\.alibaba\\.jvm\\.sandbox\\.api\\..*$",
+                        "^javax\\.servlet\\..*$",
                         "^javax\\.annotation\\.Resource.*$"
                 ), specialRouting)
         );
@@ -80,13 +80,12 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
     /**
      * 合并路由信息
      *
-     * @param selfRouting  自身路由表
+     * @param selfRouting    自身路由表
      * @param specialRouting 扩展路由表
-     *
      * @return 合并完成路由信息
      */
     private static Routing[] assembleRouting(final Routing selfRouting, final Routing... specialRouting) {
-        List<Routing> rs = new ArrayList<Routing>();
+        final List<Routing> rs = new ArrayList<>();
         if (specialRouting != null && specialRouting.length > 0) {
             rs.addAll(Arrays.asList(specialRouting));
         }
@@ -110,7 +109,7 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
         );
 
         // remove ProtectionDomain which loader is ModuleJarClassLoader
-        final Set<ProtectionDomain> cleanProtectionDomainSet = new LinkedHashSet<ProtectionDomain>();
+        final Set<ProtectionDomain> cleanProtectionDomainSet = new LinkedHashSet<>();
         if (ArrayUtils.isNotEmpty(protectionDomainArray)) {
             for (final ProtectionDomain protectionDomain : protectionDomainArray) {
                 if (protectionDomain.getClassLoader() == null
@@ -144,45 +143,12 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
 
     public void closeIfPossible() {
         onJarUnLoadCompleted();
+
+        // 关闭ClassLoader，释放资源
         try {
-
-            // 如果是JDK7+的版本, URLClassLoader实现了Closeable接口，直接调用即可
-            if (this instanceof Closeable) {
-                logger.debug("JDK is 1.7+, use URLClassLoader[file={}].close()", moduleJarFile);
-                try {
-                    ((Closeable)this).close();
-                } catch (Throwable cause) {
-                    logger.warn("close ModuleJarClassLoader[file={}] failed. JDK7+", moduleJarFile, cause);
-                }
-                return;
-            }
-
-
-            // 对于JDK6的版本，URLClassLoader要关闭起来就显得有点麻烦，这里弄了一大段代码来稍微处理下
-            // 而且还不能保证一定释放干净了，至少释放JAR文件句柄是没有什么问题了
-            try {
-                logger.debug("JDK is less then 1.7+, use File.release()");
-                final Object sun_misc_URLClassPath = unCaughtGetClassDeclaredJavaFieldValue(URLClassLoader.class, "ucp", this);
-                final Object java_util_Collection = unCaughtGetClassDeclaredJavaFieldValue(sun_misc_URLClassPath.getClass(), "loaders", sun_misc_URLClassPath);
-
-                for (Object sun_misc_URLClassPath_JarLoader :
-                        ((Collection) java_util_Collection).toArray()) {
-                    try {
-                        final JarFile java_util_jar_JarFile = unCaughtGetClassDeclaredJavaFieldValue(
-                                sun_misc_URLClassPath_JarLoader.getClass(),
-                                "jar",
-                                sun_misc_URLClassPath_JarLoader
-                        );
-                        java_util_jar_JarFile.close();
-                    } catch (Throwable t) {
-                        // if we got this far, this is probably not a JAR loader so skip it
-                    }
-                }
-
-            } catch (Throwable cause) {
-                logger.warn("close ModuleJarClassLoader[file={}] failed. probably not a HOTSPOT VM", moduleJarFile, cause);
-            }
-
+            ((Closeable) this).close();
+        } catch (Throwable cause) {
+            logger.warn("close ModuleJarClassLoader[file={}] failed. JDK7+", moduleJarFile, cause);
         } finally {
 
             // 在这里删除掉临时文件
@@ -190,10 +156,6 @@ public class ModuleJarClassLoader extends RoutingURLClassLoader {
 
         }
 
-    }
-
-    public File getModuleJarFile() {
-        return moduleJarFile;
     }
 
     @Override

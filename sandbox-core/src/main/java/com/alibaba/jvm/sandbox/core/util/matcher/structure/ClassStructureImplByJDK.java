@@ -88,7 +88,7 @@ class AccessImplByJDKBehavior extends ModifierAccess {
         super(method.getModifiers());
     }
 
-    AccessImplByJDKBehavior(Constructor constructor) {
+    AccessImplByJDKBehavior(Constructor<?> constructor) {
         super(constructor.getModifiers());
     }
 
@@ -123,7 +123,7 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
     }
 
     private List<ClassStructure> newInstances(final Class[] classArray) {
-        final List<ClassStructure> classStructures = new ArrayList<ClassStructure>();
+        final List<ClassStructure> classStructures = new ArrayList<>();
         if (null != classArray) {
             for (final Class<?> clazz : classArray) {
                 final ClassStructure classStructure = newInstance(clazz);
@@ -169,7 +169,7 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
     }
 
     private Class[] getAnnotationTypeArray(final Annotation[] annotationArray) {
-        final Collection<Class> annotationTypes = new ArrayList<Class>();
+        final Collection<Class> annotationTypes = new ArrayList<>();
         for (final Annotation annotation : annotationArray) {
             if (annotation.getClass().isAnnotation()) {
                 annotationTypes.add(annotation.getClass());
@@ -208,7 +208,7 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
         );
     }
 
-    private BehaviorStructure newBehaviorStructure(final Constructor constructor) {
+    private BehaviorStructure newBehaviorStructure(final Constructor<?> constructor) {
         return new BehaviorStructure(
                 new AccessImplByJDKBehavior(constructor),
                 "<init>",
@@ -224,7 +224,7 @@ public class ClassStructureImplByJDK extends FamilyClassStructure {
             = new LazyGet<List<BehaviorStructure>>() {
         @Override
         protected List<BehaviorStructure> initialValue() {
-            final List<BehaviorStructure> behaviorStructures = new ArrayList<BehaviorStructure>();
+            final List<BehaviorStructure> behaviorStructures = new ArrayList<>();
             for (final Constructor<?> constructor : clazz.getDeclaredConstructors()) {
                 behaviorStructures.add(newBehaviorStructure(constructor));
             }

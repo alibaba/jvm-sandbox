@@ -8,7 +8,6 @@ import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.filter.ExtFilter;
 import com.alibaba.jvm.sandbox.api.http.printer.ConcurrentLinkedQueuePrinter;
 import com.alibaba.jvm.sandbox.api.http.printer.Printer;
-import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.api.resource.ModuleManager;
 import org.kohsuke.MetaInfServices;
@@ -81,20 +80,17 @@ public class DebugLifeCycleModule implements Module, ModuleLifecycle{
         lifeCLogger.info("param.method={}", mnPattern);
 
 
+        //监听到的事件，不做任何处理
         int watcherId = moduleEventWatcher.watch(
                 new ExtFilter(){//不增强类，这里只是体验sandbox的生命周期，ExtFilter新增了增强接口的所有实现类，到boostrap ClassLoader中加载类 的能力
 
                     @Override
                     public boolean doClassFilter(int access, String javaClassName, String superClassTypeJavaClassName, String[] interfaceTypeJavaClassNameArray, String[] annotationTypeJavaClassNameArray) {
-//                        if (cnPattern != null || !mnPattern.isEmpty())
-//                            return javaClassName.matches(cnPattern);
                         return false;
                     }
 
                     @Override
                     public boolean doMethodFilter(int access, String javaMethodName, String[] parameterTypeJavaClassNameArray, String[] throwsTypeJavaClassNameArray, String[] annotationTypeJavaClassNameArray) {
-//                        if (mnPattern != null || !mnPattern.isEmpty())
-//                            return javaMethodName.matches(mnPattern);
                         return false;
                     }
 
@@ -108,11 +104,8 @@ public class DebugLifeCycleModule implements Module, ModuleLifecycle{
                         return true;
                     }
                 },
-                new EventListener() {//监听到的事件，不做任何处理
-                    @Override
-                    public void onEvent(Event event) throws Throwable {
+                event -> {
 
-                    }
                 },
                 new ModuleEventWatcher.Progress() {//如果有增强类，可以通过这里查看增强的进度
                     @Override

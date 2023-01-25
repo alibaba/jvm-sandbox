@@ -39,6 +39,7 @@ public class SandboxReflectUtils {
         final boolean isAccessible = method.isAccessible();
         try {
             method.setAccessible(true);
+            //noinspection unchecked
             return (T) method.invoke(target, parameterArray);
         } catch (Throwable e) {
             throw new UnCaughtException(e);
@@ -63,6 +64,7 @@ public class SandboxReflectUtils {
         final boolean isAccessible = field.isAccessible();
         try {
             field.setAccessible(true);
+            //noinspection unchecked
             return (T) field.get(target);
         } catch (IllegalAccessException e) {
             throw new UnCaughtException(e);

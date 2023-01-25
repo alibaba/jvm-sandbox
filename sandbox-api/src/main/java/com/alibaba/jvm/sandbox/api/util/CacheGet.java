@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public abstract class CacheGet<K, V> {
 
-    private final Map<K, V> cache = new HashMap<K, V>();
+    private final Map<K, V> cache = new HashMap<>();
 
     /**
      * 从缓存中加载

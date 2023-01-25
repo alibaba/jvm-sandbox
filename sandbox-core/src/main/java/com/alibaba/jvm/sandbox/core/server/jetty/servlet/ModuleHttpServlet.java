@@ -102,7 +102,7 @@ public class ModuleHttpServlet extends HttpServlet {
         }
 
         // 自动释放I/O资源
-        final List<Closeable> autoCloseResources = coreModule.append(new ReleaseResource<List<Closeable>>(new ArrayList<Closeable>()) {
+        final List<Closeable> autoCloseResources = coreModule.append(new ReleaseResource<List<Closeable>>(new ArrayList<>()) {
             @Override
             public void release() {
                 final List<Closeable> closeables = get();
@@ -280,7 +280,7 @@ public class ModuleHttpServlet extends HttpServlet {
             // ParameterMap<String,String>
             else if (Map.class.isAssignableFrom(parameterType)
                     && isMapWithGenericParameterTypes(method, index, String.class, String.class)) {
-                final Map<String, String> param = new HashMap<String, String>();
+                final Map<String, String> param = new HashMap<>();
                 for (final Map.Entry<String, String[]> entry : req.getParameterMap().entrySet()) {
                     param.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
                 }

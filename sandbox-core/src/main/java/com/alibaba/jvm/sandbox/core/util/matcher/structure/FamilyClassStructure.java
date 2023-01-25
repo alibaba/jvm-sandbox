@@ -13,7 +13,7 @@ public abstract class FamilyClassStructure implements ClassStructure {
             = new LazyGet<Set<ClassStructure>>() {
         @Override
         protected Set<ClassStructure> initialValue() {
-            final Set<ClassStructure> familyInterfaceClassStructures = new HashSet<ClassStructure>();
+            final Set<ClassStructure> familyInterfaceClassStructures = new HashSet<>();
             for (final ClassStructure interfaceClassStructure : getInterfaceClassStructures()) {
                 // 1. 先加自己声明的接口
                 familyInterfaceClassStructures.add(interfaceClassStructure);
@@ -41,7 +41,7 @@ public abstract class FamilyClassStructure implements ClassStructure {
             = new LazyGet<Set<ClassStructure>>() {
         @Override
         protected Set<ClassStructure> initialValue() {
-            final Set<ClassStructure> familyClassStructures = new LinkedHashSet<ClassStructure>();
+            final Set<ClassStructure> familyClassStructures = new LinkedHashSet<>();
 
             // 注入家族类&家族类所声明的家族接口
             for (final ClassStructure familySuperClassStructure : getFamilySuperClassStructures()) {
@@ -78,7 +78,7 @@ public abstract class FamilyClassStructure implements ClassStructure {
 
     // 过滤掉没有@Inherited标注的Annotation，因为他们不能继承
     private Set<ClassStructure> newSetWithFilterInheritedAnnotationTypeClassStructure(final Set<ClassStructure> classStructures) {
-        final Set<ClassStructure> inheritedAnnotationSet = new LinkedHashSet<ClassStructure>();
+        final Set<ClassStructure> inheritedAnnotationSet = new LinkedHashSet<>();
         for (final ClassStructure classStructure : classStructures) {
             if (isInheritedAnnotationType(classStructure)) {
                 inheritedAnnotationSet.add(classStructure);
@@ -91,7 +91,7 @@ public abstract class FamilyClassStructure implements ClassStructure {
             = new LazyGet<Set<ClassStructure>>() {
         @Override
         protected Set<ClassStructure> initialValue() {
-            final Set<ClassStructure> familyAnnotationTypeClassStructures = new HashSet<ClassStructure>(getAnnotationTypeClassStructures());
+            final Set<ClassStructure> familyAnnotationTypeClassStructures = new HashSet<>(getAnnotationTypeClassStructures());
             for (final ClassStructure familyClassStructure : getFamilyTypeClassStructures()) {
                 familyAnnotationTypeClassStructures.addAll(
                         newSetWithFilterInheritedAnnotationTypeClassStructure(
@@ -112,7 +112,7 @@ public abstract class FamilyClassStructure implements ClassStructure {
             = new LazyGet<LinkedHashSet<ClassStructure>>() {
         @Override
         protected LinkedHashSet<ClassStructure> initialValue() {
-            final LinkedHashSet<ClassStructure> familySuperClassStructures = new LinkedHashSet<ClassStructure>();
+            final LinkedHashSet<ClassStructure> familySuperClassStructures = new LinkedHashSet<>();
             final ClassStructure superClassStructure = getSuperClassStructure();
             if (null != superClassStructure) {
                 // 1. 先加自己的父类

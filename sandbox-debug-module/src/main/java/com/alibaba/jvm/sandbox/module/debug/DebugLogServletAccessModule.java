@@ -7,8 +7,6 @@ import com.alibaba.jvm.sandbox.api.listener.ext.Advice;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
-import com.alibaba.jvm.sandbox.module.debug.util.InterfaceProxyUtils.MethodInterceptor;
-import com.alibaba.jvm.sandbox.module.debug.util.InterfaceProxyUtils.MethodInvocation;
 import com.alibaba.jvm.sandbox.module.debug.util.InterfaceProxyUtils.ProxyMethod;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +30,7 @@ import static org.apache.commons.lang3.ArrayUtils.contains;
  */
 @MetaInfServices(Module.class)
 @Information(id = "debug-servlet-access", version = "0.0.2", author = "luanjia@taobao.com")
-public class LogServletAccessModule implements Module, LoadCompleted {
+public class DebugLogServletAccessModule implements Module, LoadCompleted {
 
     private final Logger logger = LoggerFactory.getLogger("DEBUG-SERVLET-ACCESS");
 
@@ -120,19 +118,16 @@ public class LogServletAccessModule implements Module, LoadCompleted {
                                 classOfHttpServletResponse,
                                 advice.getTarget().getClass().getClassLoader(),
                                 advice.getParameterArray()[1],
-                                new MethodInterceptor() {
-                                    @Override
-                                    public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-                                        if (contains(
-                                                new String[]{
-                                                        "setStatus",
-                                                        "sendError"
-                                                },
-                                                methodInvocation.getMethod().getName())) {
-                                            httpAccess.setStatus((Integer) methodInvocation.getArguments()[0]);
-                                        }
-                                        return methodInvocation.proceed();
+                                methodInvocation -> {
+                                    if (contains(
+                                            new String[]{
+                                                    "setStatus",
+                                                    "sendError"
+                                            },
+                                            methodInvocation.getMethod().getName())) {
+                                        httpAccess.setStatus((Integer) methodInvocation.getArguments()[0]);
                                     }
+                                    return methodInvocation.proceed();
                                 }));
 
                     }
@@ -196,15 +191,13 @@ public class LogServletAccessModule implements Module, LoadCompleted {
                 advice.getParameterArray()[0]);
 
         // 初始化HttpAccess
-        final HttpAccess httpAccess = new HttpAccess(
+        return new HttpAccess(
                 httpServletRequest.getRemoteAddress(),
                 httpServletRequest.getMethod(),
                 httpServletRequest.getRequestURI(),
                 httpServletRequest.getParameterMap(),
                 httpServletRequest.getHeader("User-Agent")
         );
-
-        return httpAccess;
     }
 
     // 格式化ParameterMap
@@ -212,7 +205,7 @@ public class LogServletAccessModule implements Module, LoadCompleted {
         if (MapUtils.isEmpty(parameterMap)) {
             return StringUtils.EMPTY;
         }
-        final Set<String> kvPairs = new LinkedHashSet<String>();
+        final Set<String> kvPairs = new LinkedHashSet<>();
         for (final Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
             kvPairs.add(String.format("%s=%s",
                     entry.getKey(),

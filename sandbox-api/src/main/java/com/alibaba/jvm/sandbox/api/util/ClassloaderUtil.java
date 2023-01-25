@@ -14,7 +14,7 @@ public class ClassloaderUtil {
 
     private final static String PANDORA_CLASSLOADER = "com.taobao.pandora.service.loader.ModuleClassLoader";
 
-    private final static Set<String> BIZ_CLASS_LOADERS = new HashSet<String>();
+    private final static Set<String> BIZ_CLASS_LOADERS = new HashSet<>();
 
     static {
         // tomcat

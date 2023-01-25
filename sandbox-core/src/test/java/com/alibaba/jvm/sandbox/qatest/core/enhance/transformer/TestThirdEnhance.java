@@ -97,8 +97,8 @@ public class TestThirdEnhance{
 
     public static class ThirdClassVisitor extends ClassVisitor {
 
-        private Set<String> signCodes;
-        private String targetJavaClassName;
+        private final Set<String> signCodes;
+        private final String targetJavaClassName;
 
         public ThirdClassVisitor(int api,ClassVisitor cv, Set<String> signCodes,String targetClassInternalName) {
             super(api,cv);

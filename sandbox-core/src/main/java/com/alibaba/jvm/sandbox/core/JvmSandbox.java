@@ -1,12 +1,13 @@
 package com.alibaba.jvm.sandbox.core;
 
-import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 import com.alibaba.jvm.sandbox.core.manager.CoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultCoreModuleManager;
 import com.alibaba.jvm.sandbox.core.manager.impl.DefaultProviderManager;
 import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -20,27 +21,44 @@ public class JvmSandbox {
     /**
      * 需要提前加载的sandbox工具类
      */
-    private final static List<String> earlyLoadSandboxClassNameList = new ArrayList<String>();
+    private final static List<String> earlyLoadSandboxClassNameList = new ArrayList<>();
 
     static {
         earlyLoadSandboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.SandboxClassUtils");
         earlyLoadSandboxClassNameList.add("com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructureImplByAsm");
+        earlyLoadSandboxClassNameList.add("com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler");
     }
 
     private final CoreConfigure cfg;
     private final CoreModuleManager coreModuleManager;
 
+    // 判断是否支持native
+    private boolean isNativeSupported(Instrumentation inst) {
+
+        // 当前经过测试的最高版本是：oracle-jdk-[1.8,12]
+        final String javaSpecVersion = System.getProperty("java.specification.version");
+        final boolean isSupportedJavaSpecVersion = StringUtils.isNotBlank(javaSpecVersion)
+                && NumberUtils.toFloat(javaSpecVersion, 999f) <= 12f
+                && NumberUtils.toFloat(javaSpecVersion, -1f) >= 1.8f;
+
+        // 最终判断是否启用Native
+        return isSupportedJavaSpecVersion
+                && inst.isNativeMethodPrefixSupported();
+    }
+
     public JvmSandbox(final CoreConfigure cfg,
                       final Instrumentation inst) {
-        EventListenerHandler.getSingleton();
         this.cfg = cfg;
+
+        // 是否支持Native方法增强
+        cfg.setNativeSupported(isNativeSupported(inst));
+
         this.coreModuleManager = SandboxProtector.instance.protectProxy(CoreModuleManager.class, new DefaultCoreModuleManager(
                 cfg,
                 inst,
-                new DefaultCoreLoadedClassDataSource(inst, cfg.isEnableUnsafe()),
+                new DefaultCoreLoadedClassDataSource(inst, cfg.isEnableUnsafe(), cfg.isNativeSupported()),
                 new DefaultProviderManager(cfg)
         ));
-
         init();
     }
 
@@ -53,7 +71,7 @@ public class JvmSandbox {
      * 提前加载某些必要的类
      */
     private void doEarlyLoadSandboxClass() {
-        for(String className : earlyLoadSandboxClassNameList){
+        for (String className : earlyLoadSandboxClassNameList) {
             try {
                 Class.forName(className);
             } catch (ClassNotFoundException e) {

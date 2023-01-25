@@ -1,11 +1,11 @@
 package com.alibaba.jvm.sandbox.core.util.matcher;
 
 import com.alibaba.jvm.sandbox.api.annotation.Stealth;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
+import com.alibaba.jvm.sandbox.core.manager.impl.SandboxClassFileTransformer;
+import com.alibaba.jvm.sandbox.core.util.CoreStringUtils;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.Access;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.BehaviorStructure;
 import com.alibaba.jvm.sandbox.core.util.matcher.structure.ClassStructure;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -19,20 +19,33 @@ public class UnsupportedMatcher implements Matcher {
 
     private final ClassLoader loader;
     private final boolean isEnableUnsafe;
+    private final boolean isNativeSupported;
 
     public UnsupportedMatcher(final ClassLoader loader,
-                              final boolean isEnableUnsafe) {
+                              final boolean isEnableUnsafe,
+                              final boolean isNativeSupported) {
         this.loader = loader;
         this.isEnableUnsafe = isEnableUnsafe;
+        this.isNativeSupported = isNativeSupported;
     }
 
-    /*
-     * 是否因sandbox容器本身缺陷所暂时无法支持的类
-     */
+    // 是否因sandbox容器本身缺陷所暂时无法支持的类
     private boolean isUnsupportedClass(final ClassStructure classStructure) {
-        return StringUtils.containsAny(
+        return CoreStringUtils.containsAny(
                 classStructure.getJavaClassName(),
-                "$$Lambda$",
+
+                /*
+                 * Lambda的方法拦截是一个深坑，常规则做法是拦截LambdaMetaFactory，
+                 * 但这种做法相当不干净，而且无法实现ATTACH模式，所以这里选择性的放弃了对Lambda表达式的支持
+                 */
+                "$$Lambda$"
+        );
+    }
+
+    // 是否已知的常用非必要增强类，常见的如CGLIB、Spring增强的类
+    private boolean isNotNecessaryClass(final ClassStructure classStructure) {
+        return CoreStringUtils.containsAny(
+                classStructure.getJavaClassName(),
                 "$$FastClassBySpringCGLIB$$",
                 "$$EnhancerBySpringCGLIB$$",
                 "$$EnhancerByCGLIB$$",
@@ -47,22 +60,6 @@ public class UnsupportedMatcher implements Matcher {
     private boolean isJvmSandboxClass(final ClassStructure classStructure) {
         return classStructure.getJavaClassName().startsWith("com.alibaba.jvm.sandbox.");
     }
-
-//    private Set<String> takeJavaClassNames(final Set<ClassStructure> classStructures) {
-//        final Set<String> javaClassNames = new LinkedHashSet<String>();
-//        for (final ClassStructure classStructure : classStructures) {
-//            javaClassNames.add(classStructure.getJavaClassName());
-//        }
-//        return javaClassNames;
-//    }
-
-//    /*
-//     * 判断是否隐形类
-//     */
-//    private boolean isStealthClass(final ClassStructure classStructure) {
-//        return takeJavaClassNames(classStructure.getFamilyAnnotationTypeClassStructures())
-//                .contains(Stealth.class.getName());
-//    }
 
     /*
      * 判断是否ClassLoader家族中是否有隐形基因
@@ -93,32 +90,41 @@ public class UnsupportedMatcher implements Matcher {
 
     /*
      * 是否不支持的方法修饰
-     * 1. abstract的方法没有实现，没有必要增强
-     * 2. native的方法暂时无法支持
      */
     private boolean isUnsupportedBehavior(final BehaviorStructure behaviorStructure) {
-        //TODO unSupportMethodName
+
+        // 不支持抽象方法
         final Access access = behaviorStructure.getAccess();
         if (access.isAbstract()) {
             return true;
         }
 
-        return null != behaviorStructure.getName() && behaviorStructure.getName().startsWith(EventWeaver.NATIVE_PREFIX);
+        // 在JVM不允许native方法重定义的时候，不支持native方法
+        return access.isNative() && !isNativeSupported;
+    }
+
+    /*
+     * 不支持被SANDBOX修改的方法
+     */
+    private boolean isSandboxSpecialBehavior(final BehaviorStructure behaviorStructure) {
+        return null != behaviorStructure.getName()
+                && behaviorStructure.getName().startsWith(SandboxClassFileTransformer.SANDBOX_SPECIAL_PREFIX);
     }
 
     @Override
     public MatchingResult matching(final ClassStructure classStructure) {
         final MatchingResult result = new MatchingResult();
         if (isUnsupportedClass(classStructure)
+                || isNotNecessaryClass(classStructure)
                 || isJvmSandboxClass(classStructure)
                 || isFromStealthClassLoader()
-            // || isStealthClass(classStructure) FIX #292
         ) {
             return result;
         }
         for (final BehaviorStructure behaviorStructure : classStructure.getBehaviorStructures()) {
             if (isJavaMainBehavior(behaviorStructure)
-                    || isUnsupportedBehavior(behaviorStructure)) {
+                    || isUnsupportedBehavior(behaviorStructure)
+                    || isSandboxSpecialBehavior(behaviorStructure)) {
                 continue;
             }
             result.getBehaviorStructures().add(behaviorStructure);

@@ -253,7 +253,7 @@ function attach_jvm() {
 
   # attach target jvm
   "${SANDBOX_JAVA_HOME}/bin/java" \
-    "${SANDBOX_JVM_OPS}" \
+    ${SANDBOX_JVM_OPS} \
     -jar "${SANDBOX_LIB_DIR}/sandbox-core.jar" \
     "${TARGET_JVM_PID}" \
     "${SANDBOX_LIB_DIR}/sandbox-agent.jar" \

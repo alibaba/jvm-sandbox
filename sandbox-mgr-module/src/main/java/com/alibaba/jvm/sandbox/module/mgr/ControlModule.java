@@ -41,14 +41,11 @@ public class ControlModule implements Module {
         logger.info("prepare to shutdown jvm-sandbox[{}].", configInfo.getNamespace());
 
         // 关闭HTTP服务器
-        final Thread shutdownJvmSandboxHook = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    uninstall();
-                } catch (Throwable cause) {
-                    logger.warn("shutdown jvm-sandbox[{}] failed.", configInfo.getNamespace(), cause);
-                }
+        final Thread shutdownJvmSandboxHook = new Thread(() -> {
+            try {
+                uninstall();
+            } catch (Throwable cause) {
+                logger.warn("shutdown jvm-sandbox[{}] failed.", configInfo.getNamespace(), cause);
             }
         }, String.format("shutdown-jvm-sandbox-%s-hook", configInfo.getNamespace()));
         shutdownJvmSandboxHook.setDaemon(true);

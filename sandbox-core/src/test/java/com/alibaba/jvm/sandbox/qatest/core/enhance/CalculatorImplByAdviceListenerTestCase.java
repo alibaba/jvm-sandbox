@@ -15,7 +15,7 @@ import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.Test
 import static com.alibaba.jvm.sandbox.qatest.core.enhance.target.Calculator.TestCase.SUM$EXCEPTION;
 import static com.alibaba.jvm.sandbox.qatest.core.util.CalculatorHelper.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * AdviceListener相关测试用例
@@ -154,7 +154,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
             sum(newInstance(calculatorClass), 10, 20);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
@@ -238,7 +238,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
             sum(newInstance(calculatorClass), 10, 20);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
@@ -270,7 +270,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
             sum(newInstance(calculatorClass, SUM$EXCEPTION), 10, 20);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
@@ -329,7 +329,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
             sum(newInstance(calculatorClass, SUM$EXCEPTION), 10, 20);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
@@ -614,7 +614,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
             sum(newInstance(calculatorClass), 10, 20);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
@@ -715,7 +715,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
             sum(newInstance(calculatorClass), 10, 20);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
@@ -753,7 +753,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
             sum(newInstance(calculatorClass, ADD$EXCEPTION), 10, 20);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }
@@ -820,7 +820,7 @@ public class CalculatorImplByAdviceListenerTestCase implements ICalculatorTestCa
                 ).loadClass(CALCULATOR_CLASS_NAME);
         try {
             sum(newInstance(calculatorClass, ADD$EXCEPTION), 10, 20);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             assertEquals(ERROR_EXCEPTION_MESSAGE, throwable.getMessage());
         }

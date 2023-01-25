@@ -37,7 +37,7 @@ public class InterfaceProxyUtils {
      */
     static abstract class WrapInvocationHandler implements InvocationHandler {
 
-        final Map<Method, Method> mappingOfWrapMethods = new ConcurrentHashMap<Method, Method>();
+        final Map<Method, Method> mappingOfWrapMethods = new ConcurrentHashMap<>();
 
         String getInterfaceMethodName(final Method interfaceMethod) {
             final ProxyMethod proxyMethod = interfaceMethod.getAnnotation(ProxyMethod.class);
@@ -85,6 +85,7 @@ public class InterfaceProxyUtils {
      * @param <T>            目标接口类型
      * @return 被目标接口操纵的傀儡对象实例
      */
+    @SuppressWarnings("unchecked")
     public static <T> T puppet(final Class<T> interfaceClass,
                                final Object target) {
         return (T) Proxy.newProxyInstance(
@@ -134,37 +135,32 @@ public class InterfaceProxyUtils {
         return Proxy.newProxyInstance(
                 targetClassLoader,
                 new Class<?>[]{interfaceClassInTargetClassLoader},
-                new InvocationHandler() {
+                (proxy, method, args) -> interceptor.invoke(new MethodInvocation() {
                     @Override
-                    public Object invoke(Object proxy, final Method method, final Object[] args) throws Throwable {
-                        return interceptor.invoke(new MethodInvocation() {
-                            @Override
-                            public Method getMethod() {
-                                return method;
-                            }
-
-                            @Override
-                            public Object[] getArguments() {
-                                return args;
-                            }
-
-                            @Override
-                            public Object proceed() throws Throwable {
-                                return method.invoke(target, args);
-                            }
-
-                            @Override
-                            public Object getThis() {
-                                return target;
-                            }
-
-                            @Override
-                            public AccessibleObject getStaticPart() {
-                                return method;
-                            }
-                        });
+                    public Method getMethod() {
+                        return method;
                     }
-                }
+
+                    @Override
+                    public Object[] getArguments() {
+                        return args;
+                    }
+
+                    @Override
+                    public Object proceed() throws Throwable {
+                        return method.invoke(target, args);
+                    }
+
+                    @Override
+                    public Object getThis() {
+                        return target;
+                    }
+
+                    @Override
+                    public AccessibleObject getStaticPart() {
+                        return method;
+                    }
+                })
         );
     }
 

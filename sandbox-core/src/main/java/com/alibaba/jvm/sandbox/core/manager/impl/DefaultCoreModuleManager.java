@@ -48,7 +48,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     private final File[] moduleLibDirArray;
 
     // 已加载的模块集合
-    private final Map<String, CoreModule> loadedModuleBOMap = new ConcurrentHashMap<String, CoreModule>();
+    private final Map<String, CoreModule> loadedModuleBOMap = new ConcurrentHashMap<>();
 
     /**
      * 模块模块管理
@@ -77,7 +77,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     }
 
     private File[] mergeFileArray(File[] aFileArray, File[] bFileArray) {
-        final List<File> _r = new ArrayList<File>();
+        final List<File> _r = new ArrayList<>();
         _r.addAll(Arrays.asList(aFileArray));
         _r.addAll(Arrays.asList(bFileArray));
         return _r.toArray(new File[]{});
@@ -178,6 +178,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         // 注入@Resource资源
         injectResourceOnLoadIfNecessary(coreModule);
 
+        // 通知模块生命周期：模块加载
         callAndFireModuleLifeCycle(coreModule, MODULE_LOAD);
 
         // 设置为已经加载
@@ -189,7 +190,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         // 注册到模块列表中
         loadedModuleBOMap.put(uniqueId, coreModule);
 
-        // 通知生命周期，模块加载完成
+        // 通知模块生命周期：模块加载完成
         callAndFireModuleLifeCycle(coreModule, MODULE_LOAD_COMPLETED);
 
     }
@@ -225,7 +226,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                                     final ModuleEventWatcher moduleEventWatcher = get();
                                     if (null != moduleEventWatcher) {
                                         for (final SandboxClassFileTransformer sandboxClassFileTransformer
-                                                : new ArrayList<SandboxClassFileTransformer>(coreModule.getSandboxClassFileTransformers())) {
+                                                : new ArrayList<>(coreModule.getSandboxClassFileTransformers())) {
                                             moduleEventWatcher.delete(sandboxClassFileTransformer.getWatchId());
                                         }
                                     }
@@ -275,30 +276,25 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                     writeField(
                             resourceField,
                             module,
-                            new EventMonitor() {
+                            (EventMonitor) () -> new EventMonitor.EventPoolInfo() {
                                 @Override
-                                public EventPoolInfo getEventPoolInfo() {
-                                    return new EventPoolInfo() {
-                                        @Override
-                                        public int getNumActive() {
-                                            return 0;
-                                        }
+                                public int getNumActive() {
+                                    return 0;
+                                }
 
-                                        @Override
-                                        public int getNumActive(Event.Type type) {
-                                            return 0;
-                                        }
+                                @Override
+                                public int getNumActive(Event.Type type) {
+                                    return 0;
+                                }
 
-                                        @Override
-                                        public int getNumIdle() {
-                                            return 0;
-                                        }
+                                @Override
+                                public int getNumIdle() {
+                                    return 0;
+                                }
 
-                                        @Override
-                                        public int getNumIdle(Event.Type type) {
-                                            return 0;
-                                        }
-                                    };
+                                @Override
+                                public int getNumIdle(Event.Type type) {
+                                    return 0;
                                 }
                             },
                             true
@@ -393,7 +389,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
         logger.info("force unloading all loaded modules:{}", loadedModuleBOMap.keySet());
 
         // 强制卸载所有模块
-        for (final CoreModule coreModule : new ArrayList<CoreModule>(loadedModuleBOMap.values())) {
+        for (final CoreModule coreModule : new ArrayList<>(loadedModuleBOMap.values())) {
             try {
                 unload(coreModule, true);
             } catch (ModuleException cause) {
@@ -419,7 +415,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 coreModule.getJarFile()
         );
 
-        // 通知生命周期
+        // 通知模块生命周期：模块激活
         callAndFireModuleLifeCycle(coreModule, MODULE_ACTIVE);
 
         // 激活所有监听器
@@ -451,7 +447,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 coreModule.getJarFile()
         );
 
-        // 通知生命周期
+        // 通知模块生命周期：模块冻结
         try {
             callAndFireModuleLifeCycle(coreModule, MODULE_FROZEN);
         } catch (ModuleException meCause) {
@@ -530,7 +526,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     final private class InnerModuleLoadCallback implements ModuleJarLoader.ModuleLoadCallback {
         @Override
         public void onLoad(final String uniqueId,
-                           final Class moduleClass,
+                           final Class<?> moduleClass,
                            final Module module,
                            final File moduleJarFile,
                            final ModuleJarClassLoader moduleClassLoader) throws Throwable {
@@ -578,7 +574,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
     }
 
     @Override
-    public synchronized CoreModuleManager reset() throws ModuleException {
+    public synchronized CoreModuleManager reset() {
 
         logger.info("resetting all loaded modules:{}", loadedModuleBOMap.keySet());
 
@@ -593,8 +589,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                 new ModuleLibLoader(moduleLibDir, cfg.getLaunchMode())
                         .load(
                                 new InnerModuleJarLoadCallback(),
-                                new InnerModuleLoadCallback(),
-                                classDataSource
+                                new InnerModuleLoadCallback()
                         );
             } else {
                 logger.warn("module-lib not access, ignore flush load this lib. path={}", moduleLibDir);
@@ -652,9 +647,9 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         final File systemModuleLibDir = new File(cfg.getSystemModuleLibPath());
         try {
-            final ArrayList<File> appendJarFiles = new ArrayList<File>();
-            final ArrayList<CoreModule> removeCoreModules = new ArrayList<CoreModule>();
-            final ArrayList<Long> checksumCRC32s = new ArrayList<Long>();
+            final ArrayList<File> appendJarFiles = new ArrayList<>();
+            final ArrayList<CoreModule> removeCoreModules = new ArrayList<>();
+            final ArrayList<Long> checksumCRC32s = new ArrayList<>();
 
             // 1. 找出所有有变动的文件(add/remove)
             for (final File jarFile : cfg.getUserModuleLibFiles()) {
@@ -712,7 +707,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
             // 4. 加载add
             for (final File jarFile : appendJarFiles) {
                 new ModuleLibLoader(jarFile, cfg.getLaunchMode())
-                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback(), classDataSource);
+                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
             }
         } catch (Throwable cause) {
             logger.warn("soft-flushing modules: occur error.", cause);
@@ -732,7 +727,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 1. 卸载模块
         // 等待卸载的模块集合
-        final Collection<CoreModule> waitingUnloadCoreModules = new ArrayList<CoreModule>();
+        final Collection<CoreModule> waitingUnloadCoreModules = new ArrayList<>();
 
         // 找出所有USER的模块，所以这些模块都卸载了
         for (final CoreModule coreModule : loadedModuleBOMap.values()) {
@@ -744,7 +739,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
 
         // 记录下即将被卸载的模块ID集合
         if (logger.isInfoEnabled()) {
-            final Set<String> uniqueIds = new LinkedHashSet<String>();
+            final Set<String> uniqueIds = new LinkedHashSet<>();
             for (final CoreModule coreModule : waitingUnloadCoreModules) {
                 uniqueIds.add(coreModule.getUniqueId());
             }
@@ -766,7 +761,7 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                     && userModuleLibDir.canRead()) {
                 logger.info("force-flush modules: module-lib={}", userModuleLibDir);
                 new ModuleLibLoader(userModuleLibDir, cfg.getLaunchMode())
-                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback(), classDataSource);
+                        .load(new InnerModuleJarLoadCallback(), new InnerModuleLoadCallback());
             } else {
                 logger.warn("force-flush modules: module-lib can not access, will be ignored. module-lib={}", userModuleLibDir);
             }

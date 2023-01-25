@@ -7,7 +7,6 @@ import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchCondition;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.core.CoreModule;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
 import com.alibaba.jvm.sandbox.core.manager.CoreLoadedClassDataSource;
 import com.alibaba.jvm.sandbox.core.util.Sequencer;
 import com.alibaba.jvm.sandbox.core.util.matcher.ExtFilterMatcher;
@@ -173,9 +172,21 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
                       final Progress progress,
                       final Event.Type... eventType) {
         final int watchId = watchIdSequencer.next();
+        final String uniqueId = coreModule.getUniqueId();
+        final boolean isNativeSupported = inst.isNativeMethodPrefixSupported();
+
         // 给对应的模块追加ClassFileTransformer
-        final SandboxClassFileTransformer sandClassFileTransformer = new SandboxClassFileTransformer(inst,
-                watchId, coreModule.getUniqueId(), matcher, listener, isEnableUnsafe, eventType, namespace);
+        final SandboxClassFileTransformer sandClassFileTransformer =
+                new SandboxClassFileTransformer(
+                        watchId,
+                        uniqueId,
+                        matcher,
+                        listener,
+                        isEnableUnsafe,
+                        eventType,
+                        namespace,
+                        isNativeSupported
+                );
 
         // 注册到CoreModule中
         coreModule.getSandboxClassFileTransformers().add(sandClassFileTransformer);
@@ -184,17 +195,19 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
         inst.addTransformer(sandClassFileTransformer, true);
 
         //设定Native支持
-        if(inst.isNativeMethodPrefixSupported()){
-            inst.setNativeMethodPrefix(sandClassFileTransformer, EventWeaver.NATIVE_PREFIX);
-        }else{
-            logger.info("Native Method Prefix Unsupported");
+        if(isNativeSupported) {
+            inst.setNativeMethodPrefix(sandClassFileTransformer, sandClassFileTransformer.getNativePrefix());
+            logger.debug("watch={} in module={} enable native method supported, prefix={}",
+                    watchId,
+                    uniqueId,
+                    sandClassFileTransformer.getNativePrefix());
         }
 
         // 查找需要渲染的类集合
         final List<Class<?>> waitingReTransformClasses = classDataSource.findForReTransform(matcher);
         logger.info("watch={} in module={} found {} classes for watch(ing).",
                 watchId,
-                coreModule.getUniqueId(),
+                uniqueId,
                 waitingReTransformClasses.size()
         );
 
@@ -229,7 +242,7 @@ public class DefaultModuleEventWatcher implements ModuleEventWatcher {
     public void delete(final int watcherId,
                        final Progress progress) {
 
-        final Set<Matcher> waitingRemoveMatcherSet = new LinkedHashSet<Matcher>();
+        final Set<Matcher> waitingRemoveMatcherSet = new LinkedHashSet<>();
 
         // 找出待删除的SandboxClassFileTransformer
         final Iterator<SandboxClassFileTransformer> cftIt = coreModule.getSandboxClassFileTransformers().iterator();

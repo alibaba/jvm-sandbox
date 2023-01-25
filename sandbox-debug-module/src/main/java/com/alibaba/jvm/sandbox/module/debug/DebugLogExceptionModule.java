@@ -4,8 +4,6 @@ import com.alibaba.jvm.sandbox.api.Information;
 import com.alibaba.jvm.sandbox.api.LoadCompleted;
 import com.alibaba.jvm.sandbox.api.Module;
 import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
-import com.alibaba.jvm.sandbox.api.event.Event;
-import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.EventWatchBuilder;
 import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import org.kohsuke.MetaInfServices;
@@ -24,7 +22,7 @@ import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;
  */
 @MetaInfServices(Module.class)
 @Information(id = "debug-exception-logger", version = "0.0.2", author = "luanjia@taobao.com")
-public class LogExceptionModule implements Module, LoadCompleted {
+public class DebugLogExceptionModule implements Module, LoadCompleted {
 
     private final Logger exLogger = LoggerFactory.getLogger("DEBUG-EXCEPTION-LOGGER");
 
@@ -37,15 +35,12 @@ public class LogExceptionModule implements Module, LoadCompleted {
                 .onClass(Exception.class)
                 .includeBootstrap()
                 .onBehavior("<init>")
-                .onWatch(new EventListener() {
-                    @Override
-                    public void onEvent(Event event) throws Throwable {
-                        final BeforeEvent bEvent = (BeforeEvent) event;
-                        exLogger.info("{} occur an exception: {}",
-                                getJavaClassName(bEvent.target.getClass()),
-                                bEvent.target
-                        );
-                    }
+                .onWatch(event -> {
+                    final BeforeEvent bEvent = (BeforeEvent) event;
+                    exLogger.info("{} occur an exception: {}",
+                            getJavaClassName(bEvent.target.getClass()),
+                            bEvent.target
+                    );
                 }, BEFORE);
     }
 

@@ -47,7 +47,7 @@ public class ConcurrentLinkedQueuePrinter implements Printer {
                                         final long delayMaxTimeMs,
                                         final int capacity) {
         this.writer = writer;
-        this.writeQueue = new ConcurrentLinkedQueue<String>();
+        this.writeQueue = new ConcurrentLinkedQueue<>();
         this.delayStepTimeMs = delayStepTimeMs;
         this.delayMaxTimeMs = delayMaxTimeMs;
         this.delayTimeMs = delayStepTimeMs;
@@ -108,13 +108,11 @@ public class ConcurrentLinkedQueuePrinter implements Printer {
     }
 
     private long computeDelayTimeMs() {
-        if (delayTimeMs >= delayMaxTimeMs) {
-            return delayTimeMs;
-        } else {
+        if (delayTimeMs < delayMaxTimeMs) {
             final long newDelayTime = delayTimeMs + delayStepTimeMs;
             delayTimeMs = min(newDelayTime, delayMaxTimeMs);
-            return delayTimeMs;
         }
+        return delayTimeMs;
     }
 
     private void resetDelayTimeMs() {

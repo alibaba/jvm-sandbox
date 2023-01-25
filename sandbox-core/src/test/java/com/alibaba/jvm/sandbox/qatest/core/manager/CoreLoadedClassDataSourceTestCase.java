@@ -14,7 +14,7 @@ import java.util.Set;
 
 class MockLoadedClassesOnlyInstrumentation extends EmptyInstrumentation {
 
-    final Set<Class<?>> loadedClasses = new LinkedHashSet<Class<?>>();
+    final Set<Class<?>> loadedClasses = new LinkedHashSet<>();
 
     void regLoadedClass(Class<?> clazz) {
         loadedClasses.add(clazz);
@@ -134,7 +134,7 @@ public class CoreLoadedClassDataSourceTestCase {
     }
 
     private final CoreLoadedClassDataSource coreLoadedClassDataSource
-            = new DefaultCoreLoadedClassDataSource(mockInstrumentation, false);
+            = new DefaultCoreLoadedClassDataSource(mockInstrumentation, false, true);
 
 
     @Test

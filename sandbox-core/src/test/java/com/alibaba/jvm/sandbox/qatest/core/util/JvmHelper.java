@@ -6,8 +6,6 @@ import com.alibaba.jvm.sandbox.api.listener.EventListener;
 import com.alibaba.jvm.sandbox.api.listener.ext.AdviceListener;
 import com.alibaba.jvm.sandbox.core.enhance.EventEnhancer;
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
-import com.alibaba.jvm.sandbox.core.enhance.weaver.asm.EventWeaver;
-import com.alibaba.jvm.sandbox.core.manager.NativeMethodEnhanceAware;
 import com.alibaba.jvm.sandbox.core.util.ObjectIDs;
 import com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils;
 import com.alibaba.jvm.sandbox.core.util.SpyUtils;
@@ -88,7 +86,7 @@ public class JvmHelper {
         }
     }
 
-    public static class Transformer implements NativeMethodEnhanceAware {
+    public static class Transformer {
 
         protected final Filter filter;
         private final EventListener listener;
@@ -107,10 +105,10 @@ public class JvmHelper {
                            final Event.Type... eventTypes) {
             this.filter = filter;
             this.listener = new InterruptedAdviceAdapterListener(listener);
-            final List<Event.Type> eventTypeList = new ArrayList<Event.Type>();
+            final List<Event.Type> eventTypeList = new ArrayList<>();
             CollectionUtils.addAll(eventTypeList, toArray(BEFORE, RETURN, THROWS, IMMEDIATELY_THROWS, IMMEDIATELY_RETURN));
             CollectionUtils.addAll(eventTypeList, eventTypes);
-            this.eventTypes = eventTypeList.toArray(new Event.Type[]{});
+            this.eventTypes = eventTypeList.toArray(EMPTY);
         }
 
         public byte[] transform(final String namespace,
@@ -128,7 +126,7 @@ public class JvmHelper {
             );
 
             if (matchingResult.isMatched()) {
-                return new EventEnhancer(true).toByteCodeArray(
+                return new EventEnhancer("$$SANDBOX$").toByteCodeArray(
                         loader,
                         byteCodes,
                         matchingResult.getBehaviorSignCodes(),
@@ -141,15 +139,6 @@ public class JvmHelper {
             }
         }
 
-        @Override
-        public String getNativeMethodPrefix() {
-            return EventWeaver.NATIVE_PREFIX;
-        }
-
-        @Override
-        public void markNativeMethodEnhance() {
-
-        }
     }
 
     public JvmHelper defineClass(final Class<?> clazz,
@@ -205,9 +194,9 @@ public class JvmHelper {
     static class PrivateClassLoader extends ClassLoader {
 
         private final Map<String, byte[]> javaClassByteArrayMap
-                = new HashMap<String, byte[]>();
+                = new HashMap<>();
 
-        private final Set<Class<?>> classes = new LinkedHashSet<Class<?>>();
+        private final Set<Class<?>> classes = new LinkedHashSet<>();
 
         public PrivateClassLoader() {
         }

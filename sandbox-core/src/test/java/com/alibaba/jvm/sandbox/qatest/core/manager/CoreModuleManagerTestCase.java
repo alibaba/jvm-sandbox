@@ -16,8 +16,6 @@ import com.alibaba.jvm.sandbox.qatest.core.util.SandboxModuleJarBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,8 +28,6 @@ import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.junit.Assert.assertEquals;
 
 public class CoreModuleManagerTestCase {
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Information(id = "broken-on-cinit")
     public static class BrokenOnCInitModule implements Module {
