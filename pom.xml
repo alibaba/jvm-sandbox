@@ -5,7 +5,7 @@
 
     <groupId>com.alibaba.jvm.sandbox</groupId>
     <artifactId>sandbox</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>sandbox ${sandbox.version}</name>
 
@@ -42,7 +42,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sandbox.version>1.4.0</sandbox.version>
+        <sandbox.version>1.4.1-SNAPSHOT</sandbox.version>
     </properties>
 
     <profiles>
