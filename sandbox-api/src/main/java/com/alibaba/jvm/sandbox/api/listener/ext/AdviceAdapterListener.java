@@ -51,8 +51,7 @@ public class AdviceAdapterListener implements EventListener {
                 final BeforeEvent bEvent = (BeforeEvent) event;
                 final ClassLoader loader = toClassLoader(bEvent.javaClassLoader);
                 final Advice advice = new Advice(
-                        bEvent.processId,
-                        bEvent.invokeId,
+                        bEvent,
                         new LazyGet<Behavior>() {
 
                             private final ClassLoader _loader = loader;
@@ -68,10 +67,7 @@ public class AdviceAdapterListener implements EventListener {
                                         _javaMethodDesc
                                 );
                             }
-                        },
-                        loader,
-                        bEvent.argumentArray,
-                        bEvent.target
+                        }
                 );
 
                 final Advice top;

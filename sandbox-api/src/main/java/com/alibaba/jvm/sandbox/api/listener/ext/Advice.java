@@ -1,5 +1,6 @@
 package com.alibaba.jvm.sandbox.api.listener.ext;
 
+import com.alibaba.jvm.sandbox.api.event.BeforeEvent;
 import com.alibaba.jvm.sandbox.api.event.Event;
 import com.alibaba.jvm.sandbox.api.event.InvokeEvent;
 import com.alibaba.jvm.sandbox.api.util.LazyGet;
@@ -21,6 +22,9 @@ public class Advice implements Attachment {
     private final int invokeId;
 
     private final ClassLoader loader;
+    private final String javaClassName;
+    private final String javaMethodName;
+    private final String javaMethodDesc;
     private final LazyGet<Behavior> behaviorLazyGet;
     private final Object[] parameterArray;
     private final Object target;
@@ -44,7 +48,9 @@ public class Advice implements Attachment {
      * @param loader          触发事件的行为所在ClassLoader
      * @param parameterArray  触发事件的行为入参
      * @param target          触发事件所归属的对象实例
+     * @deprecated 建议使用 {@link Advice#Advice(BeforeEvent, LazyGet)}
      */
+    @Deprecated
     Advice(final int processId,
            final int invokeId,
            final LazyGet<Behavior> behaviorLazyGet,
@@ -57,6 +63,29 @@ public class Advice implements Attachment {
         this.loader = loader;
         this.parameterArray = parameterArray;
         this.target = target;
+        this.javaClassName = null;
+        this.javaMethodName = null;
+        this.javaMethodDesc = null;
+    }
+
+    /**
+     * 构造通知
+     *
+     * @param bEvent          Before事件
+     * @param behaviorLazyGet 触发事件的行为(懒加载)
+     * @since {@code sandbox-api:1.4.1}
+     */
+    Advice(final BeforeEvent bEvent,
+           final LazyGet<Behavior> behaviorLazyGet) {
+        this.processId = bEvent.processId;
+        this.invokeId = bEvent.invokeId;
+        this.loader = bEvent.javaClassLoader;
+        this.parameterArray = bEvent.argumentArray;
+        this.target = bEvent.target;
+        this.javaClassName = bEvent.javaClassName;
+        this.javaMethodName = bEvent.javaMethodName;
+        this.javaMethodDesc = bEvent.javaMethodDesc;
+        this.behaviorLazyGet = behaviorLazyGet;
     }
 
     /**
@@ -193,6 +222,36 @@ public class Advice implements Attachment {
      */
     public Throwable getThrowable() {
         return throwable;
+    }
+
+    /**
+     * 获取触发调用事件的类名称
+     *
+     * @return 触发调用事件的类名称
+     * @since {@code sandbox-api:1.4.1}
+     */
+    public String getJavaClassName() {
+        return javaClassName;
+    }
+
+    /**
+     * 获取触发调用事件的方法名称
+     *
+     * @return 触发调用事件的方法名称
+     * @since {@code sandbox-api:1.4.1}
+     */
+    public String getJavaMethodName() {
+        return javaMethodName;
+    }
+
+    /**
+     * 获取触发调用事件的方法签名
+     *
+     * @return 触发调用事件的方法签名
+     * @since {@code sandbox-api:1.4.1}
+     */
+    public String getJavaMethodDesc() {
+        return javaMethodDesc;
     }
 
     @Override

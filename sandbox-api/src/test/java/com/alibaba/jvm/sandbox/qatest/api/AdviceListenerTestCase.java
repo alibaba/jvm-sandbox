@@ -26,16 +26,25 @@ public class AdviceListenerTestCase {
                 .onWatch(new AdviceListener(){
                     @Override
                     protected void before(Advice advice) throws Throwable {
+                        Assert.assertEquals("java.lang.String", advice.getJavaClassName());
+                        Assert.assertEquals("toString", advice.getJavaMethodName());
+                        Assert.assertEquals("()Ljava/lang/String;", advice.getJavaMethodDesc());
                         traceSB.append("before;");
                     }
 
                     @Override
                     protected void afterReturning(Advice advice) throws Throwable {
+                        Assert.assertEquals("java.lang.String", advice.getJavaClassName());
+                        Assert.assertEquals("toString", advice.getJavaMethodName());
+                        Assert.assertEquals("()Ljava/lang/String;", advice.getJavaMethodDesc());
                         traceSB.append("afterReturning;");
                     }
 
                     @Override
                     protected void afterThrowing(Advice advice) throws Throwable {
+                        Assert.assertEquals("java.lang.String", advice.getJavaClassName());
+                        Assert.assertEquals("toString", advice.getJavaMethodName());
+                        Assert.assertEquals("()Ljava/lang/String;", advice.getJavaMethodDesc());
                         traceSB.append("afterThrowing;");
                     }
                 });
