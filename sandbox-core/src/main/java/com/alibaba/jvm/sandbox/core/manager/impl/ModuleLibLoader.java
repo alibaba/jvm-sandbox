@@ -64,7 +64,7 @@ class ModuleLibLoader {
      * 加载Module
      *
      * @param mjCb 模块文件加载回调
-     * @param mCb  模块加载回掉
+     * @param mCb  模块加载回调
      */
     void load(final ModuleJarLoadCallback mjCb,
               final ModuleJarLoader.ModuleLoadCallback mCb) {

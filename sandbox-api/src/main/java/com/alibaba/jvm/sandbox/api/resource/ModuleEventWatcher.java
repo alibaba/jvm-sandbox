@@ -126,7 +126,7 @@ public interface ModuleEventWatcher {
          * 方法进入到结束流程，在结束流程中将会冻结和删除被渲染的代码
          * </p>
          *
-         * @throws Throwable 回掉出错
+         * @throws Throwable 回调出错
          */
         void watchCompleted() throws Throwable;
 
