@@ -11,7 +11,7 @@ typeset SANDBOX_HOME_DIR
 [[ -z ${SANDBOX_HOME_DIR} ]] && SANDBOX_HOME_DIR=${PWD}/..
 
 # define current SANDBOX_USER
-typeset SANDBOX_USER=${USER}
+typeset SANDBOX_USER=$(id -u)
 [[ -z ${SANDBOX_USER} ]] && SANDBOX_USER=$(whoami)
 
 # define sandbox's network
