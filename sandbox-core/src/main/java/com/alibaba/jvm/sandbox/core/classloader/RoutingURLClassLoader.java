@@ -41,7 +41,7 @@ public class RoutingURLClassLoader extends URLClassLoader {
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
         Enumeration<URL> urls = findResources(name);
-        if (null != urls) {
+        if (null != urls && urls.hasMoreElements()) {
             return urls;
         }
         urls = super.getResources(name);
