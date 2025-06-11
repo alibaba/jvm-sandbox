@@ -302,6 +302,8 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
     private final static Cache<Pair, ClassStructure> classStructureCache
             = CacheBuilder.newBuilder().maximumSize(1024).build();
 
+    private final static ClassStructure EMPTY_CLASS_STRUCTURE = new EmptyClassStructure();
+
     // 构造一个类结构实例
     private ClassStructure newInstance(final String javaClassName) {
 
@@ -323,7 +325,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
 
         final Pair pair = new Pair(loader, javaClassName);
         final ClassStructure existClassStructure = classStructureCache.getIfPresent(pair);
-        if (null != existClassStructure) {
+        if (null != existClassStructure && EMPTY_CLASS_STRUCTURE != existClassStructure) {
             return existClassStructure;
         } else {
             // fix for #385
@@ -337,7 +339,7 @@ public class ClassStructureImplByAsm extends FamilyClassStructure {
                     // ignore
                     logger.warn("new instance class structure by using ASM failed, will return null. class={};loader={};",
                             javaClassName, loader, cause);
-                    classStructureCache.put(pair, null);
+                    classStructureCache.put(pair, EMPTY_CLASS_STRUCTURE);
                 } finally {
                     IOUtils.closeQuietly(is);
                 }
