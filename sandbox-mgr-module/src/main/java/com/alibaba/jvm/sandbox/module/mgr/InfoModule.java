@@ -33,7 +33,8 @@ public class InfoModule implements Module {
                 "                  SERVER_ADDR : " + configInfo.getServerAddress().getHostName() + "\n" +
                 "                  SERVER_PORT : " + configInfo.getServerAddress().getPort() + "\n" +
                 "               SERVER_CHARSET : " + configInfo.getServerCharset().toUpperCase() + "\n" +
-                "               UNSAFE_SUPPORT : " + (configInfo.isEnableUnsafe() ? "ENABLE" : "DISABLE") + "\n" +
+                "               UNSAFE_ENABLED : " + (configInfo.isEnableUnsafe() ? "ENABLE" : "DISABLE") + "\n" +
+                "               LAMBDA_ENABLED : " + (configInfo.isEnableLambda() ? "ENABLE" : "DISABLE") + "\n" +
                 "               NATIVE_SUPPORT : " + (configInfo.isNativeSupported() ? "ENABLE" : "DISABLE") + "\n" +
                 "                 SANDBOX_HOME : " + configInfo.getHome() + "\n" +
                 "            SYSTEM_MODULE_LIB : " + configInfo.getSystemModuleLibPath() + "\n" +

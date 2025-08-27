@@ -36,6 +36,16 @@ public interface ConfigInfo {
     boolean isEnableUnsafe();
 
     /**
+     * 获取沙箱是否支持Lambda表达式
+     * <p>Lambda表达式支持后，沙箱将能修改Lambda表达式</p>
+     * <p>该选项不可配置，由沙箱内部根据自身机制和JVM版本类型决定，具体可参考官网</p>
+     *
+     * @return true:功能启用;false:功能未启用
+     * @since {@code sandbox-common-api:1.4.1}
+     */
+    boolean isEnableLambda();
+
+    /**
      * 判断沙箱是否支持Native方法增强
      * <p>Native方法增强支持后，沙箱将能修改native方法</p>
      * <p>该选项不可配置，由沙箱内部根据自身机制和JVM版本类型决定，具体可参考官网</p>

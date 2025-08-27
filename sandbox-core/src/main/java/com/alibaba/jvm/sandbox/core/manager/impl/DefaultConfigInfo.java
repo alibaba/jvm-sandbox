@@ -39,6 +39,11 @@ class DefaultConfigInfo implements ConfigInfo {
     }
 
     @Override
+    public boolean isEnableLambda() {
+        return cfg.isEnableLambda();
+    }
+
+    @Override
     public boolean isNativeSupported() {
         return cfg.isNativeSupported();
     }
