@@ -210,6 +210,9 @@ public class DefaultCoreModuleManager implements CoreModuleManager {
                             true
                     );
                 }
+                else if (Instrumentation.class.isAssignableFrom(fieldType)) {
+                    writeField(resourceField, module, inst, true);
+                }
 
                 // ModuleEventWatcher对象注入
                 else if (ModuleEventWatcher.class.isAssignableFrom(fieldType)) {

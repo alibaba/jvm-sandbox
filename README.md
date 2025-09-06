@@ -215,3 +215,11 @@ mvn clean install
 ## 相关文档
 
 - **[WIKI](https://github.com/alibaba/jvm-sandbox/wiki/Home)**
+
+## 额外的工作
+- 暴露Instrumentation给Module，可以在Module中注入Instrumentation
+```java
+@Resource
+private Instrumentation inst;
+```
+
