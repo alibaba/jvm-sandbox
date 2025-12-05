@@ -2,7 +2,9 @@ package com.alibaba.jvm.sandbox.core.util;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -123,16 +125,31 @@ public class ObjectIDs {
      * 清理失效的 [objectID : object] 映射
      */
     private void expungeIdentityObjectMapping() {
+
+        /*
+         * 将rQueue的数据dump到待清理引用集合中
+         * 这个过程不需要加任何的锁，rQueue已经是线程安全
+         */
+        final List<IdentityWeakReference> refs = new ArrayList<>();
         for (Object x; (x = rQueue.poll()) != null; ) {
-            synchronized (rQueue) {
-                rwLock.writeLock().lock();
-                try {
-                    identityObjectMapping.remove(((IdentityWeakReference) x).objectID);
-                } finally {
-                    rwLock.writeLock().unlock();
-                }
+            if (x instanceof IdentityWeakReference) {
+                refs.add((IdentityWeakReference) x);
             }
         }
+
+        /*
+         * 只有待清理的引用不为空时才进行清理
+         * 清理的过程会获取写锁，所以我们应该尽量避免这种情况的发生。做到有要清理的数据的时候才获取写锁，同时尽快完成处理。
+         */
+        if (!refs.isEmpty()) {
+            rwLock.writeLock().lock();
+            try {
+                refs.forEach(ref -> identityObjectMapping.remove(ref.objectID));
+            } finally {
+                rwLock.writeLock().unlock();
+            }
+        }
+
     }
 
     /**
@@ -161,7 +178,13 @@ public class ObjectIDs {
             }
         } finally {
             rwLock.readLock().unlock();
-            expungeIdentityObjectMapping();
+
+            /*
+             * 在GET方法中进行脏数据清理有点多余
+             * 而且会引入不必要的锁竞争
+             */
+            // expungeIdentityObjectMapping();
+
         }
 
     }
