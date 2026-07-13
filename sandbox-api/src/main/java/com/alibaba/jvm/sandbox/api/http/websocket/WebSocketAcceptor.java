@@ -1,6 +1,6 @@
 package com.alibaba.jvm.sandbox.api.http.websocket;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * WebSocketConnection监听器的构造工厂

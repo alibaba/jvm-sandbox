@@ -14,7 +14,7 @@ import com.alibaba.jvm.sandbox.module.debug.util.Express;
 import org.apache.commons.lang3.EnumUtils;
 import org.kohsuke.MetaInfServices;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;

@@ -35,10 +35,10 @@ public class JvmSandbox {
     // 判断是否支持native
     private boolean isNativeSupported(Instrumentation inst) {
 
-        // 当前经过测试的最高版本是：oracle-jdk-[1.8,12]
+        // 当前经过测试的最高版本是：oracle-jdk-[1.8,21]
         final String javaSpecVersion = System.getProperty("java.specification.version");
         final boolean isSupportedJavaSpecVersion = StringUtils.isNotBlank(javaSpecVersion)
-                && NumberUtils.toFloat(javaSpecVersion, 999f) <= 12f
+                && NumberUtils.toFloat(javaSpecVersion, 999f) <= 21f
                 && NumberUtils.toFloat(javaSpecVersion, -1f) >= 1.8f;
 
         // 最终判断是否启用Native

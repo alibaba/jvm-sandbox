@@ -10,7 +10,7 @@ import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.BEFORE;
 import static com.alibaba.jvm.sandbox.api.util.GaStringUtils.getJavaClassName;

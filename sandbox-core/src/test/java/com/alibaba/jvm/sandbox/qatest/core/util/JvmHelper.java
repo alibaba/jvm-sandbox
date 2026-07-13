@@ -20,7 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.com.alibaba.jvm.sandbox.spy.Spy;
+import com.alibaba.jvm.sandbox.spy.Spy;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;

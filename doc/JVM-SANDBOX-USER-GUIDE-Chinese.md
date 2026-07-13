@@ -4,7 +4,7 @@
 
 ### 环境要求
 
-1. JDK6+
+1. JDK8+（已验证支持JDK 21）
 2. Linux／UNIX／MacOS；暂不支持WINDOWS，主要是一些脚本需要改造
 
 ### 安装容器

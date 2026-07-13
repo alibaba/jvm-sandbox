@@ -8,7 +8,7 @@ import com.alibaba.jvm.sandbox.api.resource.ConfigInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.MetaInfServices;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.io.PrintWriter;
 

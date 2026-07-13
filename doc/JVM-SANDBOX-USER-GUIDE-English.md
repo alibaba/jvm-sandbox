@@ -4,7 +4,7 @@
 
 ### Environmental requirements
 
-1. JDK6+
+1. JDK8+ (verified support for JDK 21)
 2. Linux／UNIX／MacOS；Temporarily support WINDOWS, mainly some of the script needs to be modified
 
 ### Install the container

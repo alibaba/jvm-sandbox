@@ -24,7 +24,7 @@ typeset SANDBOX_LIB_DIR=${SANDBOX_HOME_DIR}/lib
 typeset SANDBOX_TOKEN_FILE="${HOME}/.sandbox.token"
 
 # define JVM OPS
-typeset SANDBOX_JVM_OPS="-Xms128M -Xmx128M -Xnoclassgc -ea"
+typeset SANDBOX_JVM_OPS="-Xms128M -Xmx128M -Xnoclassgc -ea --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED"
 
 # define target JVM Process ID
 typeset TARGET_JVM_PID
@@ -207,9 +207,9 @@ check_permission() {
   [[ ! -x "${SANDBOX_JAVA_HOME}/bin/java" ]] &&
     exit_on_err 1 "permission denied, ${SANDBOX_JAVA_HOME}/bin/java is not executable!"
 
-  # check the jvm version, we need 6+
-  "${SANDBOX_JAVA_HOME}"/bin/java -version 2>&1 | awk -F '"' '/version/&&$2<="1.5"{exit 1}' ||
-    exit_on_err 1 "permission denied, please make sure target java process: ${TARGET_JVM_PID} run in JDK[6,11]"
+  # check the jvm version, we need 8+
+  "${SANDBOX_JAVA_HOME}"/bin/java -version 2>&1 | awk -F '"' '/version/&&$2<="1.7"{exit 1}' ||
+    exit_on_err 1 "permission denied, please make sure target java process: ${TARGET_JVM_PID} run in JDK[8,21]"
 
 }
 
@@ -234,9 +234,7 @@ reset_for_env() {
         sed 's/\/bin\/java//g'
     )"
 
-  # append toos.jar to JVM_OPT
-  [[ -f "${SANDBOX_JAVA_HOME}"/lib/tools.jar ]] &&
-    SANDBOX_JVM_OPS="${SANDBOX_JVM_OPS} -Xbootclasspath/a:${SANDBOX_JAVA_HOME}/lib/tools.jar"
+  # JDK 9+ no longer needs tools.jar, the Attach API is in the jdk.attach module
 
   #fix for windows  shell $HOME diff with user.home
   test -n "${USERPROFILE}" -a -z "$(cat "${SANDBOX_TOKEN_FILE}")" && SANDBOX_TOKEN_FILE=${USERPROFILE}/.sandbox.token
@@ -257,7 +255,7 @@ function attach_jvm() {
     -jar "${SANDBOX_LIB_DIR}/sandbox-core.jar" \
     "${TARGET_JVM_PID}" \
     "${SANDBOX_LIB_DIR}/sandbox-agent.jar" \
-    "home=${SANDBOX_HOME_DIR};token=${token};server.ip=${TARGET_SERVER_IP};server.port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" ||
+    "home=${SANDBOX_HOME_DIR};system_module=${SANDBOX_HOME_DIR}/module;provider=${SANDBOX_HOME_DIR}/provider;cfg=${SANDBOX_HOME_DIR}/cfg;token=${token};server.ip=${TARGET_SERVER_IP};server.port=${TARGET_SERVER_PORT};namespace=${TARGET_NAMESPACE}" ||
     exit_on_err 1 "attach JVM ${TARGET_JVM_PID} fail."
 
   # get network from attach result

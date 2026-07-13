@@ -10,8 +10,8 @@ import com.alibaba.jvm.sandbox.core.util.SandboxProtector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.com.alibaba.jvm.sandbox.spy.Spy;
-import java.com.alibaba.jvm.sandbox.spy.SpyHandler;
+import com.alibaba.jvm.sandbox.spy.Spy;
+import com.alibaba.jvm.sandbox.spy.SpyHandler;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,8 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.IMMEDIATELY_RETURN;
 import static com.alibaba.jvm.sandbox.api.event.Event.Type.IMMEDIATELY_THROWS;
 import static com.alibaba.jvm.sandbox.core.util.SandboxReflectUtils.isInterruptEventHandler;
-import static java.com.alibaba.jvm.sandbox.spy.Spy.Ret.newInstanceForNone;
-import static java.com.alibaba.jvm.sandbox.spy.Spy.Ret.newInstanceForThrows;
+import static com.alibaba.jvm.sandbox.spy.Spy.Ret.newInstanceForNone;
+import static com.alibaba.jvm.sandbox.spy.Spy.Ret.newInstanceForThrows;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 import static org.apache.commons.lang3.StringUtils.join;
 

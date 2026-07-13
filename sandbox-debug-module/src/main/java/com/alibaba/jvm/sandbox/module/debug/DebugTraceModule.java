@@ -13,7 +13,7 @@ import com.alibaba.jvm.sandbox.api.resource.ModuleEventWatcher;
 import com.alibaba.jvm.sandbox.module.debug.textui.TTree;
 import org.kohsuke.MetaInfServices;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.PrintWriter;
 import java.util.Map;
 

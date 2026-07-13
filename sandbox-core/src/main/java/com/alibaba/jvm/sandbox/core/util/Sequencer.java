@@ -1,6 +1,6 @@
 package com.alibaba.jvm.sandbox.core.util;
 
-import java.com.alibaba.jvm.sandbox.spy.Spy;
+import com.alibaba.jvm.sandbox.spy.Spy;
 
 /**
  * 序列发生器

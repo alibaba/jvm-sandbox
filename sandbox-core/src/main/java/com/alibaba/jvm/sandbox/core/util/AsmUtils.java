@@ -31,6 +31,52 @@ public class AsmUtils {
 
     // implements by ASM
     private static String getCommonSuperClassImplByAsm(String type1, String type2, ClassLoader targetClassLoader) {
+        // JDK 9+: 优先使用Class.forName方式获取类层级，避免模块化下资源加载失败
+        try {
+            Class<?> class1 = getClassForName(type1, targetClassLoader);
+            Class<?> class2 = getClassForName(type2, targetClassLoader);
+            if (class1 != null && class2 != null) {
+                return getCommonSuperClassByReflection(class1, class2);
+            }
+        } catch (Throwable e) {
+            // fall through to resource-based approach
+        }
+
+        // 回退到基于资源加载的方式（JDK 8兼容）
+        return getCommonSuperClassByResource(type1, type2, targetClassLoader);
+    }
+
+    private static Class<?> getClassForName(String type, ClassLoader loader) {
+        String javaClassName = type.replace('/', '.');
+        ClassLoader cl = loader != null ? loader : ClassLoader.getSystemClassLoader();
+        try {
+            return Class.forName(javaClassName, false, cl);
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
+    private static String getCommonSuperClassByReflection(Class<?> class1, Class<?> class2) {
+        if (class2.isAssignableFrom(class1)) {
+            return class2.getName().replace('.', '/');
+        }
+        if (class1.isAssignableFrom(class2)) {
+            return class1.getName().replace('.', '/');
+        }
+        if (class1.isInterface() || class2.isInterface()) {
+            return "java/lang/Object";
+        }
+        Class<?> superClass = class1.getSuperclass();
+        while (superClass != null) {
+            if (superClass.isAssignableFrom(class2)) {
+                return superClass.getName().replace('.', '/');
+            }
+            superClass = superClass.getSuperclass();
+        }
+        return "java/lang/Object";
+    }
+
+    private static String getCommonSuperClassByResource(String type1, String type2, ClassLoader targetClassLoader) {
         InputStream inputStreamOfType1 = null, inputStreamOfType2 = null;
         try {
             //targetClassLoader 为null，说明是BootStrapClassLoader，不能显式引用，故使用系统类加载器间接引用
@@ -68,6 +114,8 @@ public class AsmUtils {
                 }
             } while (!classStructureOfType2.getFamilyTypeClassStructures().contains(classStructure));
             return toInternalClassName(classStructure.getJavaClassName());
+        } catch (Throwable e) {
+            return "java/lang/Object";
         } finally {
             IOUtils.closeQuietly(inputStreamOfType1);
             IOUtils.closeQuietly(inputStreamOfType2);

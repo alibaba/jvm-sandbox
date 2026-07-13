@@ -4,6 +4,10 @@ import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.lang.Module;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 public class EmptyInstrumentation implements Instrumentation {
@@ -79,6 +83,20 @@ public class EmptyInstrumentation implements Instrumentation {
 
     @Override
     public void setNativeMethodPrefix(ClassFileTransformer transformer, String prefix) {
+
+    }
+
+    @Override
+    public boolean isModifiableModule(Module module) {
+        return false;
+    }
+
+    @Override
+    public void redefineModule(Module module, Set<Module> extraReads,
+            Map<String, Set<Module>> extraOpens,
+            Map<String, Set<Module>> extraExports,
+            Set<Class<?>> extraUses,
+            Map<Class<?>, List<Class<?>>> extraProvides) {
 
     }
 }

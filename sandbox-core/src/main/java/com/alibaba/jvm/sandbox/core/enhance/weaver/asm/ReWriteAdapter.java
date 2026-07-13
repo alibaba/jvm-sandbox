@@ -6,7 +6,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 
-import java.com.alibaba.jvm.sandbox.spy.Spy;
+import com.alibaba.jvm.sandbox.spy.Spy;
 
 /**
  * 方法重写

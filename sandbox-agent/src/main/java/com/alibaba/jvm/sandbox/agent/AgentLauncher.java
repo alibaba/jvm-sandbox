@@ -103,11 +103,27 @@ public class AgentLauncher {
     public static void agentmain(String featureString, Instrumentation inst) {
         LAUNCH_MODE = LAUNCH_MODE_ATTACH;
         final Map<String, String> featureMap = toFeatureMap(featureString);
-        writeAttachResult(
-                getNamespace(featureMap),
-                getToken(featureMap),
-                install(featureMap, inst)
-        );
+        try {
+            writeAttachResult(
+                    getNamespace(featureMap),
+                    getToken(featureMap),
+                    install(featureMap, inst)
+            );
+        } catch (Throwable cause) {
+            // 将实际错误写入文件，便于排查 AgentInitializationException
+            try {
+                final File errFile = new File(System.getProperty("user.home"), ".sandbox-agent-error.log");
+                try (final java.io.FileWriter fw = new java.io.FileWriter(errFile, true)) {
+                    fw.write("[" + new java.util.Date() + "] agentmain failed:\n");
+                    cause.printStackTrace(new java.io.PrintWriter(fw));
+                    fw.write("\n");
+                    fw.flush();
+                }
+            } catch (Throwable ignored) {
+                // ignore
+            }
+            throw new RuntimeException("agent init failed: " + cause.getMessage(), cause);
+        }
     }
 
     /**

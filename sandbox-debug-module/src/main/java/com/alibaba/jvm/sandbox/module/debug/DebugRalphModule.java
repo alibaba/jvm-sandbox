@@ -16,7 +16,7 @@ import com.google.common.util.concurrent.RateLimiter;
 import org.apache.commons.lang3.EnumUtils;
 import org.kohsuke.MetaInfServices;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;

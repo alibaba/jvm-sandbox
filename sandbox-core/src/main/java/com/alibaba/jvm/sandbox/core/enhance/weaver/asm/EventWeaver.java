@@ -469,6 +469,18 @@ public class EventWeaver extends ClassVisitor implements Opcodes, AsmTypes, AsmM
         }
     }
 
+    // JDK 16+: Record类组件，保持默认委托以确保Record属性在transform后保留
+    @Override
+    public RecordComponentVisitor visitRecordComponent(final String name, final String descriptor, final String signature) {
+        return super.visitRecordComponent(name, descriptor, signature);
+    }
+
+    // JDK 17+: Sealed类的许可子类，保持默认委托以确保PermittedSubclasses属性在transform后保留
+    @Override
+    public void visitPermittedSubclass(final String permittedSubclass) {
+        super.visitPermittedSubclass(permittedSubclass);
+    }
+
     @Override
     public void visitEnd() {
 

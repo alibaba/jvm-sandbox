@@ -87,6 +87,11 @@ public class SandboxClassFileTransformer implements ClassFileTransformer {
                 return null;
             }
 
+            // 过滤掉module-info类，JDK 9+ 模块描述符不能被transform
+            if ("module-info".equals(internalClassName)) {
+                return null;
+            }
+
             // 如果未开启unsafe开关，是不允许增强来自BootStrapClassLoader的类
             if (!cfg.isEnableUnsafe()
                     && null == loader) {

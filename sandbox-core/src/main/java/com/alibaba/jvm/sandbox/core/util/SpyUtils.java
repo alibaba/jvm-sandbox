@@ -2,7 +2,7 @@ package com.alibaba.jvm.sandbox.core.util;
 
 import com.alibaba.jvm.sandbox.core.enhance.weaver.EventListenerHandler;
 
-import java.com.alibaba.jvm.sandbox.spy.Spy;
+import com.alibaba.jvm.sandbox.spy.Spy;
 
 /**
  * Spy类操作工具类
