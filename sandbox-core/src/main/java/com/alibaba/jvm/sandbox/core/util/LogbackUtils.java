@@ -1,4 +1,4 @@
-package com.alibaba.jvm.sandbox.core.util;
+﻿package com.alibaba.jvm.sandbox.core.util;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
@@ -50,10 +50,11 @@ public class LogbackUtils {
      * 销毁Logback日志框架
      */
     public static void destroy() {
+        final Logger logger = LoggerFactory.getLogger(LogbackUtils.class);
         try {
             ((LoggerContext) LoggerFactory.getILoggerFactory()).stop();
         } catch (Throwable cause) {
-            cause.printStackTrace();
+            logger.warn("destroy logback failed", cause);
         }
     }
 
