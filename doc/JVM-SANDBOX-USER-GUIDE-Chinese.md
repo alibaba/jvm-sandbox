@@ -153,7 +153,7 @@ EVENT_POOL_KEY_MAX : 2000
      - 所有的沙箱模块都可以被设计成为热插拔
      - 一个JAR包下可以申明多个模块，模块需要符合Java SPI规范，要求
 
-         1. 必须拥有publish的无参构造函数
+         1. 必须拥有public的无参构造函数
          1. 必须实现`com.alibaba.jvm.sandbox.api.Module`接口
          1. 必须完成`META-INF/services/com.alibaba.jvm.sandbox.api.Module`文件中的注册（Java SPI规范要求）
         
