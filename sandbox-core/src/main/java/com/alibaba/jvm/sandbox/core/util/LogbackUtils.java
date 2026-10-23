@@ -51,10 +51,22 @@ public class LogbackUtils {
      */
     public static void destroy() {
         try {
-            ((LoggerContext) LoggerFactory.getILoggerFactory()).stop();
+            destroy((LoggerContext) LoggerFactory.getILoggerFactory());
         } catch (Throwable cause) {
-            cause.printStackTrace();
+            logDestroyFailure(cause);
         }
+    }
+
+    static void destroy(final LoggerContext loggerContext) {
+        try {
+            loggerContext.stop();
+        } catch (Throwable cause) {
+            logDestroyFailure(cause);
+        }
+    }
+
+    private static void logDestroyFailure(final Throwable cause) {
+        LoggerFactory.getLogger(LogbackUtils.class).warn("destroy logback failed.", cause);
     }
 
 }
